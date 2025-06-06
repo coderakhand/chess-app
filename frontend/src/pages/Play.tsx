@@ -54,7 +54,7 @@ export default function Play() {
   };
 
   return (
-    <div className="flex min-w-screen min-h-screen gap-[100px]">
+    <div className="flex min-w-screen min-h-screen lg:h-screen  gap-[100px]">
       <SideBar />
       <div className="flex justify-center min-w-screen py-[30px] gap-3">
         <div className="flex flex-col gap-2">

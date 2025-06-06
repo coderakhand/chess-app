@@ -24,12 +24,13 @@ dist-ssr
 *.sw?
 
 
-/backend/node_modules/
+backend/node_modules/
 backend/dist/
+backend/DS_Store/
 
 
 frontend/node_modules/
-
+frontend/DS_Store/
 
 
 .env

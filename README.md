@@ -1,1 +1,3 @@
-# chezz.com
+# <p align="center"> Chezz Web App </p>
+
+<p > It is a Web application where users can play chess online with friends. It provides user to connect via video call while playing the game. </p>

@@ -4,8 +4,10 @@ import { useState } from "react";
 import SignUp from "../components/SignUp";
 import LogIn from "../components/LogIn";
 
+type CardValues = "LOG_IN" | "SIGN_UP" | null;
+
 export default function Home() {
-  const [card, setCard] = useState<"login" | "signup" | null>(null);
+  const [card, setCard] = useState<CardValues>(null);
 
   const closeDialog = () => setCard(null);
 
@@ -28,7 +30,7 @@ export default function Home() {
             </div>
             <hr className="my-[10px]" />
             <button
-              onClick={() => setCard("login")}
+              onClick={() => setCard("LOG_IN")}
               className="w-full h-[50px] text-lg bg-[#d6dce0] rounded-full"
             >
               LogIn with Username
@@ -36,7 +38,7 @@ export default function Home() {
             <div className="flex gap-2 mt-[10px] justify-center w-full text-sm">
               New on Chezz.com?{" "}
               <button
-                onClick={() => setCard("signup")}
+                onClick={() => setCard("SIGN_UP")}
                 className="underline underline-offset-2"
               >
                 Sign Up
@@ -49,9 +51,9 @@ export default function Home() {
             onOpenChange={(open) => !open && closeDialog()}
           >
             <DialogContent className="w-[400px] h-[500px] border-none bg-white/30 backdrop-blur-3xl rounded-xl shadow-md">
-              {card === "login" ? (
+              {card === "LOG_IN" ? (
                 <LogIn />
-              ) : card === "signup" ? (
+              ) : card === "SIGN_UP" ? (
                 <SignUp />
               ) : null}
             </DialogContent>

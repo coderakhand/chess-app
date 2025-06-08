@@ -73,17 +73,14 @@ export default function Play() {
         <div className="flex flex-col h-screen w-[400px] gap-3">
           <div className="w-full px-[20px] h-[200px]">
             {" "}
-            <iframe
-              width="360"
-              height="200"
-              src="https://www.youtube.com/embed/3QHNwUAC7q4?si=czjtukoInvB6rxhb"
-              title="YouTube video player"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            ></iframe>
+            <div className="h-[200px] w-[360px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40">
+              {" "}
+              Opponent Video
+            </div>
           </div>
-          <div className="flex justify-center w-full">
+          <div className="flex justify-center w-full h-[250px] ">
             <div
-              className="flex flex-col items-center p-[5px] gap-3 w-[360px] h-[500px] 
+              className="flex flex-col items-center p-[5px] gap-3 w-[360px]
             bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40"
             >
               <div className="w-full h-[50px] flex rounded-xl">
@@ -96,12 +93,12 @@ export default function Play() {
                   {isGameStarted ? "Moves" : "New"}
                 </button>
                 <button
-                  onClick={() => setTab("myVideo")}
+                  onClick={() => setTab("games")}
                   className={`w-full rounded-xl cursor-pointer ${
                     tab !== "myVideo" ? "" : "backdrop-blur-md shadow-md"
                   }`}
                 >
-                  My Video
+                  Games
                 </button>
                 <button
                   onClick={() => setTab("friends")}
@@ -117,6 +114,11 @@ export default function Play() {
                 isGameStarted={isGameStarted}
                 createGame={createGame}
               />
+            </div>
+          </div>
+          <div className="w-full px-[20px] h-[200px]">
+            <div className="h-[200px] w-[360px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40">
+              Your Video
             </div>
           </div>
         </div>
@@ -163,7 +165,7 @@ function CustomComponent({
     );
   }
 
-  if (tab == "myvideo") {
+  if (tab == "games") {
     return <div></div>;
   }
 

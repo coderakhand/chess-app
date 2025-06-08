@@ -27,7 +27,7 @@ export default function SignUp() {
             placeholder="Password"
             className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg"
           />
-          <button className=" text-white text-xl h-[50px] w-[150px] bg-[black] rounded-full">
+          <button className=" mt-[20px] text-white text-xl h-[50px] w-[150px] bg-[black] rounded-full">
             Sign Up
           </button>
         </div>

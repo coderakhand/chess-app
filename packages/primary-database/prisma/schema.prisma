@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  directUrl = env("DIRECT_URL")
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String    @unique
+  password     String
+  rating       Int       @default(800)
+  gamesAsWhite Game[]    @relation("WhiteGames")
+  gamesAsBlack Game[]    @relation("BlackGames")
+  createdAt    DateTime  @default(now())
+  lastLogin    DateTime?
+
+  @@index([rating])
+}
+
+model Guest {
+  id           String   @id @default(uuid())
+  rating       Int      @default(800)
+  gamesAsWhite Game[]   @relation("GuestWhiteGames")
+  gamesAsBlack Game[]   @relation("GuestBlackGames")
+  createdAt    DateTime @default(now())
+
+  @@index([rating])
+}
+
+enum GameStatus {
+  ACTIVE
+  OVER
+  PLAYER_LEFT
+  ABANDONED
+  TIME_UP
+}
+
+enum TimeControl {
+  CLASSICAL
+  RAPID
+  BLITZ
+  BULLET
+}
+
+enum GameResult {
+  WHITE_WINS
+  BLACK_WINS
+  DRAW
+}
+
+model Game {
+  id String @id @default(uuid())
+
+  whiteUserId  String?
+  whiteUser    User?   @relation("WhiteGames", fields: [whiteUserId], references: [id])
+  whiteGuestId String?
+  whiteGuest   Guest?  @relation("GuestWhiteGames", fields: [whiteGuestId], references: [id])
+
+  blackUserId  String?
+  blackUser    User?   @relation("BlackGames", fields: [blackUserId], references: [id])
+  blackGuestId String?
+  blackGuest   Guest?  @relation("GuestBlackGames", fields: [blackGuestId], references: [id])
+
+  moves            Move[]
+  startingPosition String      @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  currentPosition  String?
+  timeControl      TimeControl
+  createdAt        DateTime    @default(now())
+  status           GameStatus
+  result           GameResult?
+
+  @@index([status, result])
+}
+
+model Move {
+  id         String   @id @default(uuid())
+  gameId     String
+  game       Game     @relation(fields: [gameId], references: [id])
+  moveNumber Int
+  from       String
+  to         String
+  timeTaken  Int?     @default(0)
+  playedAt   DateTime @default(now())
+
+  @@index([gameId])
+}

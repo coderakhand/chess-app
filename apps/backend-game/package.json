@@ -1,5 +1,5 @@
 {
-  "name": "chess121-backend",
+  "name": "@rep/backend-game",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,9 +12,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@prisma/client": "^6.9.0",
     "@types/express": "^5.0.2",
     "chess.js": "^1.2.0",
-    "ws": "^8.18.2"
+    "ws": "^8.18.2",
+    "@repo/utils": "*"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1"

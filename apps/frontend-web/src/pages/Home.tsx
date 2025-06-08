@@ -31,15 +31,15 @@ export default function Home() {
             <hr className="my-[10px]" />
             <button
               onClick={() => setCard("LOG_IN")}
-              className="w-full h-[50px] text-lg bg-[#d6dce0] rounded-full"
+              className="w-full h-[50px] text-lg bg-[#d6dce0] rounded-full cursor-pointer"
             >
               LogIn with Username
             </button>
             <div className="flex gap-2 mt-[10px] justify-center w-full text-sm">
-              New on Chezz.com?{" "}
+              New on Chezz.com?
               <button
                 onClick={() => setCard("SIGN_UP")}
-                className="underline underline-offset-2"
+                className="underline underline-offset-2 cursor-pointer"
               >
                 Sign Up
               </button>

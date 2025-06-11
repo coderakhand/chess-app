@@ -72,9 +72,7 @@ export default function Play() {
         </div>
         <div className="flex flex-col h-screen w-[400px] gap-3">
           <div className="w-full px-[20px] h-[200px]">
-            {" "}
             <div className="h-[200px] w-[360px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40">
-              {" "}
               Opponent Video
             </div>
           </div>

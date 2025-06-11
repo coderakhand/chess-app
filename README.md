@@ -1,4 +1,4 @@
-# <p align="center"> Chezz Web App </p>
+# <p align="center"> Chess Web App </p>
 
 <p > It is a Web application where users can play chess online with friends. It provides user to connect via video call while playing the game. </p>
 
@@ -10,3 +10,10 @@
 - Websocket
 - Webrtc
 - Prisma + SQL
+
+
+## Architecture
+<img src="./images/rough_architecture.svg" width="100%"/>
+
+
+

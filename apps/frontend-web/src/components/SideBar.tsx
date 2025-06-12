@@ -3,21 +3,23 @@ import { MdPersonSearch, MdOutlineMail } from "react-icons/md";
 import { AiTwotoneSetting } from "react-icons/ai";
 import { VscSignOut } from "react-icons/vsc";
 import { IoNewspaperOutline } from "react-icons/io5";
-
+import { Link } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { useState } from "react";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md";
 
-export default function SideBar() {
+export default function SideBar({ position }: { position: string }) {
   const [component, setComponent] = useState<string | null>(null);
 
   const commonStyle =
     "text-3xl transition delay-80 duration-600 cursor-pointer";
 
   return (
-    <div className="fixed left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md">
+    <div
+      className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md`}
+    >
       <div className="grid grid-rows-2 h-screen">
         <HoverCard openDelay={150} closeDelay={150}>
           <HoverCardContent
@@ -66,7 +68,9 @@ export default function SideBar() {
         </HoverCard>
 
         <div className="py-[20px] px-[10px] w-full gap-3 flex flex-col justify-end">
-          <AiTwotoneSetting className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer" />
+          <Link to={"/settings"}>
+            <AiTwotoneSetting className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer" />
+          </Link>
           <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer" />
         </div>
       </div>

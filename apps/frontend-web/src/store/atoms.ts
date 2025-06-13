@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { boardColorsList } from "../config";
 
 interface bgImageStore {
   bgImage: string;
@@ -20,8 +21,8 @@ interface BoardStore {
 }
 
 export const useBoardStore = create<BoardStore>((set) => ({
-  darkSquare: "",
-  lightSquare: "",
+  darkSquare: boardColorsList[0].darkSquare,
+  lightSquare: boardColorsList[0].lightSquare,
   pieces: "normal",
   setDarkSquare: (newDarkSquare: string) => set({ darkSquare: newDarkSquare }),
   setLightSquare: (newLightSquare: string) =>

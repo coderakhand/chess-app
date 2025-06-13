@@ -17,7 +17,7 @@ export const boardColorsList = [
     lightSquare: "bg-[#ced4da]",
   },
   {
-    darkSquare: "bg-[#343a40]",
-    lightSquare: "bg-[#6c757d]",
+    darkSquare: "bg-gradient-to-r from-slate-600 to-slate-800",
+    lightSquare: "bg-gradient-to-l from-slate-200 to-slate-500",
   },
 ];

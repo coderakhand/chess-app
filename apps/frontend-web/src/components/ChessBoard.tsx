@@ -8,6 +8,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
+import { useBoardStore } from "../store/atoms";
 
 interface ChessBoardProps {
   socket: WebSocket | null;
@@ -39,6 +40,9 @@ export default function ChessBoard({
   color,
   winner,
 }: ChessBoardProps) {
+  const lightSquare = useBoardStore((state) => state.lightSquare);
+  const darkSquare = useBoardStore((state) => state.darkSquare);
+
   const [source, setSource] = useState<string | null>(null);
 
   const handleMovement = (
@@ -124,7 +128,7 @@ export default function ChessBoard({
                     key={j}
                     id={cellCode}
                     onClick={() => handleMovement(i, j, square)}
-                    color={(i + j) % 2 !== 0 ? "bg-[#8CA2AD]" : "bg-[#DEE3E6]"}
+                    color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
                   >
                     {square !== null ? (
                       <ChessPiece square={square} color={color} id={cellCode} />

@@ -5,7 +5,7 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import SideBar from "../components/SideBar";
-import { useBgImageStore } from "../store/atoms";
+import { useBgImageStore, useBoardStore } from "../store/atoms";
 import { useState } from "react";
 import { boardColorsList } from "../config";
 
@@ -17,6 +17,10 @@ export default function Settings() {
     darkSquare: boardColorsList[0].darkSquare,
     lightSquare: boardColorsList[0].lightSquare,
   });
+  const setDarkSquareBoardColor = useBoardStore((state) => state.setDarkSquare);
+  const setLightSquareBoardColor = useBoardStore(
+    (state) => state.setLightSquare
+  );
 
   return (
     <div className={`min-w-screen flex ${bgImage} bg-fixed bg-cover bg-center`}>
@@ -61,50 +65,66 @@ export default function Settings() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="board" className="flex p-4">
-                <div className="flex flex-col gap-10">
-                  <div>
-                    <label htmlFor="board" className="px-[4px] text-lg">
-                      Board
-                    </label>
-                    <div className="mt-[10px] flex gap-3">
-                      {boardColorsList.map((item, idx) => (
-                        <SampleSelectBoard
-                          id={idx}
-                          darkSquare={item.darkSquare}
-                          lightSquare={item.lightSquare}
-                          sampleBoardColor={sampleBoardColor}
-                          setSampleBoardColor={setSampleBoardColor}
-                          key={idx}
-                        />
-                      ))}
+              <TabsContent value="board" className="p-4">
+                <div className="flex">
+                  <div className="flex flex-col gap-10">
+                    <div>
+                      <label htmlFor="board" className="px-[4px] text-lg">
+                        Board
+                      </label>
+                      <div className="mt-[10px] flex gap-3">
+                        {boardColorsList.map((item, idx) => (
+                          <SampleSelectBoard
+                            id={idx}
+                            darkSquare={item.darkSquare}
+                            lightSquare={item.lightSquare}
+                            sampleBoardColor={sampleBoardColor}
+                            setSampleBoardColor={setSampleBoardColor}
+                            key={idx}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="pieces" className="text-lg">
+                        Pieces
+                      </label>
+                      <div>{/* piece styles */}</div>
                     </div>
                   </div>
-                  <div>
-                    <label htmlFor="pieces" className="text-lg">
-                      Pieces
-                    </label>
-                    <div>{/* piece styles */}</div>
+                  <div className="flex-grow flex justify-end">
+                    <SmallBoard
+                      darkSquare={sampleBoardColor.darkSquare}
+                      lightSquare={sampleBoardColor.lightSquare}
+                      size="200"
+                    />
                   </div>
                 </div>
-                <div className="flex-grow flex justify-end">
-                  <SmallBoard
-                    darkSquare={sampleBoardColor.darkSquare}
-                    lightSquare={sampleBoardColor.lightSquare}
-                    size="200"
-                  />
+                <div className="pr-[240px] flex justify-end w-full">
+                  <button
+                    onClick={() => {
+                      setDarkSquareBoardColor(sampleBoardColor.darkSquare);
+                      setLightSquareBoardColor(sampleBoardColor.lightSquare);
+                    }}
+                    className="cursor-pointer bg-white/30 backdrop-blur-md shadow-md border border-white/40 text-2xl w-[80px] h-[40px] rounded-xl"
+                  >
+                    Save
+                  </button>
                 </div>
               </TabsContent>
 
               <TabsContent value="gameSettings" className="p-4">
                 nrroieiorneornie
               </TabsContent>
+
               <TabsContent value="profile" className="p-4">
                 nrroieiorneornie
               </TabsContent>
+
               <TabsContent value="deleteAccount" className="p-4">
                 nrroieiorneornie
               </TabsContent>
+
               <TabsContent value="logout" className="p-4">
                 nrroieiorneornie
               </TabsContent>

@@ -21,7 +21,11 @@ export default function SideBar({ position }: { position: string }) {
       className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md`}
     >
       <div className="grid grid-rows-2 h-screen">
-        <HoverCard openDelay={150} closeDelay={150}>
+        <HoverCard
+          openDelay={150}
+          closeDelay={150}
+          onOpenChange={() => setComponent(null)}
+        >
           <HoverCardContent
             className="rounded-none bg-white/30 backdrop-blur-2xl shadow-md border-none w-[300px] h-screen"
             side="right"
@@ -31,7 +35,7 @@ export default function SideBar({ position }: { position: string }) {
           <div className="py-[50px] w-full flex flex-col">
             <HoverCardTrigger>
               <button
-                className={`flex justify-center items-center ${hoverEffect} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "chezz" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
                 onMouseOver={() => setComponent("chezz")}
               >
                 <FaChessBoard className={`${commonStyle} border`} />
@@ -41,7 +45,7 @@ export default function SideBar({ position }: { position: string }) {
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("find_users")}
-                className={`flex justify-center items-center ${hoverEffect} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "find_users" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
               >
                 <MdPersonSearch className={`${commonStyle}`} />
               </button>
@@ -50,7 +54,7 @@ export default function SideBar({ position }: { position: string }) {
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("messages")}
-                className={`flex justify-center items-center ${hoverEffect} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "messages" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
               >
                 <MdOutlineMail className={`${commonStyle}`} />
               </button>
@@ -59,7 +63,7 @@ export default function SideBar({ position }: { position: string }) {
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("news")}
-                className={`flex justify-center items-center ${hoverEffect} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "news" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
               >
                 <IoNewspaperOutline className={`${commonStyle}`} />
               </button>

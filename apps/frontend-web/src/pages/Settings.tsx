@@ -19,9 +19,7 @@ export default function Settings() {
   });
 
   return (
-    <div
-      className={`min-w-screen flex bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
-    >
+    <div className={`min-w-screen flex ${bgImage} bg-fixed bg-cover bg-center`}>
       <SideBar position="static" />
       <div className="w-full flex justify-center pt-[60px]">
         <div className="flex h-[600px] w-[1000px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 p-[20px]">
@@ -46,11 +44,16 @@ export default function Settings() {
                   <label className="px-[10px] text-xl">Images</label>
                   <div className="w-full overflow-x-auto">
                     <div className="flex w-max gap-3 snap-x snap-mandatory">
-                      {["bg-1", "bg-2", "bg-3", "bg-4"].map((bg, i) => (
+                      {[
+                        "bg-[url(/background/bg-1.jpg)]",
+                        "bg-[url(/background/bg-2.jpg)]",
+                        "bg-[url(/background/bg-3.jpg)]",
+                        "bg-[url(/background/bg-4.jpg)]",
+                      ].map((bg, i) => (
                         <div
                           key={i}
-                          className={`snap-start w-[300px] h-[160px] bg-[url(/background/${bg}.jpg)] bg-cover rounded-xl shrink-0 cursor-pointer`}
-                          onClick={() => setBgImage(`/background/${bg}.jpg`)}
+                          className={`snap-start w-[300px] h-[160px] ${bg} bg-cover rounded-xl shrink-0 cursor-pointer`}
+                          onClick={() => setBgImage(`${bg}`)}
                         />
                       ))}
                     </div>

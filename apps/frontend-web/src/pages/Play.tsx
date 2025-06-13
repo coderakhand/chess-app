@@ -55,7 +55,7 @@ export default function Play() {
 
   return (
     <div
-      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
+      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center`}
     >
       <SideBar position={"fixed"} />
       <div className="flex justify-center min-w-screen py-[30px] gap-3">

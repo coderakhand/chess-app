@@ -15,7 +15,7 @@ export default function Home() {
 
   return (
     <div
-      className={`min-h-screen min-w-screen flex flex-col justify-center items-center bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
+      className={`min-h-screen min-w-screen flex flex-col justify-center items-center ${bgImage} bg-fixed bg-cover bg-center`}
     >
       <div className="flex gap-2">
         "Life is like chess—sometimes, the most powerful move is not in taking,

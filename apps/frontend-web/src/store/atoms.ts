@@ -6,7 +6,7 @@ interface bgImageStore {
 }
 
 export const useBgImageStore = create<bgImageStore>((set) => ({
-  bgImage: "/background/bg-1.jpg",
+  bgImage: "bg-[url(/background/bg-1.jpg)]",
   setBgImage: (newImage: string) => set({ bgImage: newImage }),
 }));
 

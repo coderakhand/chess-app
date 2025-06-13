@@ -1,6 +1,11 @@
-import { atom } from "recoil";
+import { create } from "zustand";
 
-export const winnerAtom = atom<string | null>({
-  key: "winnerAtom",
-  default: null,
-});
+interface bgImageStore {
+  bgImage: string;
+  setBgImage: (newImage: string) => void;
+}
+
+export const useBgImageStore = create<bgImageStore>((set) => ({
+  bgImage: "/background/bg-1.jpg",
+  setBgImage: (newImage: string) => set({ bgImage: newImage }),
+}));

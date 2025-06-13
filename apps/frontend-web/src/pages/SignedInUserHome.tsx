@@ -1,9 +1,13 @@
 import SideBar from "../components/SideBar";
+import { useBgImageStore } from "../store/atoms";
 
 export default function SignedInUserHome() {
+  const bgImage = useBgImageStore((state) => state.bgImage);
   return (
-    <div className="flex min-h-screen">
-      <SideBar />
+    <div
+      className={`flex min-h-screen bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
+    >
+      <SideBar position="fixed" />
       <div className="py-[50px] flex flex-col gap-3 items-center w-full">
         <div className="bg-black bg-cover bg-center bg-no-repeat w-[950px] h-[150px] rounded-2xl" />
         <div className="flex h-[100px] w-[950px]">

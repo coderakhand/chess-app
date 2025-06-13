@@ -4,10 +4,12 @@ import { INIT_GAME, GAME_OVER, MOVE } from "../config";
 import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
+import { useBgImageStore } from "../store/atoms";
 // import { useRecoilValue, useSetRecoilState } from 'recoil';
 // import {winnerAtom} from '../store/atoms';
 
 export default function Play() {
+  const bgImage = useBgImageStore((state) => state.bgImage);
   const socket = useSocket();
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [tab, setTab] = useState("new");
@@ -54,7 +56,9 @@ export default function Play() {
   };
 
   return (
-    <div className="flex min-w-screen min-h-screen lg:h-screen  gap-[100px]">
+    <div
+      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
+    >
       <SideBar position={"fixed"} />
       <div className="flex justify-center min-w-screen py-[30px] gap-3">
         <div className="flex flex-col gap-2">

@@ -3,16 +3,19 @@ import { Dialog, DialogContent } from "../components/ui/dialog";
 import { useState } from "react";
 import SignUp from "../components/SignUp";
 import LogIn from "../components/LogIn";
+import { useBgImageStore } from "../store/atoms";
 
 type CardValues = "LOG_IN" | "SIGN_UP" | null;
 
 export default function Home() {
+  const bgImage = useBgImageStore((state) => state.bgImage);
   const [card, setCard] = useState<CardValues>(null);
-
   const closeDialog = () => setCard(null);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
+    <div
+      className={`min-h-screen min-w-screen flex flex-col justify-center items-center bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
+    >
       <div className="flex gap-2">
         "Life is like chess—sometimes, the most powerful move is not in taking,
         but in waiting."

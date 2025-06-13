@@ -101,20 +101,20 @@ function SideBarComponentContent({ component }: { component: string | null }) {
 function ChezzBarContent() {
   return (
     <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
-      <a
-        href={"/home"}
+      <Link
+        to={"/home"}
         className={`px-[15px] flex items-center gap-1 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <img src="/home.png" className="w-[40px]" />
         Home
-      </a>
-      <a
-        href={"/profile"}
+      </Link>
+      <Link
+        to={"/profile"}
         className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <img src="/user.png" className="h-[40px] overflow-hidden" />
         Profile
-      </a>
+      </Link>
       <button
         className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect} cursor-pointer`}
       >

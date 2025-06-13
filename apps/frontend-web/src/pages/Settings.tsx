@@ -6,24 +6,31 @@ import {
 } from "../components/ui/tabs";
 import SideBar from "../components/SideBar";
 import { useBgImageStore } from "../store/atoms";
+import { useState } from "react";
+import { boardColorsList } from "../config";
 
 export default function Settings() {
   const bgImage = useBgImageStore((state) => state.bgImage);
   const setBgImage = useBgImageStore((state) => state.setBgImage);
+  const [sampleBoardColor, setSampleBoardColor] = useState({
+    id: 0,
+    darkSquare: boardColorsList[0].darkSquare,
+    lightSquare: boardColorsList[0].lightSquare,
+  });
 
   return (
     <div
       className={`min-w-screen flex bg-[url(${bgImage})] bg-fixed bg-cover bg-center`}
     >
-      <SideBar position={"static"}></SideBar>
+      <SideBar position="static" />
       <div className="w-full flex justify-center pt-[60px]">
         <div className="flex h-[600px] w-[1000px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 p-[20px]">
           <Tabs defaultValue="background" className="h-full w-full">
             <div className="h-full w-full flex">
               <TabsList className="h-[250px] w-[160px] bg-transparent flex flex-col justify-start items-start">
                 <SettingsTab name="Background" value="background" />
-                <SettingsTab name="Board" value="board" />
-                <SettingsTab name="Pieces" value="pieces" />
+                <SettingsTab name="Board & Pieces" value="board" />
+                <SettingsTab name="Game Settings" value="gameSettings" />
                 <SettingsTab name="Profile" value="profile" />
                 <SettingsTab name="Delete Account" value="deleteAccount" />
                 <SettingsTab name="Log Out" value="logout" />
@@ -39,48 +46,63 @@ export default function Settings() {
                   <label className="px-[10px] text-xl">Images</label>
                   <div className="w-full overflow-x-auto">
                     <div className="flex w-max gap-3 snap-x snap-mandatory">
-                      <div
-                        className="snap-start w-[300px] h-[160px] bg-[url(/background/bg-1.jpg)] bg-cover rounded-xl shrink-0"
-                        onClick={() => setBgImage("/background/bg-1.jpg")}
-                      />
-                      <div
-                        className="snap-start w-[300px] h-[160px] bg-[url(/background/bg-2.jpg)] bg-cover rounded-xl shrink-0"
-                        onClick={() => setBgImage("/background/bg-2.jpg")}
-                      />
-                      <div
-                        className="snap-start w-[300px] h-[160px] bg-[url(/background/bg-3.jpg)] bg-cover rounded-xl shrink-0"
-                        onClick={() => setBgImage("/background/bg-3.jpg")}
-                      />
-                      <div
-                        className="snap-start w-[300px] h-[160px] bg-[url(/background/bg-4.jpg)] bg-cover rounded-xl shrink-0"
-                        onClick={() => setBgImage("/background/bg-4.jpg")}
-                      />
+                      {["bg-1", "bg-2", "bg-3", "bg-4"].map((bg, i) => (
+                        <div
+                          key={i}
+                          className={`snap-start w-[300px] h-[160px] bg-[url(/background/${bg}.jpg)] bg-cover rounded-xl shrink-0 cursor-pointer`}
+                          onClick={() => setBgImage(`/background/${bg}.jpg`)}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="board" className="bg-green-200 p-4">
-                joinre
+
+              <TabsContent value="board" className="flex p-4">
+                <div className="flex flex-col gap-10">
+                  <div>
+                    <label htmlFor="board" className="px-[4px] text-lg">
+                      Board
+                    </label>
+                    <div className="mt-[10px] flex gap-3">
+                      {boardColorsList.map((item, idx) => (
+                        <SampleSelectBoard
+                          id={idx}
+                          darkSquare={item.darkSquare}
+                          lightSquare={item.lightSquare}
+                          sampleBoardColor={sampleBoardColor}
+                          setSampleBoardColor={setSampleBoardColor}
+                          key={idx}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="pieces" className="text-lg">
+                      Pieces
+                    </label>
+                    <div>{/* piece styles */}</div>
+                  </div>
+                </div>
+                <div className="flex-grow flex justify-end">
+                  <SmallBoard
+                    darkSquare={sampleBoardColor.darkSquare}
+                    lightSquare={sampleBoardColor.lightSquare}
+                    size="200"
+                  />
+                </div>
               </TabsContent>
-              <TabsContent value="pieces" className="bg-red-200 p-4 ">
+
+              <TabsContent value="gameSettings" className="p-4">
                 nrroieiorneornie
               </TabsContent>
-              <TabsContent
-                value="profile"
-                className="bg-purple-200 p-4 rounded-md"
-              >
+              <TabsContent value="profile" className="p-4">
                 nrroieiorneornie
               </TabsContent>
-              <TabsContent
-                value="deleteAccount"
-                className="bg-pink-200 p-4 rounded-md"
-              >
+              <TabsContent value="deleteAccount" className="p-4">
                 nrroieiorneornie
               </TabsContent>
-              <TabsContent
-                value="logout"
-                className="bg-orange-200 p-4 rounded-md"
-              >
+              <TabsContent value="logout" className="p-4">
                 nrroieiorneornie
               </TabsContent>
             </div>
@@ -99,6 +121,82 @@ function SettingsTab({ value, name }: { value: string; name: string }) {
     >
       {name}
     </TabsTrigger>
+  );
+}
+
+interface SampleSelectBoardProps {
+  id: number;
+  darkSquare: string;
+  lightSquare: string;
+  sampleBoardColor: {
+    id: number;
+    darkSquare: string;
+    lightSquare: string;
+  };
+  setSampleBoardColor: React.Dispatch<
+    React.SetStateAction<{
+      id: number;
+      darkSquare: string;
+      lightSquare: string;
+    }>
+  >;
+}
+
+function SampleSelectBoard({
+  id,
+  darkSquare,
+  lightSquare,
+  sampleBoardColor,
+  setSampleBoardColor,
+}: SampleSelectBoardProps) {
+  const isSelected = id === sampleBoardColor.id;
+
+  return (
+    <div
+      className={`cursor-pointer}`}
+      onClick={() =>
+        setSampleBoardColor({
+          id,
+          darkSquare,
+          lightSquare,
+        })
+      }
+    >
+      <SmallBoard
+        isSelected={isSelected}
+        darkSquare={darkSquare}
+        lightSquare={lightSquare}
+      />
+    </div>
+  );
+}
+
+interface SmallBoardProps {
+  darkSquare: string;
+  lightSquare: string;
+  size?: string;
+  isSelected?: boolean;
+}
+
+function SmallBoard({
+  darkSquare,
+  lightSquare,
+  size,
+  isSelected,
+}: SmallBoardProps) {
+  return (
+    <div
+      style={{
+        height: (size ?? "60") + "px",
+        width: (size ?? "60") + "px",
+      }}
+      className={`grid grid-cols-2 grid-rows-2 ${isSelected ? "border-3 border-black" : ""} rounded-lg overflow-hidden`}
+    >
+      <div className={darkSquare}></div>
+      <div className={lightSquare}></div>
+      <div className={lightSquare}></div>
+      <div className={darkSquare}></div>
+    </div>
   );
 }
 

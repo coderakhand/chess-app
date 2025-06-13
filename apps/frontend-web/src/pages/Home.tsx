@@ -4,6 +4,7 @@ import { useState } from "react";
 import SignUp from "../components/SignUp";
 import LogIn from "../components/LogIn";
 import { useBgImageStore } from "../store/atoms";
+import { Link } from "react-router-dom";
 
 type CardValues = "LOG_IN" | "SIGN_UP" | null;
 
@@ -62,12 +63,12 @@ export default function Home() {
             </DialogContent>
           </Dialog>
 
-          <a
-            href="/play"
+          <Link
+            to="/play"
             className="w-full h-[80px] bg-[#d6dce0] flex justify-center items-center text-3xl rounded-xl"
           >
             Play as Guest
-          </a>
+          </Link>
         </div>
       </div>
     </div>

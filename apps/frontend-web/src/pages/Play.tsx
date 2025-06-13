@@ -5,8 +5,6 @@ import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
 import { useBgImageStore } from "../store/atoms";
-// import { useRecoilValue, useSetRecoilState } from 'recoil';
-// import {winnerAtom} from '../store/atoms';
 
 export default function Play() {
   const bgImage = useBgImageStore((state) => state.bgImage);

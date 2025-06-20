@@ -29,3 +29,6 @@ export const useBoardStore = create<BoardStore>((set) => ({
     set({ lightSquare: newLightSquare }),
   setPieces: (newPieces: string) => set({ pieces: newPieces }),
 }));
+
+
+

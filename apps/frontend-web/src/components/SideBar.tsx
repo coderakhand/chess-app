@@ -113,6 +113,13 @@ function ChezzBarContent() {
         Home
       </Link>
       <Link
+        to={"/play"}
+        className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+      >
+        <img src="/user.png" className="h-[40px] overflow-hidden" />
+        New Game
+      </Link>
+      <Link
         to={"/profile"}
         className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >

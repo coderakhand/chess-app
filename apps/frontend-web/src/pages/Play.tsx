@@ -14,38 +14,41 @@ export default function Play() {
   const [tab, setTab] = useState("new");
   const [chess, setChess] = useState(new Chess());
   const [board, setBoard] = useState(chess.board());
-  const [color, setColor] = useState<string>("white");
+  const [color, setColor] = useState<string>("w");
   const [winner, setWinner] = useState(null);
 
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!socket) return;
-    socket.onmessage = (e) => {
-      const message = JSON.parse(e.data);
-      switch (message.type) {
-        case INIT_GAME: {
-          setChess(new Chess());
-          setBoard(chess.board());
-          setColor(message.payload.color);
-          setIsGameStarted(true);
-          break;
+    const handleGame = () => {
+      if (!socket) return;
+      socket.onmessage = (e) => {
+        const message = JSON.parse(e.data);
+        switch (message.type) {
+          case INIT_GAME: {
+            setChess(new Chess());
+            setBoard(chess.board());
+            setColor(message.payload.color);
+            setIsGameStarted(true);
+            break;
+          }
+          case MOVE: {
+            const move = message.payload;
+            chess.move(move);
+            setBoard(chess.board());
+            break;
+          }
+          case GAME_OVER: {
+            const move = message.payload.move;
+            chess.move(move);
+            setBoard(chess.board());
+            setWinner(message.payload.winner);
+            break;
+          }
         }
-        case MOVE: {
-          const move = message.payload;
-          chess.move(move);
-          setBoard(chess.board());
-          break;
-        }
-        case GAME_OVER: {
-          const move = message.payload.move;
-          chess.move(move);
-          setBoard(chess.board());
-          setWinner(message.payload.winner);
-          break;
-        }
-      }
+      };
     };
+    handleGame();
   }, [socket, chess]);
 
   if (socket === null) {
@@ -61,12 +64,12 @@ export default function Play() {
       className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center`}
     >
       <SideBar position={"fixed"} />
-      <div className="flex justify-center min-w-screen py-[30px] gap-3">
+      <div className="flex justify-center min-w-screen py-[30px] gap-6">
         <div className="flex flex-col gap-2">
           <PlayerCard
             player={"Opponent"}
             rating={800}
-            color={color === "white" ? "black" : "white"}
+            color={color === "w" ? "b" : "w"}
           />
           <ChessBoard
             socket={socket}
@@ -92,7 +95,7 @@ export default function Play() {
           <div className="w-full px-[20px] h-[200px]">
             <LocalVideo />
           </div>
-          <div className="flex justify-center w-full h-[250px] ">
+          <div className="flex justify-center w-full h-[270px] ">
             <div
               className="flex flex-col items-center p-[5px] gap-3 w-[360px]
             bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40"
@@ -193,12 +196,12 @@ function PlayerCard({
   return (
     <div className="flex items-center w-full h-[40px]">
       <div className=" flex-grow px-[5px] h-full flex items-center gap-2">
-        <img src="/chezz.png" alt="" className="w-[30px]" />
+        <img src="/chezz.png" alt="" className="w-[30px] rounded-sm" />
         <div>{player} </div>
         <div>{rating}</div>
       </div>
       <div
-        className={`flex justify-end items-center px-[5px] h-[40px] w-[120px] ${color === "black" ? "text-white bg-black" : "text-black bg-white"} rounded-lg text-3xl`}
+        className={`flex justify-end items-center px-[5px] h-[40px] w-[120px] ${color === "b" ? "text-white bg-black" : "text-black bg-white"} rounded-lg text-3xl`}
       >
         5:00
       </div>

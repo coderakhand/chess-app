@@ -114,7 +114,7 @@ export default function ChessBoard({
       <div
         className={`${
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
-        } relative w-[580px] h-[580px] grid grid-rows-8`}
+        } relative w-[600px] h-[600px] grid grid-rows-8`}
       >
         {winner !== null ? <GameResultCard winner={winner} /> : <></>}
         {board.map((row, i) => {

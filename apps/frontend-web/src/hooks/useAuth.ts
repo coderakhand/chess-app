@@ -6,16 +6,16 @@ export default function useAuth() {
     username: "",
     rating: 0,
   });
-  const [gameInfoLoading, setGameInfoLoading] = useState(true);
+  const [userInfoLoading, setUserInfoLoading] = useState(true);
 
   const fetchMe = async () => {
     try {
       const { data } = await api.get("/me");
       setUser(data.user);
       console.log(data.user);
-      setGameInfoLoading(false);
+      setUserInfoLoading(false);
     } catch {
-      setGameInfoLoading(false);
+      setUserInfoLoading(false);
       alert("unable to load user details");
     }
   };
@@ -24,5 +24,5 @@ export default function useAuth() {
     fetchMe();
   }, []);
 
-  return { user, gameInfoLoading, refresh: fetchMe };
+  return { user, userInfoLoading, refresh: fetchMe };
 }

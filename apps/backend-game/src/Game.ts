@@ -1,22 +1,35 @@
 import WebSocket from "ws";
 import { Chess } from "chess.js";
 import { GAME_OVER, INIT_GAME, MOVE } from "@repo/utils";
+import { ViewersManager } from "./ViewersManager";
+import { randomUUID } from "crypto";
+
 export class Game {
+  public id: string;
   public player1: WebSocket;
   public player2: WebSocket;
   public board: Chess;
   public startDate: Date;
+  public viewersManager: ViewersManager;
 
-  constructor(player1: WebSocket, player2: WebSocket) {
+  constructor(
+    player1: WebSocket,
+    player2: WebSocket,
+    viewersManager: ViewersManager
+  ) {
+    this.id = randomUUID();
     this.player1 = player1;
     this.player2 = player2;
     this.board = new Chess();
     this.startDate = new Date();
+    this.viewersManager = viewersManager;
+
     this.player1.send(
       JSON.stringify({
         type: INIT_GAME,
         payload: {
           color: "w",
+          gameId: this.id,
         },
       })
     );
@@ -26,6 +39,7 @@ export class Game {
         type: INIT_GAME,
         payload: {
           color: "b",
+          gameId: this.id,
         },
       })
     );
@@ -53,42 +67,27 @@ export class Game {
 
     if (this.board.isGameOver()) {
       const winner = this.board.turn() === "w" ? "b" : "w";
-      opponent.send(
-        JSON.stringify({
-          type: GAME_OVER,
-          payload: {
-            winner,
-            move,
-          },
-        })
-      );
 
-      if (opponent !== this.player1) {
-        this.player1.send(
-          JSON.stringify({
-            type: GAME_OVER,
-            payload: { winner },
-          })
-        );
-      }
+      const gameOverMessage = JSON.stringify({
+        type: GAME_OVER,
+        payload: { winner, move },
+      });
 
-      if (opponent !== this.player2) {
-        this.player2.send(
-          JSON.stringify({
-            type: GAME_OVER,
-            payload: { winner },
-          })
-        );
-      }
+      player.send(gameOverMessage);
+      opponent.send(gameOverMessage);
+
+      this.viewersManager.broadCast(this.id, gameOverMessage);
 
       return;
     }
 
-    opponent.send(
-      JSON.stringify({
-        type: MOVE,
-        payload: move,
-      })
-    );
+    const moveMessage = JSON.stringify({
+      type: MOVE,
+      payload: move,
+    });
+
+    opponent.send(moveMessage);
+
+    this.viewersManager.broadCast(this.id, moveMessage);
   }
 }

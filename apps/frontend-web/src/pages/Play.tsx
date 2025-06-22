@@ -4,20 +4,43 @@ import { INIT_GAME, GAME_OVER, MOVE } from "../config";
 import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
-import { useBgImageStore } from "../store/atoms";
+import { useBgImageStore, useGameInfoStore } from "../store/atoms";
 import useAuth from "../hooks/useAuth";
+import PlayerCard from "../components/PlayerCard";
 
 export default function Play() {
+  const { user } = useAuth();
+
   const bgImage = useBgImageStore((state) => state.bgImage);
+
   const socket = useSocket();
+
   const [isGameStarted, setIsGameStarted] = useState(false);
+
   const [tab, setTab] = useState("new");
-  const [chess, setChess] = useState(new Chess());
-  const [board, setBoard] = useState(chess.board());
-  const [color, setColor] = useState<string>("w");
+
+  const setChess = useGameInfoStore((state) => state.setChess);
+  const chess = useGameInfoStore((state) => state.chess);
+  const setBoard = useGameInfoStore((state) => state.setBoard);
+
+  const color = useGameInfoStore((state) => state.color);
+  const setColor = useGameInfoStore((state) => state.setColor);
   const [winner, setWinner] = useState(null);
 
-  const { user } = useAuth();
+  const setMove = useGameInfoStore((state) => state.setMoves);
+  const setOpponentInfo = useGameInfoStore((state) => state.setOpponentInfo);
+  const opponentInfo = useGameInfoStore((state) => state.opponentInfo);
+
+  const setGameCreationTime = useGameInfoStore(
+    (state) => state.setGameCreationTime
+  );
+  const timeControl = useGameInfoStore((state) => state.timeControl);
+  const timeLeft = useGameInfoStore((state) => state.timeLeft);
+  const setTimeLeft = useGameInfoStore((state) => state.setTimeLeft);
+  const opponentTimeLeft = useGameInfoStore((state) => state.opponentTimeLeft);
+  const setOpponentTimeLeft = useGameInfoStore(
+    (state) => state.setOpponentTimeLeft
+  );
 
   useEffect(() => {
     const handleGame = () => {
@@ -26,16 +49,22 @@ export default function Play() {
         const message = JSON.parse(e.data);
         switch (message.type) {
           case INIT_GAME: {
-            setChess(new Chess());
-            setBoard(chess.board());
+            const newChess = new Chess();
+            setChess(newChess);
+            setBoard(newChess.board());
             setColor(message.payload.color);
             setIsGameStarted(true);
+            setOpponentInfo(message.opponentInfo);
+            setTimeLeft(timeControl.baseTime);
+            setOpponentTimeLeft(timeControl.baseTime);
+            setGameCreationTime(Date.now());
             break;
           }
           case MOVE: {
             const move = message.payload;
             chess.move(move);
             setBoard(chess.board());
+            setMove(move);
             break;
           }
           case GAME_OVER: {
@@ -48,15 +77,34 @@ export default function Play() {
         }
       };
     };
-    handleGame();
-  }, [socket, chess]);
 
-  if (socket === null) {
-    return <div className="min-h-screen text-white">Loading....</div>;
-  }
+    handleGame();
+  }, [
+    socket,
+    chess,
+    setMove,
+    setOpponentInfo,
+    setBoard,
+    setChess,
+    setGameCreationTime,
+    setOpponentTimeLeft,
+    setTimeLeft,
+    timeControl.baseTime,
+    setColor,
+  ]);
 
   const createGame = () => {
-    socket.send(JSON.stringify({ type: INIT_GAME }));
+    if (socket === null) return;
+    socket.send(
+      JSON.stringify({
+        type: INIT_GAME,
+        userInfo: {
+          userId: user.id,
+          username: user.username,
+          rating: user.rating,
+        },
+      })
+    );
   };
 
   return (
@@ -67,22 +115,16 @@ export default function Play() {
       <div className="flex justify-center min-w-screen py-[30px] gap-6">
         <div className="flex flex-col gap-2">
           <PlayerCard
-            player={"Opponent"}
-            rating={800}
+            player={opponentInfo.username}
+            rating={opponentInfo.rating}
             color={color === "w" ? "b" : "w"}
+            time={opponentTimeLeft}
           />
-          <ChessBoard
-            socket={socket}
-            chess={chess}
-            winner={winner}
-            board={board}
-            setBoard={setBoard}
-            setChess={setChess}
-            color={color}
-          />
+          <ChessBoard socket={socket} winner={winner} />
           <PlayerCard
             player={user.username}
             rating={user.rating}
+            time={timeLeft}
             color={color}
           />
         </div>
@@ -126,7 +168,7 @@ export default function Play() {
                   Video / Chat
                 </button>
               </div>
-              <CustomComponent
+              <TabContent
                 tab={tab}
                 isGameStarted={isGameStarted}
                 createGame={createGame}
@@ -139,7 +181,7 @@ export default function Play() {
   );
 }
 
-function CustomComponent({
+function TabContent({
   tab,
   isGameStarted,
   createGame,
@@ -150,7 +192,35 @@ function CustomComponent({
 }) {
   const [isDisabled, setIsDisabled] = useState(false);
 
+  const moves = useGameInfoStore((state) => state.moves);
+
   if (tab === "new") {
+    if (isGameStarted) {
+      return (
+        <div className="w-full bg-white">
+          <div className="w-full flex">
+            <div className="w-full flex justify-center">White</div>
+            <div className="w-full flex justify-center">Black</div>
+          </div>
+          <div className="w-full">
+            {Array.from({ length: Math.ceil(moves.length / 2) }).map(
+              (_, idx) => {
+                const whiteMove = moves[idx * 2];
+                const blackMove = moves[idx * 2 + 1];
+
+                return (
+                  <div key={idx} className="flex bg-green-300 p-2">
+                    <div className="w-8">{idx + 1}</div>
+                    <Move whiteMove={whiteMove} blackMove={blackMove} />
+                  </div>
+                );
+              }
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={`${isGameStarted ? "hidden" : "block"}`}>
         <div className="flex justify-center h-[60px] px-[10px] w-full rounded-md">
@@ -184,31 +254,6 @@ function CustomComponent({
   return <div></div>;
 }
 
-function PlayerCard({
-  player,
-  rating,
-  color,
-}: {
-  player: string;
-  rating: number;
-  color: string;
-}) {
-  return (
-    <div className="flex items-center w-full h-[40px]">
-      <div className=" flex-grow px-[5px] h-full flex items-center gap-2">
-        <img src="/chezz.png" alt="" className="w-[30px] rounded-sm" />
-        <div>{player} </div>
-        <div>{rating}</div>
-      </div>
-      <div
-        className={`flex justify-end items-center px-[5px] h-[40px] w-[120px] ${color === "b" ? "text-white bg-black" : "text-black bg-white"} rounded-lg text-3xl`}
-      >
-        5:00
-      </div>
-    </div>
-  );
-}
-
 function LocalVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -228,10 +273,29 @@ function LocalVideo() {
   return (
     <video
       ref={videoRef}
-      autoPlay
+      autoPlay={true}
       muted
       playsInline
       className="h-[200px] w-[360px] rounded-xl object-cover"
     />
+  );
+}
+
+function Move({
+  whiteMove,
+  blackMove,
+}: {
+  whiteMove?: { from: string; to: string };
+  blackMove?: { from: string; to: string };
+}) {
+  return (
+    <div className="flex gap-4">
+      <div className="w-32 text-left">
+        {whiteMove ? `${whiteMove.from} → ${whiteMove.to}` : ""}
+      </div>
+      <div className="w-32 text-left">
+        {blackMove ? `${blackMove.from} → ${blackMove.to}` : ""}
+      </div>
+    </div>
   );
 }

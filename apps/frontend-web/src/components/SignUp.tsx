@@ -21,7 +21,7 @@ export default function SignUp() {
       );
 
       console.log(res.data);
-      navigate("/play");
+      navigate("/home");
     } catch {
       alert("Signup failed");
     }

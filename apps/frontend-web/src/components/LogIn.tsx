@@ -3,10 +3,12 @@ import { DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useUserInfoStore } from "../store/atoms";
 
 export default function LogIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -19,8 +21,16 @@ export default function LogIn() {
         { headers: { "csrf-token": csrf.csrfToken } }
       );
 
-      console.log(res.data);
-      navigate("/play");
+      const data = res.data;
+
+      setUserInfo({
+        isGuest: false,
+        username: data.username,
+        rating: data.rating,
+      });
+
+      console.log(data);
+      navigate("/home");
     } catch {
       alert("Login failed.");
     }

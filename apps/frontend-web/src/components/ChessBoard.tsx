@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Square, PieceSymbol, Color, Chess } from "chess.js";
+import type { Square, PieceSymbol, Color } from "chess.js";
 import { RxCross2 } from "react-icons/rx";
 import {
   DndContext,
@@ -8,42 +8,24 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { useBoardStore } from "../store/atoms";
+import { useBoardStore, useGameInfoStore } from "../store/atoms";
 
 interface ChessBoardProps {
   socket: WebSocket | null;
-  chess: Chess;
-  board: ({
-    square: Square;
-    type: PieceSymbol;
-    color: Color;
-  } | null)[][];
-  setBoard: React.Dispatch<
-    React.SetStateAction<
-      ({
-        square: Square;
-        type: PieceSymbol;
-        color: Color;
-      } | null)[][]
-    >
-  >;
-  setChess?: React.Dispatch<React.SetStateAction<Chess>>;
-  color: string | null;
   winner: string | null;
 }
 
-export default function ChessBoard({
-  socket,
-  chess,
-  board,
-  setBoard,
-  color,
-  winner,
-}: ChessBoardProps) {
+export default function ChessBoard({ socket, winner }: ChessBoardProps) {
+  const color = useGameInfoStore((state) => state.color);
+  const chess = useGameInfoStore((state) => state.chess);
+  const board = useGameInfoStore((state) => state.board);
+  const setBoard = useGameInfoStore((state) => state.setBoard);
   const lightSquare = useBoardStore((state) => state.lightSquare);
   const darkSquare = useBoardStore((state) => state.darkSquare);
 
   const [source, setSource] = useState<string | null>(null);
+
+  const setMoves = useGameInfoStore((state) => state.setMoves);
 
   const handleMovement = (
     i: number,
@@ -78,6 +60,7 @@ export default function ChessBoard({
       }
 
       setBoard(chess.board());
+      setMoves(move);
       socket.send(
         JSON.stringify({
           type: "move",
@@ -97,6 +80,7 @@ export default function ChessBoard({
     if (chess.move(move)) {
       setBoard(chess.board());
       if (socket === null) return;
+      setMoves(move);
       socket.send(
         JSON.stringify({
           type: "move",

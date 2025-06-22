@@ -2,10 +2,11 @@ import WebSocket from "ws";
 import { Game } from "./Game";
 import { INIT_GAME, MOVE, INIT_VIEW_GAME } from "@repo/utils";
 import { Viewer, ViewersManager } from "./ViewersManager";
+import { User } from "./UserManager";
 
 export class GameManager {
   public games: Game[];
-  public pendingPlayer: WebSocket | null;
+  public pendingPlayer: User | null;
   public users: WebSocket[];
   public viewersManager: ViewersManager;
 
@@ -23,13 +24,11 @@ export class GameManager {
 
   removePlayer(socket: WebSocket) {
     this.users = this.users.filter((user) => user !== socket);
-
-    if (this.pendingPlayer === socket) {
-      this.pendingPlayer = null;
-    }
+    this.viewersManager.removeViewer(socket);
+    this.pendingPlayer = null;
 
     this.games = this.games.filter(
-      (game) => game.player1 !== socket && game.player2 !== socket
+      (game) => game.player1.socket !== socket && game.player2.socket !== socket
     );
   }
 
@@ -38,17 +37,30 @@ export class GameManager {
       const message = JSON.parse(data.toString());
 
       if (message.type == INIT_GAME) {
+        const userInfo = message.userInfo;
+
+        const player = new User(
+          userInfo.userId,
+          userInfo.username,
+          userInfo.rating,
+          socket
+        );
+
         if (this.pendingPlayer !== null) {
           const game = new Game(
             this.pendingPlayer,
-            socket,
+            player,
             this.viewersManager
           );
+
           this.games.push(game);
+
           this.pendingPlayer = null;
+
           console.log("Game started:", game.id);
         } else {
-          this.pendingPlayer = socket;
+          this.pendingPlayer = player;
+
           console.log("Player waiting...");
         }
         return;
@@ -56,8 +68,10 @@ export class GameManager {
 
       if (message.type == MOVE) {
         const game = this.games.find(
-          (game) => game.player1 === socket || game.player2 === socket
+          (game) =>
+            game.player1.socket === socket || game.player2.socket === socket
         );
+
         if (game) {
           game.makeMove(socket, message.payload);
         }
@@ -66,7 +80,9 @@ export class GameManager {
 
       if (message.type == INIT_VIEW_GAME) {
         const gameId = message.payload.gameId;
+
         const viewer = new Viewer(message.payload.username, socket);
+
         this.viewersManager.addViewer(gameId, viewer);
 
         console.log(`Viewer ${viewer.username} joined game ${gameId}`);

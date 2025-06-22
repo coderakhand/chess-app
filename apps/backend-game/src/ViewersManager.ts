@@ -25,12 +25,13 @@ export class ViewersManager {
     this.interestedViewers.set(gameId, [...viewers, newViewer]);
   }
 
-  removeViewer(gameId: string, viewerId: string) {
-    const viewers =
-      this.interestedViewers
-        .get(gameId)
-        ?.filter((viewer) => viewer.id !== viewerId) || [];
-    this.interestedViewers.set(gameId, viewers);
+  removeViewer(viewerSocket: WebSocket) {
+    for (const [gameId, viewers] of this.interestedViewers.entries()) {
+      const filteredViewers = viewers.filter(
+        (viewer) => viewer.socket !== viewerSocket
+      );
+      this.interestedViewers.set(gameId, filteredViewers);
+    }
   }
 
   broadCast(gameId: string, message: string) {

@@ -3,9 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   directUrl = env("DIRECT_URL")
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
 }
 
 model User {
@@ -45,6 +45,7 @@ enum TimeControl {
   RAPID
   BLITZ
   BULLET
+  CUSTOM
 }
 
 enum GameResult {
@@ -67,12 +68,16 @@ model Game {
   blackGuest   Guest?  @relation("GuestBlackGames", fields: [blackGuestId], references: [id])
 
   moves            Move[]
-  startingPosition String      @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  startingPosition String  @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
   currentPosition  String?
-  timeControl      TimeControl
-  createdAt        DateTime    @default(now())
-  status           GameStatus
-  result           GameResult?
+
+  timeControl TimeControl?
+  baseTime    Int?
+  increment   Int?
+
+  createdAt DateTime    @default(now())
+  status    GameStatus
+  result    GameResult?
 
   @@index([status, result])
 }

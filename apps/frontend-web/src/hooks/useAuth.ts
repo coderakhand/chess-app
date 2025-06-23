@@ -27,7 +27,7 @@ export default function useAuth() {
 
   useEffect(() => {
     fetchMe();
-  });
+  }, []);
 
   return { user, userInfoLoading, refresh: fetchMe };
 }

@@ -11,11 +11,18 @@ export default function PlayerCard({
 }) {
   function formatTime(time: number | null) {
     if (time === null) return "3:00";
-    const m = Math.floor(time / 3600);
 
-    const s =
-      Math.ceil((time / 60) % 60) === 60 ? 0 : Math.ceil((time / 60) % 60);
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
+    const totalSeconds =
+      time % 1000 >= 500 ? Math.ceil(time / 1000) : Math.floor(time / 1000);
+
+    const minutes = Math.floor(totalSeconds / 60);
+
+    const seconds =
+      totalSeconds % 60 >= 30
+        ? Math.ceil(totalSeconds % 60)
+        : Math.floor(totalSeconds % 60);
+
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   }
 
   return (

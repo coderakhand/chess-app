@@ -43,7 +43,12 @@ export default function LogIn() {
         Welcome back! Enter your account to continue.
       </DialogDescription>
 
-      <div className="w-[300px] flex flex-col items-center gap-3 mt-[10px]">
+      <div
+        className="w-[300px] flex flex-col items-center gap-3 mt-[10px]"
+        onKeyDown={(event) => {
+          if (event.key === "Enter") handleLogin();
+        }}
+      >
         <a
           href="http://localhost:3000/auth/google"
           className="w-full flex justify-center items-center h-[50px] gap-2 text-lg rounded-full cursor-pointer bg-white/30 backdrop-blur-md shadow-md border border-white/40"

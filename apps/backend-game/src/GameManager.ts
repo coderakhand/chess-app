@@ -38,18 +38,21 @@ export class GameManager {
 
       if (message.type == INIT_GAME) {
         const userInfo = message.userInfo;
+        const timeControl = message.payload.timeControl;
 
         const player = new User(
           userInfo.userId,
           userInfo.username,
           userInfo.rating,
-          socket
+          socket,
+          timeControl.baseTime
         );
 
         if (this.pendingPlayer !== null) {
           const game = new Game(
             this.pendingPlayer,
             player,
+            timeControl,
             this.viewersManager
           );
 

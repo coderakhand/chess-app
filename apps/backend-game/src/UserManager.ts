@@ -7,17 +7,20 @@ export class User {
   public username: string;
   public rating: number;
   public socket: WebSocket;
+  public timeLeft: number;
 
   constructor(
     userId: string,
     username: string,
     rating: number,
-    socket: WebSocket
+    socket: WebSocket,
+    timeLeft: number
   ) {
     this.id = randomUUID();
     this.userId = userId;
     this.username = username;
     this.rating = rating;
+    this.timeLeft = timeLeft;
     this.socket = socket;
   }
 }

@@ -1,11 +1,13 @@
 import WebSocket from "ws";
 import { Chess } from "chess.js";
-import { GAME_OVER, INIT_GAME, MOVE } from "@repo/utils";
+import { GAME_OVER, INIT_GAME, MOVE, moveType } from "@repo/utils";
 import { ViewersManager } from "./ViewersManager";
 import { randomUUID } from "crypto";
 import { User } from "./UserManager";
 import { db } from "./db";
 import { sendJsonMessage } from "./Helper";
+import { timeControlType } from "@repo/utils";
+import { GameStatus } from "@prisma/client";
 export class Game {
   public id: string;
   public player1: User;
@@ -13,18 +15,31 @@ export class Game {
   public board: Chess;
   public gameId: string;
   public startDate: Date;
+  public prevTime: number;
   public moves: { from: string; to: string }[];
+  public timeControl: timeControlType;
   public viewersManager: ViewersManager;
 
-  constructor(player1: User, player2: User, viewersManager: ViewersManager) {
+  constructor(
+    player1: User,
+    player2: User,
+    timeControl: timeControlType,
+    viewersManager: ViewersManager
+  ) {
     this.id = randomUUID();
     this.gameId = randomUUID();
     this.player1 = player1;
     this.player2 = player2;
     this.board = new Chess();
     this.startDate = new Date();
+    this.prevTime = Date.now();
     this.moves = [];
     this.viewersManager = viewersManager;
+    this.timeControl = {
+      name: timeControl.name,
+      baseTime: timeControl.baseTime,
+      increment: timeControl.increment,
+    };
 
     this.player1.socket.send(
       JSON.stringify({
@@ -60,6 +75,7 @@ export class Game {
   private async newGameInDB() {
     const player1 = this.player1;
     const player2 = this.player2;
+    const timeControl = this.timeControl;
 
     try {
       const game = await db.game.create({
@@ -67,7 +83,9 @@ export class Game {
           whiteUserId: player1.userId,
           blackUserId: player2.userId,
           status: "ACTIVE",
-          timeControl: "RAPID",
+          timeControl: timeControl.name,
+          baseTime: timeControl.baseTime,
+          increment: timeControl.increment,
         },
       });
       this.gameId = game.id;
@@ -79,10 +97,12 @@ export class Game {
       sendJsonMessage(player2.socket, {
         ErrorMessage: "Error while creating Game",
       });
+
+      return;
     }
   }
 
-  makeMove(player: WebSocket, move: { from: string; to: string }) {
+  makeMove(player: WebSocket, move: moveType) {
     const turn = this.board.turn();
 
     if (
@@ -103,35 +123,62 @@ export class Game {
     const opponent =
       player === this.player1.socket ? this.player2 : this.player1;
 
-    if (this.board.isGameOver()) {
-      const winner = this.board.turn() === "w" ? "b" : "w";
+    const you = this.player1 === opponent ? this.player2 : this.player1;
 
+    const moveTime = Date.now();
+    const timeTaken = moveTime - this.prevTime;
+    you.timeLeft = you.timeLeft - timeTaken <= 0 ? 0 : you.timeLeft - timeTaken;
+    this.prevTime = moveTime;
+
+    let gameStatus: GameStatus = GameStatus.ACTIVE;
+
+    if (you.timeLeft === 0) {
+      gameStatus = GameStatus.TIME_UP;
+    } else if (this.board.isGameOver()) {
+      gameStatus = GameStatus.OVER;
+    }
+
+    if (gameStatus !== GameStatus.ACTIVE) {
+      const winner = this.board.turn() === "w" ? "b" : "w";
       const gameOverMessage = JSON.stringify({
         type: GAME_OVER,
-        payload: { winner, move },
+        payload: {
+          winner,
+          move,
+          time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+        },
       });
 
       player.send(gameOverMessage);
+
       opponent.socket.send(gameOverMessage);
 
       this.viewersManager.broadCast(this.id, gameOverMessage);
-      this.newMoveInDB(move);
-      
+      this.newMoveInDB(move, timeTaken, gameStatus);
+
       return;
     }
 
     const moveMessage = JSON.stringify({
       type: MOVE,
-      payload: move,
+      payload: {
+        move: move,
+        time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+      },
     });
 
     opponent.socket.send(moveMessage);
 
-    this.newMoveInDB(move);
     this.viewersManager.broadCast(this.id, moveMessage);
+
+    this.newMoveInDB(move, timeTaken, gameStatus);
   }
 
-  private async newMoveInDB({ from, to }: { from: string; to: string }) {
+  private async newMoveInDB(
+    { from, to }: moveType,
+    timeTaken: number,
+    gameStatus: GameStatus
+  ) {
     const gameId = this.gameId;
     const moveNumber = this.moves.length + 1;
 
@@ -141,6 +188,7 @@ export class Game {
         from: from,
         to: to,
         moveNumber: moveNumber,
+        timeTaken: timeTaken,
       },
     });
 
@@ -150,6 +198,7 @@ export class Game {
       },
       data: {
         currentPosition: this.board.fen(),
+        status: gameStatus,
       },
     });
   }

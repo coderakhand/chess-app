@@ -29,5 +29,5 @@
         "./src/*"
       ]
     },
-  "include": ["src", "src/lib"]
+  "include": ["src", "src/lib", "tailwind.config.ts"]
 }

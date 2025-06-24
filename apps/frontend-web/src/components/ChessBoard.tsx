@@ -13,9 +13,15 @@ import { useBoardStore, useGameInfoStore } from "../store/atoms";
 interface ChessBoardProps {
   socket: WebSocket | null;
   winner: string | null;
+
+  customClass?: string;
 }
 
-export default function ChessBoard({ socket, winner }: ChessBoardProps) {
+export default function ChessBoard({
+  socket,
+  winner,
+  customClass,
+}: ChessBoardProps) {
   const color = useGameInfoStore((state) => state.color);
   const chess = useGameInfoStore((state) => state.chess);
   const board = useGameInfoStore((state) => state.board);
@@ -98,7 +104,7 @@ export default function ChessBoard({ socket, winner }: ChessBoardProps) {
       <div
         className={`${
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
-        } relative w-[600px] h-[600px] grid grid-rows-8`}
+        } relative ${customClass ?? "w-[600px] h-[600px]"} grid grid-rows-8`}
       >
         {winner !== null ? <GameResultCard winner={winner} /> : <></>}
         {board.map((row, i) => {

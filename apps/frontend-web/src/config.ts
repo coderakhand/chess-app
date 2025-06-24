@@ -5,6 +5,10 @@ export const GAME_OVER = "game_over";
 
 export const boardColorsList = [
   {
+    darkSquare: "bg-[#18B350]",
+    lightSquare: "bg-[#DCFCE6]",
+  },
+  {
     darkSquare: "bg-[#8CA2AD]",
     lightSquare: "bg-[#DEE3E6]",
   },

@@ -94,7 +94,7 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
   moves: [],
   color: "w",
   opponentInfo: { username: "Opponent", rating: 800 },
-  timeControl: { name: "BLITZ", baseTime: 10 * 1000, increment: 2 * 1000 },
+  timeControl: { name: "BLITZ", baseTime: 1 * 60 * 1000, increment: 2 * 1000 },
   opponentTimeLeft: null,
   timeLeft: null,
   gameCreationTime: null,

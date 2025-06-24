@@ -1,4 +1,4 @@
-import SideBar from "../components/SideBar";
+import SideBar from "./SideBar";
 import { useBgImageStore } from "../store/atoms";
 
 export default function SignedInUserHome() {

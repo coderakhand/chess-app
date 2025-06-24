@@ -115,6 +115,7 @@ export class Game {
 
     try {
       this.board.move(move);
+      this.moves.push(move);
     } catch (e) {
       player.send("invalid move");
       return;
@@ -139,7 +140,12 @@ export class Game {
     }
 
     if (gameStatus !== GameStatus.ACTIVE) {
-      const winner = this.board.turn() === "w" ? "b" : "w";
+      const winner = this.board.isDraw()
+        ? "draw"
+        : this.board.turn() === "w"
+          ? "b"
+          : "w";
+
       const gameOverMessage = JSON.stringify({
         type: GAME_OVER,
         payload: {
@@ -155,7 +161,6 @@ export class Game {
 
       this.viewersManager.broadCast(this.id, gameOverMessage);
       this.newMoveInDB(move, timeTaken, gameStatus);
-
       return;
     }
 

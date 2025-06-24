@@ -4,12 +4,10 @@ import Play from "./pages/Play";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Error from "./pages/Error";
-import { ThemeProvider } from "./components/ThemeProvider";
 
 function App() {
   return (
     <>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -20,7 +18,6 @@ function App() {
             <Route path="*" element={<Error />}></Route>
           </Routes>
         </BrowserRouter>
-      </ThemeProvider>
     </>
   );
 }

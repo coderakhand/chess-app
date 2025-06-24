@@ -6,19 +6,22 @@ import { IoNewspaperOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { useState } from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md";
 
 export default function SideBar({ position }: { position: string }) {
   const [component, setComponent] = useState<string | null>(null);
+  const { theme, setTheme } = useTheme();
 
   const commonStyle =
     "text-3xl transition delay-80 duration-600 cursor-pointer";
 
   return (
     <div
-      className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md`}
+      className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md dark:bg-[#18181B]`}
     >
       <div className="grid grid-rows-2 h-screen">
         <HoverCard
@@ -72,6 +75,16 @@ export default function SideBar({ position }: { position: string }) {
         </HoverCard>
 
         <div className="py-[20px] px-[10px] w-full gap-3 flex flex-col justify-end">
+          <div
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex justify-center"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-7 h-7" />
+            ) : (
+              <Moon className="w-7 h-7" />
+            )}
+          </div>
           <Link to={"/settings"}>
             <AiTwotoneSetting className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer" />
           </Link>

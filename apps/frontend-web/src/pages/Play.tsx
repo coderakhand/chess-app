@@ -116,13 +116,17 @@ export default function Play() {
     if (isGameStarted && winner === null) {
       interval = setInterval(() => {
         if (chess.turn() === color) {
-          const clock = (timeLeft ?? 0) - 1000;
+          if (timeLeftRef.current === null) return;
+          const clock = timeLeftRef.current - 1000;
           const newTime = clock >= 0 ? clock : 0;
           timeLeftRef.current = newTime;
+          setTimeLeft(newTime);
         } else {
-          const clock = (opponentTimeLeft ?? 0) - 1000;
+          if (opponentTimeLeftRef.current === null) return;
+          const clock = opponentTimeLeftRef.current - 1000;
           const newTime = clock >= 0 ? clock : 0;
           opponentTimeLeftRef.current = newTime;
+          setOpponentTimeLeft(newTime);
         }
       }, 1000);
     }
@@ -158,10 +162,18 @@ export default function Play() {
     );
   };
 
+  const offerDraw = () => {
+    if (socket === null) return;
+    socket.send(
+      JSON.stringify({
+        type: "OFFER_DRAW",
+      })
+    );
+  };
 
   return (
     <div
-      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center`}
+      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position={"fixed"} />
 
@@ -171,7 +183,7 @@ export default function Play() {
             player={opponentInfo.username}
             rating={opponentInfo.rating}
             color={color === "w" ? "b" : "w"}
-            time={opponentTimeLeftRef.current}
+            time={opponentTimeLeft}
           />
 
           <ChessBoard socket={socket} winner={winner} />
@@ -180,7 +192,7 @@ export default function Play() {
             player={user.username}
             rating={user.rating}
             color={color}
-            time={timeLeftRef.current}
+            time={timeLeft}
           />
         </div>
 
@@ -234,6 +246,7 @@ export default function Play() {
                 isGameStarted={isGameStarted}
                 createGame={createGame}
               />
+              <button onClick={offerDraw}> offer draw</button>
             </div>
           </div>
         </div>
@@ -312,9 +325,7 @@ function TabContent({
     return <div></div>;
   }
 
-  return <div>
-    
-  </div>;
+  return <div></div>;
 }
 
 function LocalVideo() {

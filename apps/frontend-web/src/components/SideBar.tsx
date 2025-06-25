@@ -1,16 +1,24 @@
 import { FaChessBoard } from "react-icons/fa";
-import { MdPersonSearch, MdOutlineMail } from "react-icons/md";
-import { AiTwotoneSetting } from "react-icons/ai";
+import { MdPersonSearch } from "react-icons/md";
 import { VscSignOut } from "react-icons/vsc";
-import { IoNewspaperOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import {
+  Binoculars,
+  Brain,
+  Crown,
+  Moon,
+  Play,
+  Search,
+  Sun,
+} from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import { Settings } from "lucide-react";
+import { Button } from "./ui/button";
 
 const hoverEffect =
-  " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md";
+  " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md  dark:hover:shadow-none dark:hover:bg-[#27272A]";
 
 export default function SideBar({ position }: { position: string }) {
   const [component, setComponent] = useState<string | null>(null);
@@ -21,7 +29,7 @@ export default function SideBar({ position }: { position: string }) {
 
   return (
     <div
-      className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md dark:bg-[#18181B]`}
+      className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B]`}
     >
       <div className="grid grid-rows-2 h-screen">
         <HoverCard
@@ -30,65 +38,69 @@ export default function SideBar({ position }: { position: string }) {
           onOpenChange={() => setComponent(null)}
         >
           <HoverCardContent
-            className="rounded-none bg-white/30 backdrop-blur-2xl shadow-md border-none w-[300px] h-screen"
+            className="rounded-none bg-white/30 backdrop-blur-2xl shadow-md border-none w-[300px] h-screen dark:bg-[#18181B] dark:text-white"
             side="right"
           >
             <SideBarComponentContent component={component} />
           </HoverCardContent>
-          <div className="py-[50px] w-full flex flex-col">
+          <div className="pt-[20px] pb-[50px] w-full flex flex-col">
             <HoverCardTrigger>
               <button
-                className={`flex justify-center items-center ${component == "chezz" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "chezz" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
                 onMouseOver={() => setComponent("chezz")}
               >
-                <FaChessBoard className={`${commonStyle} border`} />
+                <FaChessBoard
+                  className={`${commonStyle} border dark:text-white`}
+                />
+              </button>
+            </HoverCardTrigger>
+
+            <HoverCardTrigger>
+              <button
+                onMouseOver={() => setComponent("playTab")}
+                className={`flex justify-center items-center ${component == "playTab" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
+              >
+                <Play
+                  className={`${commonStyle} p-1 h-10 w-10 text-green-600`}
+                />
               </button>
             </HoverCardTrigger>
 
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("find_users")}
-                className={`flex justify-center items-center ${component == "find_users" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "find_users" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
               >
-                <MdPersonSearch className={`${commonStyle}`} />
+                <MdPersonSearch className={`${commonStyle} text-blue-600`} />
               </button>
             </HoverCardTrigger>
 
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("messages")}
-                className={`flex justify-center items-center ${component == "messages" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "messages" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
               >
-                <MdOutlineMail className={`${commonStyle}`} />
-              </button>
-            </HoverCardTrigger>
-
-            <HoverCardTrigger>
-              <button
-                onMouseOver={() => setComponent("news")}
-                className={`flex justify-center items-center ${component == "news" ? "bg-white/30 backdrop-blur-2xl shadow-md" : ""} my-[5px] h-[50px] w-full`}
-              >
-                <IoNewspaperOutline className={`${commonStyle}`} />
+                <Binoculars className={`${commonStyle} text-yellow-600`} />
               </button>
             </HoverCardTrigger>
           </div>
         </HoverCard>
 
-        <div className="py-[20px] px-[10px] w-full gap-3 flex flex-col justify-end">
+        <div className="py-[20px] px-[10px] w-full gap-4 flex flex-col justify-end">
           <div
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="flex justify-center"
           >
             {theme === "dark" ? (
-              <Sun className="w-7 h-7" />
+              <Sun className="w-7 h-7 text-white" />
             ) : (
               <Moon className="w-7 h-7" />
             )}
           </div>
           <Link to={"/settings"}>
-            <AiTwotoneSetting className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer" />
+            <Settings className="w-7 h-7 transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer dark:text-white" />
           </Link>
-          <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer" />
+          <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer text-red-400" />
         </div>
       </div>
     </div>
@@ -110,8 +122,8 @@ function SideBarComponentContent({ component }: { component: string | null }) {
     return <div></div>;
   }
 
-  if (component === "news") {
-    return <div></div>;
+  if (component === "playTab") {
+    return <PlayTabContent />;
   }
 }
 
@@ -126,13 +138,6 @@ function ChezzBarContent() {
         Home
       </Link>
       <Link
-        to={"/play"}
-        className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
-      >
-        <img src="/user.png" className="h-[40px] overflow-hidden" />
-        New Game
-      </Link>
-      <Link
         to={"/profile"}
         className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
@@ -142,23 +147,67 @@ function ChezzBarContent() {
       <button
         className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect} cursor-pointer`}
       >
-        <VscSignOut className="text-3xl" /> Log Out
+        <VscSignOut className="text-3xl text-red-400" /> Log Out
       </button>
+    </div>
+  );
+}
+
+function PlayTabContent() {
+  return (
+    <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
+      <Link
+        to={"/play"}
+        className={`px-[15px] flex items-center gap-3 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+      >
+        <Crown className="w-5 h-5 font-bold overflow-hidden text-yellow-600" />
+        New Game
+      </Link>
+      <Link
+        to={"/analyze"}
+        className={`pl-[15px] flex items-center gap-3 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+      >
+        <Brain className="w-5 h-5 overflow-hidden text-blue-600" />
+        Analyze Game
+      </Link>
     </div>
   );
 }
 
 function FindUsersContent() {
   return (
-    <div>
-      <div>
-        <input type="text" placeholder="search username" />
+    <div className="w-full h-[600px] flex flex-col items-center">
+      <div className="relative mt-3">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <input
+          placeholder="Search Users"
+          className="pl-10 bg-muted/50 outline-1 outline-blue-500  rounded-sm h-[30px]"
+        />
       </div>
-      <div>
-        <div>user1</div>
-        <div>user2</div>
-        <div>user3</div>
+      <div className="w-full px-[10px] py-[20px]">
+        <UserCard username="akhand" rating={800} />
       </div>
     </div>
+  );
+}
+
+interface UserCardProps {
+  username: string;
+  rating: number;
+  imageUrl?: string;
+}
+function UserCard({ username, rating, imageUrl }: UserCardProps) {
+  return (
+    <Button className="w-full flex justify-start items-center px-[10px] gap-3 h-8 border-1 hover:bg-white/40 hover:border-none dark:border-none dark:bg-black dark:text-white rounded-sm cursor-pointer transition-all duration-600">
+      <img
+        src={`${imageUrl ?? "/chezz.png"}`}
+        alt=""
+        className="w-5 h-5 rounded-sm"
+      />
+      <div className="flex items-center gap-1">
+        <div>{username}</div>
+        <div className="flex justify-center items-center h-4 px-1 dark:bg-white dark:text-black rounded-xs text-xs">{rating}</div>
+      </div>
+    </Button>
   );
 }

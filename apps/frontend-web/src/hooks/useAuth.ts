@@ -21,7 +21,6 @@ export default function useAuth() {
       setUserInfoLoading(false);
     } catch {
       setUserInfoLoading(false);
-      alert("unable to load user details");
     }
   };
 

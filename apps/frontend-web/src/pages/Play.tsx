@@ -7,6 +7,8 @@ import ChessBoard from "../components/ChessBoard";
 import { useBgImageStore, useGameInfoStore } from "../store/atoms";
 import useAuth from "../hooks/useAuth";
 import PlayerCard from "../components/PlayerCard";
+import { Button } from "../components/ui/button";
+import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 
 export default function Play() {
   const { user } = useAuth();
@@ -44,6 +46,9 @@ export default function Play() {
 
   const timeLeftRef = useRef<number | null>(null);
   const opponentTimeLeftRef = useRef<number | null>(null);
+
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(true);
 
   useEffect(() => {
     const handleGame = () => {
@@ -173,7 +178,7 @@ export default function Play() {
 
   return (
     <div
-      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position={"fixed"} />
 
@@ -197,20 +202,48 @@ export default function Play() {
         </div>
 
         <div className="flex flex-col h-screen w-[400px] gap-3">
-          <div className="w-full px-[20px] h-[200px]">
-            <div className="h-[200px] w-[360px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40">
-              Opponent Video
+          <div className="flex flex-col gap-3 w-full items-center ">
+            <div className="flex w-full h-full gap-4 justify-center">
+              <div className="h-[160px] w-[290px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40">
+                Opponent Video
+              </div>
+              <div className="py-[20px] px-[4px] flex flex-col justify-start gap-3  bg-white/30 backdrop-blur-md shadow-md border border-white/40  dark:border-[#27272A] dark:bg-[#18181B] h-full w-[45px] rounded-xl">
+                <Button
+                  variant={isMuted ? "destructive" : "ghost"}
+                  size="sm"
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="w-full"
+                >
+                  {isMuted ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </Button>
+                <Button
+                  variant={!isVideoOn ? "destructive" : "ghost"}
+                  size="sm"
+                  onClick={() => setIsVideoOn(!isVideoOn)}
+                  className="w-full"
+                >
+                  {isVideoOn ? (
+                    <Video className="w-4 h-4" />
+                  ) : (
+                    <VideoOff className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="flex w-full h-full gap-4 justify-center">
+              <LocalVideo />
+              <div className="bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#18181B] h-full w-[45px] rounded-xl"></div>
             </div>
           </div>
 
-          <div className="w-full px-[20px] h-[200px]">
-            <LocalVideo />
-          </div>
-
-          <div className="flex justify-center w-full h-[270px] ">
+          <div className="flex justify-center w-full h-[350px] ">
             <div
-              className="flex flex-col items-center p-[5px] gap-3 w-[360px]
-            bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40"
+              className={`flex flex-col items-center p-[5px] gap-3 w-[360px]
+            bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A]`}
             >
               <div className="w-full h-[50px] flex rounded-xl">
                 <button
@@ -350,7 +383,7 @@ function LocalVideo() {
       autoPlay={true}
       muted
       playsInline
-      className="h-[200px] w-[360px] rounded-xl object-cover"
+      className="h-[160px] w-[290px] rounded-xl object-cover"
     />
   );
 }

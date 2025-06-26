@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { Settings } from "lucide-react";
-import { Button } from "./ui/button";
+import { useUserInfoStore } from "../store/atoms";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md  dark:hover:shadow-none dark:hover:bg-[#27272A]";
 
 export default function SideBar({ position }: { position: string }) {
+  const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
   const [component, setComponent] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
 
@@ -100,7 +101,9 @@ export default function SideBar({ position }: { position: string }) {
           <Link to={"/settings"}>
             <Settings className="w-7 h-7 transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer dark:text-white" />
           </Link>
-          <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer text-red-400" />
+          {!isGuest && (
+            <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer text-red-400" />
+          )}
         </div>
       </div>
     </div>
@@ -128,6 +131,8 @@ function SideBarComponentContent({ component }: { component: string | null }) {
 }
 
 function ChezzBarContent() {
+  const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
+
   return (
     <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
       <Link
@@ -144,11 +149,13 @@ function ChezzBarContent() {
         <img src="/user.png" className="h-[40px] overflow-hidden" />
         Profile
       </Link>
-      <button
-        className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect} cursor-pointer`}
-      >
-        <VscSignOut className="text-3xl text-red-400" /> Log Out
-      </button>
+      {!isGuest && (
+        <button
+          className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect} cursor-pointer`}
+        >
+          <VscSignOut className="text-3xl text-red-400" /> Log Out
+        </button>
+      )}
     </div>
   );
 }
@@ -196,9 +203,10 @@ interface UserCardProps {
   rating: number;
   imageUrl?: string;
 }
+
 function UserCard({ username, rating, imageUrl }: UserCardProps) {
   return (
-    <Button className="w-full flex justify-start items-center px-[10px] gap-3 h-8 border-1 hover:bg-white/40 hover:border-none dark:border-none dark:bg-black dark:text-white rounded-sm cursor-pointer transition-all duration-600">
+    <button className="w-full flex justify-start items-center px-[10px] gap-3 h-8  bg-white/40  hover:bg-transparent hover:border-1 dark:bg-black dark:hover:bg-transparent dark:border-[#27272A] dark:text-white rounded-sm cursor-pointer transition-all duration-600">
       <img
         src={`${imageUrl ?? "/chezz.png"}`}
         alt=""
@@ -206,8 +214,10 @@ function UserCard({ username, rating, imageUrl }: UserCardProps) {
       />
       <div className="flex items-center gap-1">
         <div>{username}</div>
-        <div className="flex justify-center items-center h-4 px-1 dark:bg-white dark:text-black rounded-xs text-xs">{rating}</div>
+        <div className="flex justify-center items-center h-4 px-1 dark:bg-white dark:text-black rounded-xs text-xs">
+          {rating}
+        </div>
       </div>
-    </Button>
+    </button>
   );
 }

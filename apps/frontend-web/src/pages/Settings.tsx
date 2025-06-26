@@ -69,28 +69,28 @@ export default function Settings() {
             <TabsList className="h-[40px] py-[3px] px-[20px] grid w-full grid-cols-4 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
               <TabsTrigger
                 value="appearance"
-                className="flex items-center gap-2 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
+                className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
                 <Palette className="w-4 h-4" />
                 Appearance
               </TabsTrigger>
               <TabsTrigger
                 value="game"
-                className="flex items-center gap-2 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
+                className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
                 <Monitor className="w-4 h-4" />
                 Game
               </TabsTrigger>
               <TabsTrigger
                 value="notifications"
-                className="flex items-center gap-2 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
+                className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
                 <Bell className="w-4 h-4" />
                 Notifications
               </TabsTrigger>
               <TabsTrigger
                 value="account"
-                className="flex items-center gap-2 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
+                className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
                 <User className="w-4 h-4" />
                 Account

@@ -4,6 +4,7 @@ import Play from "./pages/Play";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Error from "./pages/Error";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile/>} />
             <Route path="*" element={<Error />}></Route>
           </Routes>
         </BrowserRouter>

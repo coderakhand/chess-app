@@ -9,6 +9,7 @@ import useAuth from "../hooks/useAuth";
 import PlayerCard from "../components/PlayerCard";
 import { Button } from "../components/ui/button";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 
 export default function Play() {
   const { user } = useAuth();
@@ -18,8 +19,6 @@ export default function Play() {
   const socket = useSocket();
 
   const [isGameStarted, setIsGameStarted] = useState(false);
-
-  const [tab, setTab] = useState("new");
 
   const setChess = useGameInfoStore((state) => state.setChess);
   const chess = useGameInfoStore((state) => state.chess);
@@ -49,6 +48,8 @@ export default function Play() {
 
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
+
+  const gameStatus = useGameInfoStore((state) => state.gameStatus);
 
   useEffect(() => {
     const handleGame = () => {
@@ -182,8 +183,8 @@ export default function Play() {
     >
       <SideBar position={"fixed"} />
 
-      <div className="flex justify-center min-w-screen py-[30px] gap-6">
-        <div className="flex flex-col gap-2">
+      <div className="flex justify-center min-w-screen min-h-screen pt-[30px] gap-6">
+        <div className="flex flex-col gap-2 h-full">
           <PlayerCard
             player={opponentInfo.username}
             rating={opponentInfo.rating}
@@ -242,123 +243,52 @@ export default function Play() {
 
           <div className="flex justify-center w-full h-[350px] ">
             <div
-              className={`flex flex-col items-center p-[5px] gap-3 w-[360px]
-            bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A]`}
+              className={`flex flex-col items-center p-[5px] gap-3 w-[360px]`}
             >
               <div className="w-full h-[50px] flex rounded-xl">
-                <button
-                  onClick={() => setTab("new")}
-                  className={`w-full rounded-xl cursor-pointer ${
-                    tab !== "new" ? "" : "backdrop-blur-md shadow-md"
-                  }`}
-                >
-                  {isGameStarted ? "Moves" : "New"}
-                </button>
-
-                <button
-                  onClick={() => setTab("friends")}
-                  className={`w-full rounded-xl cursor-pointer ${
-                    tab !== "friends" ? "" : "backdrop-blur-md shadow-md"
-                  }`}
-                >
-                  Friends
-                </button>
-
-                <button
-                  onClick={() => setTab("video/chat")}
-                  className={`w-full rounded-xl cursor-pointer ${
-                    tab !== "video/chat" ? "" : "backdrop-blur-md shadow-md"
-                  }`}
-                >
-                  Video / Chat
-                </button>
+                <Tabs defaultValue="new/move" className="w-full space-y-2">
+                  <TabsList className="h-[40px] py-[3px] px-[20px] grid w-full grid-cols-3 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
+                    <TabsTrigger
+                      value="new/move"
+                      className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
+                    >
+                      {gameStatus === null ? "New" : "Move"}
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="chat"
+                      className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
+                    >
+                      Chat
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="friends"
+                      className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
+                    >
+                      Friends
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent
+                    value="new/move"
+                    className="w-full h-[300px] space-y-6 bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                  >
+                    {gameStatus !== null && <MovesTable />}
+                  </TabsContent>
+                  <TabsContent
+                    value="chat"
+                    className="h-[300px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                  ></TabsContent>
+                  <TabsContent
+                    value="friends"
+                    className="h-[300px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                  ></TabsContent>
+                </Tabs>
               </div>
-
-              <TabContent
-                tab={tab}
-                isGameStarted={isGameStarted}
-                createGame={createGame}
-              />
-              <button onClick={offerDraw}> offer draw</button>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function TabContent({
-  tab,
-  isGameStarted,
-  createGame,
-}: {
-  tab: string;
-  isGameStarted: boolean;
-  createGame: () => void;
-}) {
-  const [isDisabled, setIsDisabled] = useState(false);
-
-  const moves = useGameInfoStore((state) => state.moves);
-
-  if (tab === "new") {
-    if (isGameStarted) {
-      return (
-        <div className="w-full bg-white">
-          <div className="w-full flex">
-            <div className="w-full flex justify-center">White</div>
-            <div className="w-full flex justify-center">Black</div>
-          </div>
-          <div className="w-full">
-            {Array.from({ length: Math.ceil(moves.length / 2) }).map(
-              (_, idx) => {
-                const whiteMove = moves[idx * 2];
-                const blackMove = moves[idx * 2 + 1];
-
-                return (
-                  <div key={idx} className="flex bg-green-300 p-2">
-                    <div className="w-8">{idx + 1}</div>
-                    <Move whiteMove={whiteMove} blackMove={blackMove} />
-                  </div>
-                );
-              }
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className={`${isGameStarted ? "hidden" : "block"}`}>
-        <div className="flex justify-center h-[60px] px-[10px] w-full rounded-md">
-          <select className="w-full backdrop-blur-md shadow-md rounded-xl hover:outline-none">
-            <option className="flex w-full justify-center">
-              3 | 2 (Blitz)
-            </option>
-            <option>5 | 2 (Blitz)</option>
-            <option>10 | 0 (Rapid)</option>
-          </select>
-        </div>
-
-        <button
-          onClick={() => {
-            if (!isDisabled) createGame();
-            setIsDisabled(true);
-          }}
-          disabled={isDisabled}
-          className={`h-[50px] w-[160px] bg-[#788d97] rounded-full text-white disabled:cursor-progress`}
-        >
-          Play
-        </button>
-      </div>
-    );
-  }
-
-  if (tab == "friends") {
-    return <div></div>;
-  }
-
-  return <div></div>;
 }
 
 function LocalVideo() {
@@ -385,6 +315,31 @@ function LocalVideo() {
       playsInline
       className="h-[160px] w-[290px] rounded-xl object-cover"
     />
+  );
+}
+
+function MovesTable() {
+  const moves = useGameInfoStore((state) => state.moves);
+  return (
+    <div className="w-full bg-white">
+      <div className="w-full flex">
+        <div className="w-full flex justify-center">White</div>
+        <div className="w-full flex justify-center">Black</div>
+      </div>
+      <div className="w-full">
+        {Array.from({ length: Math.ceil(moves.length / 2) }).map((_, idx) => {
+          const whiteMove = moves[idx * 2];
+          const blackMove = moves[idx * 2 + 1];
+
+          return (
+            <div key={idx} className="flex bg-green-300 p-2">
+              <div className="w-8">{idx + 1}</div>
+              <Move whiteMove={whiteMove} blackMove={blackMove} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

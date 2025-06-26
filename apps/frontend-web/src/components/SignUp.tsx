@@ -13,7 +13,7 @@ export default function SignUp() {
   const handleSignup = async () => {
     try {
       const { data: csrf } = await api.get("/csrf-token");
-
+      console.log(csrf);
       const res = await api.post(
         "/signup",
         { username, email, password },
@@ -22,8 +22,9 @@ export default function SignUp() {
 
       console.log(res.data);
       navigate("/home");
-    } catch {
-      alert("Signup failed");
+    } catch (e){
+      console.log(e)
+      alert("Signup failed unable to send request");
     }
   };
 

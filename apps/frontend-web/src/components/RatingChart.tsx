@@ -1,5 +1,16 @@
-import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../components/ui/chart";
+import {
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "../components/ui/chart";
 
 type TimeControl = "blitz" | "bullet" | "rapid";
 
@@ -17,7 +28,10 @@ export function RatingChart({ timeControl }: { timeControl: TimeControl }) {
       currentRating = Math.max(800, Math.min(2000, currentRating));
 
       data.push({
-        date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        date: date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
         rating: Math.round(currentRating),
       });
     }
@@ -40,18 +54,25 @@ export function RatingChart({ timeControl }: { timeControl: TimeControl }) {
         timeControl === "blitz"
           ? "hsl(142, 76%, 36%)"
           : timeControl === "bullet"
-          ? "hsl(221, 83%, 53%)"
-          : "hsl(262, 83%, 58%)",
+            ? "hsl(221, 83%, 53%)"
+            : "hsl(262, 83%, 58%)",
     },
   };
 
   return (
     <ChartContainer config={chartConfig} className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <LineChart
+          data={data}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis dataKey="date" className="text-xs" tick={{ fontSize: 12 }} />
-          <YAxis className="text-xs" tick={{ fontSize: 12 }} domain={["dataMin - 20", "dataMax + 20"]} />
+          <YAxis
+            className="text-xs"
+            tick={{ fontSize: 12 }}
+            domain={["dataMin - 20", "dataMax + 20"]}
+          />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Line
             type="monotone"

@@ -5,8 +5,8 @@ import { useUserInfoStore } from "../store/atoms";
 export default function useAuth() {
   const [user, setUser] = useState({
     id: "",
-    username: "",
-    rating: 0,
+    username: "You",
+    rating: 800,
   });
   const [userInfoLoading, setUserInfoLoading] = useState(true);
 

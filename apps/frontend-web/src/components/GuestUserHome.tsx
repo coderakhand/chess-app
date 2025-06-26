@@ -55,7 +55,7 @@ export default function GuestUserHome() {
             # New World of Chess
           </h2>
         </div>
-        <div className="pl-[30px] flex flex-col justify-center">
+        <div className="flex-grow pl-[30px] flex flex-col justify-center">
           <div className="flex justify-center items-center md:gap-5">
             <div className="flex flex-col">
               <PlayerCard
@@ -77,7 +77,7 @@ export default function GuestUserHome() {
                 rating={2751}
               />
             </div>
-            <div className="flex flex-col justify-center px-[20px] gap-6 w-[350px] h-[600px]">
+            <div className="flex flex-col justify-center px-[20px] gap-6 w-[350px] h-[500px]">
               <div className="flex flex-col justify-center  w-full px-[20px] h-[200px] bg-[#8CA2AD] rounded-xl  dark:bg-[#09090B] dark:border-2 dark:border-[#27272A]">
                 <a className="flex justify-center items-center h-[50px] gap-2 text-lg bg-[#d6dce0] dark:bg-white dark:hover:bg-[#E2E2E2] hover:shadow-lg transition-shadow rounded-full cursor-pointer">
                   <FcGoogle className="my-[3px] text-2xl" /> Continue with

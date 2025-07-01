@@ -2,25 +2,26 @@ import { randomUUID } from "crypto";
 import type WebSocket from "ws";
 
 export class User {
+  public isGuest: boolean;
   public id: string;
-  public userId: string;
   public username: string;
   public rating: number;
-  public socket: WebSocket;
+  public socket: WebSocket | null;
   public timeLeft: number;
 
   constructor(
-    userId: string,
+    isGuest: boolean,
+    id: string | null,
     username: string,
     rating: number,
-    socket: WebSocket,
+    socket: WebSocket | null,
     timeLeft: number
   ) {
-    this.id = randomUUID();
-    this.userId = userId;
+    this.isGuest = isGuest;
+    this.id = isGuest ? randomUUID() : (id ?? randomUUID());
     this.username = username;
     this.rating = rating;
-    this.timeLeft = timeLeft;
     this.socket = socket;
+    this.timeLeft = timeLeft;
   }
 }

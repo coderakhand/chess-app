@@ -5,111 +5,149 @@ import { ViewersManager } from "./ViewersManager";
 import { randomUUID } from "crypto";
 import { User } from "./UserManager";
 import { db } from "./db";
-import { sendJsonMessage } from "./Helper";
 import { timeControlType } from "@repo/utils";
 import { GameStatus } from "@prisma/client";
+import { gameManager } from "./index";
 export class Game {
   public id: string;
   public player1: User;
   public player2: User;
+  public isRated: boolean;
+  public timeControl: timeControlType;
   public board: Chess;
-  public gameId: string;
   public startDate: Date;
   public prevTime: number;
-  public moves: { from: string; to: string }[];
-  public timeControl: timeControlType;
+  public moves: moveType[];
+  public gameStatus: GameStatus;
   public viewersManager: ViewersManager;
 
   constructor(
     player1: User,
     player2: User,
+    isRated: boolean,
     timeControl: timeControlType,
-    viewersManager: ViewersManager
+    viewersManager: ViewersManager,
+    position?: string,
+    moves?: moveType[]
   ) {
     this.id = randomUUID();
-    this.gameId = randomUUID();
     this.player1 = player1;
     this.player2 = player2;
-    this.board = new Chess();
+    this.isRated = isRated;
     this.startDate = new Date();
     this.prevTime = Date.now();
-    this.moves = [];
     this.viewersManager = viewersManager;
-    this.timeControl = {
-      name: timeControl.name,
-      baseTime: timeControl.baseTime,
-      increment: timeControl.increment,
-    };
+    this.timeControl = timeControl;
+    this.board = !position ? new Chess() : new Chess(position);
+    this.moves = !moves ? [] : moves;
+    this.gameStatus = GameStatus.ACTIVE;
 
-    this.player1.socket.send(
-      JSON.stringify({
-        type: INIT_GAME,
-        payload: {
-          color: "w",
-          gameId: this.id,
-        },
-        opponentInfo: {
-          username: this.player2.username,
-          rating: this.player2.rating,
-        },
-      })
-    );
-
-    this.player2.socket.send(
-      JSON.stringify({
-        type: INIT_GAME,
-        payload: {
-          color: "b",
-          gameId: this.id,
-        },
-        opponentInfo: {
-          username: this.player1.username,
-          rating: this.player1.rating,
-        },
-      })
-    );
-
-    this.newGameInDB();
+    if (!position) {
+      this.createNewGame();
+    }
   }
 
-  private async newGameInDB() {
+  private async createNewGame() {
     const player1 = this.player1;
     const player2 = this.player2;
     const timeControl = this.timeControl;
 
-    try {
-      const game = await db.game.create({
-        data: {
-          whiteUserId: player1.userId,
-          blackUserId: player2.userId,
-          status: "ACTIVE",
-          timeControl: timeControl.name,
-          baseTime: timeControl.baseTime,
-          increment: timeControl.increment,
-        },
-      });
-      this.gameId = game.id;
-    } catch (e) {
-      sendJsonMessage(player1.socket, {
-        ErrorMessage: "Error while creating Game",
-      });
-
-      sendJsonMessage(player2.socket, {
-        ErrorMessage: "Error while creating Game",
-      });
-
-      return;
+    if (player1.socket) {
+      player1.socket.send(
+        JSON.stringify({
+          type: INIT_GAME,
+          payload: {
+            userInfo: {
+              color: "w",
+            },
+            opponentInfo: {
+              username: player2.username,
+              rating: player2.rating,
+            },
+          },
+        })
+      );
+      console.log(`${player1.username} is white`);
     }
+
+    if (player2.socket) {
+      player2.socket.send(
+        JSON.stringify({
+          type: INIT_GAME,
+          payload: {
+            userInfo: {
+              color: "b",
+            },
+            opponentInfo: {
+              username: player1.username,
+              rating: player1.rating,
+            },
+          },
+        })
+      );
+      console.log(`${player1.username} is black`);
+    }
+
+    if (!player1.isGuest && !player2.isGuest) {
+      try {
+        const game = await db.game.create({
+          data: {
+            whiteUserId: player1.id,
+            blackUserId: player2.id,
+            status: "ACTIVE",
+            timeControl: timeControl.name,
+            baseTime: timeControl.baseTime,
+            increment: timeControl.increment,
+          },
+        });
+
+        this.id = game.id;
+      } catch (e) {
+        if (player1.socket) {
+          player1.socket.send(
+            JSON.stringify({
+              type: "ERROR",
+              ErrorMessage: "Error while creating Game",
+            })
+          );
+        }
+
+        if (player2.socket) {
+          player2.socket.send(
+            JSON.stringify({
+              type: "ERROR",
+              ErrorMessage: "Error while creating Game",
+            })
+          );
+        }
+      }
+    }
+    return;
   }
 
-  makeMove(player: WebSocket, move: moveType) {
+  makeMove(socket: WebSocket, move: moveType) {
+    let user, opponent;
+
+    if (socket === this.player1.socket) {
+      user = this.player1;
+      opponent = this.player2;
+    } else {
+      user = this.player2;
+      opponent = this.player1;
+    }
+
     const turn = this.board.turn();
 
     if (
-      (turn === "w" && player !== this.player1.socket) ||
-      (turn === "b" && player !== this.player2.socket)
+      (turn === "w" && socket !== this.player1.socket) ||
+      (turn === "b" && socket !== this.player2.socket)
     ) {
-      player.send("not your move");
+      socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "This is not your move",
+        })
+      );
       return;
     }
 
@@ -117,94 +155,159 @@ export class Game {
       this.board.move(move);
       this.moves.push(move);
     } catch (e) {
-      player.send("invalid move");
+      socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Invalid Move",
+        })
+      );
       return;
     }
 
-    const opponent =
-      player === this.player1.socket ? this.player2 : this.player1;
-
-    const you = this.player1 === opponent ? this.player2 : this.player1;
+    console.log(`${user.username} made the move`);
 
     const moveTime = Date.now();
     const timeTaken = moveTime - this.prevTime;
-    you.timeLeft = you.timeLeft - timeTaken <= 0 ? 0 : you.timeLeft - timeTaken;
     this.prevTime = moveTime;
 
-    let gameStatus: GameStatus = GameStatus.ACTIVE;
+    if (user.timeLeft - timeTaken > 0) {
+      user.timeLeft -= timeTaken;
+      user.timeLeft += Number(this.timeControl.increment);
 
-    if (you.timeLeft === 0) {
-      gameStatus = GameStatus.TIME_UP;
-    } else if (this.board.isGameOver()) {
-      gameStatus = GameStatus.OVER;
-    }
+      user.socket?.send(
+        JSON.stringify({
+          type: "TIME_UPDATE",
+          payload: {
+            time: {
+              w: this.player1.timeLeft,
+              b: this.player2.timeLeft,
+            },
+          },
+        })
+      );
+      console.log(`updated time send to ${user.username}`);
 
-    if (gameStatus !== GameStatus.ACTIVE) {
-      const winner = this.board.isDraw()
-        ? "draw"
-        : this.board.turn() === "w"
-          ? "b"
-          : "w";
+      opponent.socket?.send(
+        JSON.stringify({
+          type: MOVE,
+          payload: {
+            move: move,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+          },
+        })
+      );
 
+      console.log(`move send to ${opponent.username}`);
+
+      this.viewersManager.broadCast(
+        this.id,
+        JSON.stringify({
+          type: MOVE,
+          payload: {
+            move: move,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+          },
+        })
+      );
+    } else {
+      this.gameStatus = GameStatus.TIME_UP;
+      const winner = this.board.turn() === "w" ? "b" : "w";
       const gameOverMessage = JSON.stringify({
         type: GAME_OVER,
         payload: {
-          winner,
-          move,
-          time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+          reason: "Won on Time",
+          winner: winner,
+        },
+      });
+      socket.send(gameOverMessage);
+      opponent.socket?.send(gameOverMessage);
+      this.viewersManager.broadCast(this.id, gameOverMessage);
+      gameManager.removeGame(this.id);
+    }
+
+    if (this.board.isGameOver() && this.gameStatus !== GameStatus.TIME_UP) {
+      this.gameStatus = GameStatus.OVER;
+
+      let gameOverMessage: string = "";
+
+      if (this.board.isCheckmate()) {
+        const winner = this.board.turn() === "w" ? "b" : "w";
+
+        gameOverMessage = JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            reason: "Win by Checkmate",
+            winner: winner,
+          },
+        });
+      } else if (this.board.isStalemate()) {
+        gameOverMessage = JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            reason: "Draw by Stalemate",
+          },
+        });
+      } else if (this.board.isDrawByFiftyMoves()) {
+        gameOverMessage = JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            reason: "Draw by 50 Move Rule",
+          },
+        });
+      } else if (this.board.isThreefoldRepetition()) {
+        gameOverMessage = JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            reason: "Draw by 3 Fold Repetition",
+          },
+        });
+      } else if (this.board.isInsufficientMaterial()) {
+        gameOverMessage = JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            reason: "Draw by Insufficient Material",
+          },
+        });
+      }
+
+      socket.send(gameOverMessage);
+      opponent.socket?.send(gameOverMessage);
+      this.viewersManager.broadCast(this.id, gameOverMessage);
+      gameManager.removeGame(this.id);
+    }
+
+    if (!user.isGuest && !opponent.isGuest) {
+      this.newMoveInDB(move, timeTaken);
+      console.log(`move stored in database`);
+    }
+
+    return;
+  }
+
+  private async newMoveInDB({ from, to }: moveType, timeTaken: number) {
+    const moveNumber = this.moves.length;
+    try {
+      await db.move.create({
+        data: {
+          gameId: this.id,
+          from: from,
+          to: to,
+          moveNumber: moveNumber,
+          timeTaken: timeTaken,
         },
       });
 
-      player.send(gameOverMessage);
-
-      opponent.socket.send(gameOverMessage);
-
-      this.viewersManager.broadCast(this.id, gameOverMessage);
-      this.newMoveInDB(move, timeTaken, gameStatus);
-      return;
+      await db.game.update({
+        where: {
+          id: this.id,
+        },
+        data: {
+          currentPosition: this.board.fen(),
+          status: this.gameStatus,
+        },
+      });
+    } catch (e) {
+      console.log(`Unable to put move in Database`);
     }
-
-    const moveMessage = JSON.stringify({
-      type: MOVE,
-      payload: {
-        move: move,
-        time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
-      },
-    });
-
-    opponent.socket.send(moveMessage);
-
-    this.viewersManager.broadCast(this.id, moveMessage);
-
-    this.newMoveInDB(move, timeTaken, gameStatus);
-  }
-
-  private async newMoveInDB(
-    { from, to }: moveType,
-    timeTaken: number,
-    gameStatus: GameStatus
-  ) {
-    const gameId = this.gameId;
-    const moveNumber = this.moves.length + 1;
-
-    await db.move.create({
-      data: {
-        gameId: gameId,
-        from: from,
-        to: to,
-        moveNumber: moveNumber,
-        timeTaken: timeTaken,
-      },
-    });
-
-    await db.game.update({
-      where: {
-        id: this.gameId,
-      },
-      data: {
-        currentPosition: this.board.fen(),
-        status: gameStatus,
-      },
-    });
   }
 }

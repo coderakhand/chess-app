@@ -1,70 +1,129 @@
 import WebSocket from "ws";
 import { Game } from "./Game";
-import { INIT_GAME, MOVE, INIT_VIEW_GAME } from "@repo/utils";
+import {
+  INIT_GAME,
+  MOVE,
+  INIT_VIEW_GAME,
+  PENDING_GAME,
+  timeControlType,
+} from "@repo/utils";
 import { Viewer, ViewersManager } from "./ViewersManager";
 import { User } from "./UserManager";
+import { db } from "./db";
 
 export class GameManager {
   public games: Game[];
-  public pendingPlayer: User | null;
+  public pendingUsers: {
+    gameInfo: {
+      isRated: boolean;
+      timeControl: {
+        name: string;
+        baseTime: number;
+        increment: number;
+      };
+    };
+    user: User;
+  }[];
   public users: WebSocket[];
   public viewersManager: ViewersManager;
 
   constructor() {
     this.games = [];
-    this.pendingPlayer = null;
+    this.pendingUsers = [];
     this.users = [];
     this.viewersManager = new ViewersManager();
   }
 
-  addPlayer(socket: WebSocket) {
+  addUser(socket: WebSocket) {
     this.users.push(socket);
     this.addHandler(socket);
   }
 
-  removePlayer(socket: WebSocket) {
+  removeUser(socket: WebSocket) {
     this.users = this.users.filter((user) => user !== socket);
     this.viewersManager.removeViewer(socket);
-    this.pendingPlayer = null;
 
-    this.games = this.games.filter(
-      (game) => game.player1.socket !== socket && game.player2.socket !== socket
+    const game = this.games.find(
+      (game) => game.player1.socket === socket && game.player2.socket === socket
     );
+
+    if (game) {
+      if (game.player1.socket === socket) {
+        game.player1.socket = null;
+      } else {
+        game.player2.socket = null;
+      }
+
+      if (game.player1 === null && game.player2 === null) {
+        this.games = this.games.filter((g) => g.id !== game.id);
+      }
+    }
+  }
+
+  removeGame(gameId: string) {
+    this.games = this.games.filter((game) => game.id !== gameId);
   }
 
   private addHandler(socket: WebSocket) {
-    socket.on("message", (data) => {
+    socket.on("message", async (data) => {
       const message = JSON.parse(data.toString());
 
       if (message.type == INIT_GAME) {
-        const userInfo = message.userInfo;
-        const timeControl = message.payload.timeControl;
-
-        const player = new User(
-          userInfo.userId,
+        const { userInfo, isRated, timeControl } = message.payload;
+        console.log(message.payload);
+        const user = new User(
+          userInfo.isGuest,
+          userInfo.id,
           userInfo.username,
           userInfo.rating,
           socket,
           timeControl.baseTime
         );
 
-        if (this.pendingPlayer !== null) {
+        if (!user.isGuest) {
+          const isPendingGame = await this.handlePendingGame(user);
+          if (isPendingGame) {
+            return;
+          }
+        }
+
+        const waitingOpponent = this.pendingUsers.find(
+          (pendingUser) =>
+            pendingUser.user.isGuest === user.isGuest &&
+            pendingUser.gameInfo.isRated === isRated &&
+            pendingUser.gameInfo.timeControl.baseTime ===
+              timeControl.baseTime &&
+            pendingUser.gameInfo.timeControl.increment === timeControl.increment
+        );
+
+        if (waitingOpponent) {
+          const opponent = waitingOpponent.user;
           const game = new Game(
-            this.pendingPlayer,
-            player,
+            user,
+            opponent,
+            isRated,
             timeControl,
             this.viewersManager
           );
 
           this.games.push(game);
 
-          this.pendingPlayer = null;
+          this.pendingUsers = this.pendingUsers.filter(
+            (pendingUser) => pendingUser !== waitingOpponent
+          );
 
-          console.log("Game started:", game.id);
+          console.log(
+            `Game Started b/w ${user.username} & ${waitingOpponent.user.username}`
+          );
         } else {
-          this.pendingPlayer = player;
-
-          console.log("Player waiting...");
+          this.pendingUsers.push({
+            gameInfo: {
+              isRated: isRated,
+              timeControl: timeControl,
+            },
+            user: user,
+          });
+          console.log(`${user.username} is waiting`);
         }
         return;
       }
@@ -76,7 +135,7 @@ export class GameManager {
         );
 
         if (game) {
-          game.makeMove(socket, message.payload);
+          game.makeMove(socket, message.payload.move);
         }
         return;
       }
@@ -91,5 +150,199 @@ export class GameManager {
         console.log(`Viewer ${viewer.username} joined game ${gameId}`);
       }
     });
+  }
+
+  private async handlePendingGame(user: User) {
+    const existingGame = this.games.find(
+      (game) => game.player1.id === user.id || game.player2.id === user.id
+    );
+
+    if (existingGame) {
+      this.restoreSocket(existingGame, user);
+      return;
+    }
+
+    try {
+      const dbUser = await db.user.findUnique({
+        where: { id: user.id },
+        include: {
+          gamesAsWhite: true,
+          gamesAsBlack: true,
+        },
+      });
+
+      if (!dbUser) return;
+
+      const allGames = [
+        ...dbUser.gamesAsWhite.map((g) => ({ ...g, isWhite: true })),
+        ...dbUser.gamesAsBlack.map((g) => ({ ...g, isWhite: false })),
+      ];
+
+      const lastActiveGame = allGames
+        .filter((g) => g.status === "ACTIVE")
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+      if (!lastActiveGame) return false;
+
+      const opponentId = lastActiveGame.isWhite
+        ? lastActiveGame.blackUserId
+        : lastActiveGame.whiteUserId;
+
+      if (!opponentId) return false;
+
+      const opponent = await db.user.findUnique({
+        where: { id: opponentId },
+      });
+
+      if (!opponent) return false;
+
+      const timeControl = {
+        name: lastActiveGame.timeControl,
+        baseTime: lastActiveGame.baseTime,
+        increment: lastActiveGame.increment,
+      };
+
+      const {
+        userTimeLeft,
+        opponentTimeLeft,
+        movesList,
+      } = //@ts-ignore
+        await this.calculateTimeAndMoves(lastActiveGame.id, timeControl);
+
+      const playerUser = new User(
+        user.isGuest,
+        user.id,
+        user.username,
+        user.rating,
+        user.socket,
+        userTimeLeft
+      );
+
+      const opponentUser = new User(
+        false,
+        opponent.id,
+        opponent.username,
+        opponent.rating,
+        null,
+        opponentTimeLeft
+      );
+
+      const game = lastActiveGame.isWhite
+        ? new Game(
+            playerUser,
+            opponentUser,
+            //@ts-ignore
+            timeControl,
+            this.viewersManager,
+            lastActiveGame.currentPosition,
+            movesList
+          )
+        : new Game(
+            opponentUser,
+            playerUser,
+            //@ts-ignore
+            timeControl,
+            this.viewersManager,
+            lastActiveGame.currentPosition,
+            movesList
+          );
+
+      user.socket?.send(
+        JSON.stringify({
+          type: PENDING_GAME,
+          payload: {
+            position: game.board.fen(),
+            timeControl: timeControl,
+            userInfo: {
+              color: lastActiveGame.isWhite ? "w" : "b",
+              timeLeft: playerUser.timeLeft,
+            },
+            opponentInfo: {
+              username: opponentUser.username,
+              rating: opponentUser.rating,
+              timeLeft: opponentUser.timeLeft,
+            },
+          },
+        })
+      );
+
+      this.games.push(game);
+      return true;
+    } catch (err) {
+      user.socket?.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Unable to search database. Retry.",
+        })
+      );
+      return false;
+    }
+  }
+
+  private restoreSocket(game: Game, user: User) {
+    let playerUser, opponentUser;
+    if (game.player1.id === user.id) {
+      game.player1 = user;
+      playerUser = game.player1;
+      opponentUser = game.player2;
+    } else {
+      game.player2 = user;
+      playerUser = game.player2;
+      opponentUser = game.player1;
+    }
+
+    const color = game.player1.id === user.id ? "w" : "b";
+
+    user.socket?.send(
+      JSON.stringify({
+        type: PENDING_GAME,
+        payload: {
+          position: game.board.fen(),
+          timeControl: game.timeControl,
+          userInfo: {
+            color: color,
+            timeLeft: playerUser.timeLeft,
+          },
+          opponentInfo: {
+            username: opponentUser.username,
+            rating: opponentUser.rating,
+            timeLeft: opponentUser.timeLeft,
+          },
+        },
+      })
+    );
+  }
+
+  private async calculateTimeAndMoves(
+    gameId: string,
+    timeControl: timeControlType
+  ) {
+    const moves = await db.move.findMany({
+      where: { gameId },
+      orderBy: { moveNumber: "asc" },
+    });
+
+    let userTimeLeft = timeControl.baseTime ?? 0;
+    let opponentTimeLeft = timeControl.baseTime ?? 0;
+
+    const movesList = moves.map((move, idx) => {
+      const isWhiteMove = idx % 2 === 0;
+      const timeTaken = move.timeTaken ?? 0;
+
+      if (isWhiteMove) {
+        opponentTimeLeft -= timeTaken;
+        opponentTimeLeft += timeControl.increment ?? 0;
+      } else {
+        userTimeLeft -= timeTaken;
+        userTimeLeft += timeControl.increment ?? 0;
+      }
+
+      return {
+        from: move.from,
+        to: move.to,
+      };
+    });
+
+    return { userTimeLeft, opponentTimeLeft, movesList };
   }
 }

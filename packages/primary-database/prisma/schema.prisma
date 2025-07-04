@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  directUrl = env("DIRECT_URL")
   url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -13,23 +13,75 @@ model User {
   username     String    @unique
   email        String    @unique
   password     String
-  rating       Int       @default(800)
-  gamesAsWhite Game[]    @relation("WhiteGames")
-  gamesAsBlack Game[]    @relation("BlackGames")
+  rapidRating  Int       @default(800) @map("rating")
+  bulletRating Int       @default(800)
+  blitzRating  Int       @default(800)
   createdAt    DateTime  @default(now())
   lastLogin    DateTime?
+  gamesAsBlack Game[]    @relation("BlackGames")
+  gamesAsWhite Game[]    @relation("WhiteGames")
+  userSettings Settings?
 
-  @@index([rating])
+  @@index([rapidRating, bulletRating, blitzRating])
+}
+
+model Settings {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  premove            Boolean @default(false)
+  autoPromoteToQueen Boolean @default(false)
 }
 
 model Guest {
   id           String   @id @default(uuid())
   rating       Int      @default(800)
-  gamesAsWhite Game[]   @relation("GuestWhiteGames")
-  gamesAsBlack Game[]   @relation("GuestBlackGames")
   createdAt    DateTime @default(now())
+  gamesAsBlack Game[]   @relation("GuestBlackGames")
+  gamesAsWhite Game[]   @relation("GuestWhiteGames")
 
   @@index([rating])
+}
+
+model Game {
+  id                    String       @id @default(uuid())
+  whiteUserId           String?
+  whiteGuestId          String?
+  blackUserId           String?
+  blackGuestId          String?
+  startingPosition      String       @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  currentPosition       String?
+  timeControl           TimeControl?
+  createdAt             DateTime     @default(now())
+  status                GameStatus
+  result                GameResult?
+  baseTime              Int?
+  increment             Int?
+  blackGuest            Guest?       @relation("GuestBlackGames", fields: [blackGuestId], references: [id])
+  blackUser             User?        @relation("BlackGames", fields: [blackUserId], references: [id])
+  whiteGuest            Guest?       @relation("GuestWhiteGames", fields: [whiteGuestId], references: [id])
+  whiteUser             User?        @relation("WhiteGames", fields: [whiteUserId], references: [id])
+  moves                 Move[]
+  whitePlayerRating     Int?
+  blackPlayerRating     Int?
+  whiteUserRatingChange Int?
+  blackUserRatingChange Int?
+
+  @@index([status, result])
+}
+
+model Move {
+  id         String   @id @default(uuid())
+  gameId     String
+  moveNumber Int
+  from       String
+  to         String
+  timeTaken  Int?     @default(0)
+  playedAt   DateTime @default(now())
+  game       Game     @relation(fields: [gameId], references: [id])
+
+  @@index([gameId])
 }
 
 enum GameStatus {
@@ -52,45 +104,4 @@ enum GameResult {
   WHITE_WINS
   BLACK_WINS
   DRAW
-}
-
-model Game {
-  id String @id @default(uuid())
-
-  whiteUserId  String?
-  whiteUser    User?   @relation("WhiteGames", fields: [whiteUserId], references: [id])
-  whiteGuestId String?
-  whiteGuest   Guest?  @relation("GuestWhiteGames", fields: [whiteGuestId], references: [id])
-
-  blackUserId  String?
-  blackUser    User?   @relation("BlackGames", fields: [blackUserId], references: [id])
-  blackGuestId String?
-  blackGuest   Guest?  @relation("GuestBlackGames", fields: [blackGuestId], references: [id])
-
-  moves            Move[]
-  startingPosition String  @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-  currentPosition  String?
-
-  timeControl TimeControl?
-  baseTime    Int?
-  increment   Int?
-
-  createdAt DateTime    @default(now())
-  status    GameStatus
-  result    GameResult?
-
-  @@index([status, result])
-}
-
-model Move {
-  id         String   @id @default(uuid())
-  gameId     String
-  game       Game     @relation(fields: [gameId], references: [id])
-  moveNumber Int
-  from       String
-  to         String
-  timeTaken  Int?     @default(0)
-  playedAt   DateTime @default(now())
-
-  @@index([gameId])
 }

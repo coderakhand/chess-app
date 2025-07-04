@@ -7,9 +7,9 @@ export enum TimeControl {
 }
 
 export interface timeControlType {
-  name: TimeControl;
-  baseTime: number;
-  increment: number;
+  name: TimeControl | null;
+  baseTime: number | null;
+  increment: number | null;
 }
 
 export interface moveType {

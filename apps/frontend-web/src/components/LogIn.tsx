@@ -6,13 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { useUserInfoStore } from "../store/atoms";
 
 export default function LogIn() {
+  const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    if (isLoading) return;
     try {
+      setIsLoading(true);
       const { data: csrf } = await api.get("/csrf-token");
 
       const res = await api.post(
@@ -25,6 +28,7 @@ export default function LogIn() {
 
       setUserInfo({
         isGuest: false,
+        id: data.id,
         username: data.username,
         rating: data.rating,
       });
@@ -32,6 +36,7 @@ export default function LogIn() {
       console.log(data);
       navigate("/home");
     } catch {
+      setIsLoading(false);
       alert("Login failed.");
     }
   };
@@ -72,9 +77,17 @@ export default function LogIn() {
         />
         <button
           onClick={handleLogin}
+          disabled={isLoading}
           className="mt-[20px] text-white text-xl h-[50px] w-[150px] bg-[black] rounded-full"
         >
-          Log In
+          {isLoading ? (
+            <div className="flex gap-3 w-full justify-center items-center">
+              <div className="animate-spin rounded-full h-6 w-4 border-b-2 border-[#8CA2AD] dark:border-green-600"></div>
+              <div>Loading</div>
+            </div>
+          ) : (
+            "Log In"
+          )}
         </button>
       </div>
     </DialogHeader>

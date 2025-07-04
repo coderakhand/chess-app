@@ -1,15 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { useSocket } from "../hooks/useSocket";
-import { INIT_GAME, GAME_OVER, MOVE } from "../config";
+import { INIT_GAME, GAME_OVER, MOVE, PENDING_GAME } from "../config";
 import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
 import { useBgImageStore, useGameInfoStore } from "../store/atoms";
 import useAuth from "../hooks/useAuth";
 import PlayerCard from "../components/PlayerCard";
-import { Button } from "../components/ui/button";
-import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import { Button } from "../components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../components/ui/collapsible";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
+import { games } from "../config";
+import { Calendar, ChevronsUpDown, Clock, Zap } from "lucide-react";
 
 export default function Play() {
   const { user } = useAuth();
@@ -36,6 +43,7 @@ export default function Play() {
     (state) => state.setGameCreationTime
   );
   const timeControl = useGameInfoStore((state) => state.timeControl);
+  const setTimeControl = useGameInfoStore((state) => state.setTimeControl);
   const timeLeft = useGameInfoStore((state) => state.timeLeft);
   const setTimeLeft = useGameInfoStore((state) => state.setTimeLeft);
   const opponentTimeLeft = useGameInfoStore((state) => state.opponentTimeLeft);
@@ -46,24 +54,41 @@ export default function Play() {
   const timeLeftRef = useRef<number | null>(null);
   const opponentTimeLeftRef = useRef<number | null>(null);
 
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
+  const [isGameLoading, setIsGameLoading] = useState(false);
 
   useEffect(() => {
     const handleGame = () => {
       if (!socket) return;
       socket.onmessage = (e) => {
         const message = JSON.parse(e.data);
-        switch (message.type) {
+        const { type, payload } = message;
+
+        switch (type) {
+          case PENDING_GAME: {
+            console.log(payload);
+            const newChess = new Chess(payload.position);
+            setChess(newChess);
+            setBoard(newChess.board());
+            setTimeControl(payload.timeControl);
+            setIsGameStarted(true);
+            setColor(payload.userInfo.color);
+            setTimeLeft(payload.userInfo.timeLeft);
+            setOpponentInfo({
+              username: payload.opponentInfo.username,
+              rating: payload.opponentInfo.rating,
+            });
+            setOpponentTimeLeft(payload.opponentInfo.timeLeft);
+            break;
+          }
+
           case INIT_GAME: {
             const newChess = new Chess();
             setChess(newChess);
             setBoard(newChess.board());
-            setColor(message.payload.color);
+            setColor(payload.userInfo.color);
             setIsGameStarted(true);
-            setOpponentInfo(message.opponentInfo);
+            setOpponentInfo(payload.opponentInfo);
             setGameCreationTime(Date.now());
             timeLeftRef.current = timeControl.baseTime;
             opponentTimeLeftRef.current = timeControl.baseTime;
@@ -71,8 +96,9 @@ export default function Play() {
           }
 
           case MOVE: {
-            const move = message.payload.move;
-            const time = message.payload.time;
+            const move = payload.move;
+            const time = payload.time;
+            console.log(move);
             chess.move(move);
             setBoard(chess.board());
             setMove(move);
@@ -90,11 +116,28 @@ export default function Play() {
           }
 
           case GAME_OVER: {
-            const move = message.payload.move;
-            chess.move(move);
-            setBoard(chess.board());
-            setWinner(message.payload.winner);
+            if (payload.winner) {
+              setWinner(payload.winner);
+            }
+            console.log(payload.reason);
             break;
+          }
+
+          case "TIME_UPDATE": {
+            const { time } = payload;
+            if (color === "w") {
+              timeLeftRef.current = time.w;
+              opponentTimeLeftRef.current = time.b;
+              setTimeLeft(time.w);
+              setOpponentTimeLeft(time.b);
+              console.log("yourTime: ", time.w, "  hisTime: ", time.b);
+            } else {
+              timeLeftRef.current = time.b;
+              opponentTimeLeftRef.current = time.w;
+              setOpponentTimeLeft(time.w);
+              setTimeLeft(time.b);
+              console.log("yourTime: ", time.b, "  hisTime: ", time.w);
+            }
           }
         }
       };
@@ -111,9 +154,10 @@ export default function Play() {
     setGameCreationTime,
     setOpponentTimeLeft,
     setTimeLeft,
-    timeControl.baseTime,
+    timeControl,
     setColor,
     color,
+    setTimeControl,
   ]);
 
   useEffect(() => {
@@ -152,27 +196,38 @@ export default function Play() {
   ]);
 
   const createGame = () => {
-    if (socket === null) return;
+    if (!socket) return;
     socket.send(
       JSON.stringify({
         type: INIT_GAME,
         payload: {
+          isRated: true,
           timeControl: timeControl,
-        },
-        userInfo: {
-          userId: user.id,
-          username: user.username,
-          rating: user.rating,
+          userInfo: {
+            isGuest: user.id ? true : false,
+            id: user.id,
+            username: user.username,
+            rating: user.rating,
+          },
         },
       })
     );
   };
 
   const offerDraw = () => {
-    if (socket === null) return;
+    if (!socket) return;
     socket.send(
       JSON.stringify({
         type: "OFFER_DRAW",
+      })
+    );
+  };
+
+  const resignGame = () => {
+    if (!socket) return;
+    socket.send(
+      JSON.stringify({
+        type: "RESIGN_GAME",
       })
     );
   };
@@ -202,64 +257,31 @@ export default function Play() {
           />
         </div>
 
-        <div className="flex flex-col h-screen w-[400px] gap-3">
-          <div className="flex flex-col gap-3 w-full items-center ">
-            <div className="flex w-full h-full gap-4 justify-center">
-              <div className="h-[160px] w-[290px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40">
-                Opponent Video
-              </div>
-              <div className="py-[20px] px-[4px] flex flex-col justify-start gap-3  bg-white/30 backdrop-blur-md shadow-md border border-white/40  dark:border-[#27272A] dark:bg-[#18181B] h-full w-[45px] rounded-xl">
-                <Button
-                  variant={isMuted ? "destructive" : "ghost"}
-                  size="sm"
-                  onClick={() => setIsMuted(!isMuted)}
-                  className="w-full"
-                >
-                  {isMuted ? (
-                    <MicOff className="w-4 h-4" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
-                  )}
-                </Button>
-                <Button
-                  variant={!isVideoOn ? "destructive" : "ghost"}
-                  size="sm"
-                  onClick={() => setIsVideoOn(!isVideoOn)}
-                  className="w-full"
-                >
-                  {isVideoOn ? (
-                    <Video className="w-4 h-4" />
-                  ) : (
-                    <VideoOff className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            <div className="flex w-full h-full gap-4 justify-center">
-              <LocalVideo />
-              <div className="bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#18181B] h-full w-[45px] rounded-xl"></div>
-            </div>
-          </div>
-
-          <div className="flex justify-center w-full h-[350px] ">
+        <div className="flex flex-col h-full w-[400px] gap-3 pb-[30px]">
+          <div className="flex justify-center w-full h-screen max-h-[900px]">
             <div
               className={`flex flex-col items-center p-[5px] gap-3 w-[360px]`}
             >
-              <div className="w-full h-[50px] flex rounded-xl">
-                <Tabs defaultValue="new/move" className="w-full space-y-2">
-                  <TabsList className="h-[40px] py-[3px] px-[20px] grid w-full grid-cols-3 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
+              <div className="w-full h-full flex rounded-xl">
+                <Tabs
+                  defaultValue="new/move"
+                  className="flex flex-col w-full gap-3"
+                >
+                  <TabsList className="h-[40px] py-[5px] px-[20px] grid w-full grid-cols-3 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
                     <TabsTrigger
                       value="new/move"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
                     >
                       {gameStatus === null ? "New" : "Move"}
                     </TabsTrigger>
+
                     <TabsTrigger
                       value="chat"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
                     >
                       Chat
                     </TabsTrigger>
+
                     <TabsTrigger
                       value="friends"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
@@ -267,19 +289,99 @@ export default function Play() {
                       Friends
                     </TabsTrigger>
                   </TabsList>
+
                   <TabsContent
                     value="new/move"
-                    className="w-full h-[300px] space-y-6 bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                    className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   >
-                    {gameStatus !== null && <MovesTable />}
+                    {gameStatus !== null ? (
+                      <div>
+                        <MovesTable />
+                        <Button onClick={resignGame}>Resign</Button>
+                        <Button onClick={offerDraw}>Draw</Button>
+                        <ChatBox />
+                      </div>
+                    ) : (
+                      <div className="flex justify-center w-full h-full py-[20px]">
+                        <div className="flex flex-col items-center gap-6">
+                          <Collapsible className="w-[240px] dark:bg-black dark:text-white dark:border-none rounded-sm overflow-hidden">
+                            <CollapsibleTrigger className="flex gap-2 w-full justify-center items-center h-[50px]">
+                              {timeControl.name === "RAPID" ? (
+                                <Calendar className="w-4 h-4 text-purple-600" />
+                              ) : timeControl.name === "BLITZ" ? (
+                                <Clock className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Zap className="w-4 h-4 text-blue-600" />
+                              )}
+                              {timeControl.baseTime / 60000} |{" "}
+                              {timeControl.increment / 1000}
+                              <p>({timeControl.name})</p>
+                              <ChevronsUpDown></ChevronsUpDown>
+                            </CollapsibleTrigger>
+
+                            <CollapsibleContent className="rounded-xl">
+                              {games.map((game) => (
+                                <Card className="w-full h-[100px] flex flex-col justify-center gap-2 border-none ">
+                                  <CardHeader className="h-full flex items-center font-bold">
+                                    {game.name.toLowerCase() === "rapid" ? (
+                                      <Calendar className="w-4 h-4 text-purple-600" />
+                                    ) : game.name.toLowerCase() === "blitz" ? (
+                                      <Clock className="w-4 h-4 text-green-600" />
+                                    ) : (
+                                      <Zap className="w-4 h-4 text-blue-600" />
+                                    )}
+                                    {game.name}
+                                  </CardHeader>
+
+                                  <CardContent className="flex gap-3">
+                                    {game.types.map((gameTimeControl) => (
+                                      <Button
+                                        onClick={() =>
+                                          setTimeControl({
+                                            name: game.name.toUpperCase(),
+                                            baseTime:
+                                              gameTimeControl.baseTime *
+                                              60 *
+                                              1000,
+                                            increment:
+                                              gameTimeControl.increment * 1000,
+                                          })
+                                        }
+                                        className="dark:bg-white dark:hover:bg-[#E2E2E2] text-black font-medium cursor-pointer"
+                                      >
+                                        {gameTimeControl.baseTime} |{" "}
+                                        {gameTimeControl.increment}
+                                      </Button>
+                                    ))}
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </CollapsibleContent>
+                          </Collapsible>
+
+                          <Button
+                            onClick={() => {
+                              setIsGameLoading(true);
+                              createGame();
+                            }}
+                            disabled={isGameLoading}
+                            className="w-[200px] h-[50px] text-white bg-[#8CA2AD] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer"
+                          >
+                            Start Game
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </TabsContent>
+
                   <TabsContent
                     value="chat"
-                    className="h-[300px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                    className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   ></TabsContent>
+
                   <TabsContent
                     value="friends"
-                    className="h-[300px] bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                    className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   ></TabsContent>
                 </Tabs>
               </div>
@@ -288,33 +390,6 @@ export default function Play() {
         </div>
       </div>
     </div>
-  );
-}
-
-function LocalVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: false })
-      .then((stream) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to access webcam:", err);
-      });
-  }, []);
-
-  return (
-    <video
-      ref={videoRef}
-      autoPlay={true}
-      muted
-      playsInline
-      className="h-[160px] w-[290px] rounded-xl object-cover"
-    />
   );
 }
 
@@ -360,4 +435,8 @@ function Move({
       </div>
     </div>
   );
+}
+
+function ChatBox() {
+  return <div></div>;
 }

@@ -63,11 +63,15 @@ export default function ChessBoard({
       }
 
       setBoard(chess.board());
+
       setMoves(move);
+
       socket.send(
         JSON.stringify({
           type: "move",
-          payload: move,
+          payload: {
+            move: move,
+          },
         })
       );
     }
@@ -87,7 +91,9 @@ export default function ChessBoard({
       socket.send(
         JSON.stringify({
           type: "move",
-          payload: move,
+          payload: {
+            move: move,
+          },
         })
       );
     }
@@ -101,7 +107,7 @@ export default function ChessBoard({
       <div
         className={`${
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
-        } relative ${customClass ?? "w-[600px] h-[600px] max-w-[600px] max-h-[600px]"} grid grid-rows-8 rounded-md overflow-hidden`}
+        } relative ${customClass ?? "w-[600px] h-[600px] max-w-[580px] max-h-[580px]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
         {winner !== null ? <GameResultCard winner={winner} /> : <></>}
         {board.map((row, i) => {

@@ -33,6 +33,7 @@ export const useBoardStore = create<BoardStoreType>((set) => ({
 
 interface UserInfoType {
   isGuest: boolean;
+  id: string;
   username: string;
   rating: number;
 }
@@ -42,7 +43,7 @@ interface UserInfoStoreType {
 }
 
 export const useUserInfoStore = create<UserInfoStoreType>((set) => ({
-  userInfo: { isGuest: true, username: "", rating: 0 },
+  userInfo: { isGuest: true, id: "", username: "Guest", rating: 800 },
   setUserInfo: (newUserInfo: UserInfoType) => set({ userInfo: newUserInfo }),
 }));
 
@@ -94,9 +95,9 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
   moves: [],
   color: "w",
   opponentInfo: { username: "Opponent", rating: 800 },
-  timeControl: { name: "BLITZ", baseTime: 1 * 60 * 1000, increment: 2 * 1000 },
-  opponentTimeLeft: null,
-  timeLeft: null,
+  timeControl: { name: "BULLET", baseTime: 1 * 60 * 1000, increment: 2 * 1000 },
+  opponentTimeLeft: 1 * 60 * 1000,
+  timeLeft: 1 * 60 * 1000,
   gameCreationTime: null,
 
   setChess: (newChess: Chess) => set({ chess: newChess }),

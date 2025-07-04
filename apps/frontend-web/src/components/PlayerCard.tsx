@@ -45,20 +45,16 @@ export default function PlayerCard({
           </div>
         )}
         <div className={`dark:text-white`}>{player} </div>
-        <div
-          className={`text-xs px-1 rounded-sm bg-[#27272A] text-[#A1A1AA]`}
-        >
+        <div className={`text-xs px-1 rounded-sm bg-[#27272A] text-[#A1A1AA]`}>
           {rating}
         </div>
       </div>
-      {time ? (
+      {time && (
         <div
-          className={`flex justify-end items-center px-[5px] h-[40px] w-[120px] ${color === "b" ? "text-white bg-black" : "text-black bg-white"} rounded-lg text-3xl`}
+          className={`flex justify-end items-center px-[5px] h-[40px] w-[120px] ${color === "b" ? "text-white bg-black dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A]" : "text-black bg-white"} rounded-lg text-3xl`}
         >
           {formatTime(time)}
         </div>
-      ) : (
-        <></>
       )}
     </div>
   );

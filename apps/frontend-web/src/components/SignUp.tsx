@@ -5,13 +5,16 @@ import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
 export default function SignUp() {
+  const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleSignup = async () => {
+    if (isLoading) return;
     try {
+      setIsLoading(true);
       const { data: csrf } = await api.get("/csrf-token");
       console.log(csrf);
       const res = await api.post(
@@ -22,8 +25,9 @@ export default function SignUp() {
 
       console.log(res.data);
       navigate("/home");
-    } catch (e){
-      console.log(e)
+    } catch (e) {
+      setIsLoading(false);
+      console.log(e);
       alert("Signup failed unable to send request");
     }
   };
@@ -71,9 +75,17 @@ export default function SignUp() {
         />
         <button
           onClick={handleSignup}
+          disabled={isLoading}
           className="mt-[20px] text-white text-xl h-[50px] w-[150px] bg-[black] rounded-full"
         >
-          Sign Up
+          {isLoading ? (
+            <div className="flex gap-3 w-full justify-center items-center">
+              <div className="animate-spin rounded-full h-6 w-4 border-b-2 border-[#8CA2AD] dark:border-green-600"></div>
+              <div>Loading</div>
+            </div>
+          ) : (
+            "Sign Up"
+          )}
         </button>
       </div>
     </DialogHeader>

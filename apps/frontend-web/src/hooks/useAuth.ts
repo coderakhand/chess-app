@@ -3,30 +3,31 @@ import api from "../api/axios";
 import { useUserInfoStore } from "../store/atoms";
 
 export default function useAuth() {
-  const [user, setUser] = useState({
-    id: "",
-    username: "You",
-    rating: 800,
-  });
-  const [userInfoLoading, setUserInfoLoading] = useState(true);
-
+  const [user, setUser] = useState(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
+  const userInfo = useUserInfoStore((state) => state.userInfo);
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
 
   const fetchMe = async () => {
     try {
       const { data } = await api.get("/me");
       setUser(data.user);
-      setUserInfo({ ...user, isGuest: false });
+      setUserInfo({ ...data.user, isGuest: false });
       console.log(data.user);
-      setUserInfoLoading(false);
+      setIsUserLoading(false);
     } catch {
-      setUserInfoLoading(false);
+      setIsUserLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMe();
+    if (!userInfo || !userInfo.id) {
+      fetchMe();
+    } else {
+      setUserInfo(userInfo);
+      setIsUserLoading(false);
+    }
   }, []);
 
-  return { user, userInfoLoading, refresh: fetchMe };
+  return { user: user || userInfo, isUserLoading, refresh: fetchMe };
 }

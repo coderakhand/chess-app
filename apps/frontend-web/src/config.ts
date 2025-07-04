@@ -2,6 +2,7 @@ export const WS_URL = "ws://localhost:8080";
 export const INIT_GAME = "init_game";
 export const MOVE = "move";
 export const GAME_OVER = "game_over";
+export const PENDING_GAME = "pending_game";
 
 export const boardColorsList = [
   {
@@ -124,4 +125,30 @@ export const sampleGame = [
   "Rc7",
   "Rd8",
   "Nf5",
+];
+
+export const games = [
+  {
+    name: "Blitz",
+    types: [
+      { baseTime: 3, increment: 0 },
+      { baseTime: 3, increment: 2 },
+      { baseTime: 5, increment: 0 },
+    ],
+  },
+  {
+    name: "Bullet",
+    types: [
+      { baseTime: 1, increment: 0 },
+      { baseTime: 1, increment: 1 },
+      { baseTime: 2, increment: 1 },
+    ],
+  },
+  {
+    name: "Rapid",
+    types: [
+      { baseTime: 10, increment: 0 },
+      { baseTime: 15, increment: 10 },
+    ],
+  },
 ];

@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { Settings } from "lucide-react";
-import { useUserInfoStore } from "../store/atoms";
+import { useBoardStore, useUserInfoStore } from "../store/atoms";
+import { boardColorsList } from "../config";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md  dark:hover:shadow-none dark:hover:bg-[#27272A]";
@@ -24,6 +25,9 @@ export default function SideBar({ position }: { position: string }) {
   const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
   const [component, setComponent] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
+
+  const setDarkSquare = useBoardStore((state) => state.setDarkSquare);
+  const setLightSquare = useBoardStore((state) => state.setLightSquare);
 
   const commonStyle =
     "text-3xl transition delay-80 duration-600 cursor-pointer";
@@ -89,7 +93,16 @@ export default function SideBar({ position }: { position: string }) {
 
         <div className="py-[20px] px-[10px] w-full gap-4 flex flex-col justify-end">
           <div
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={() => {
+              if (theme === "dark") {
+                setDarkSquare(boardColorsList[1].darkSquare);
+                setLightSquare(boardColorsList[1].lightSquare);
+              } else {
+                setDarkSquare(boardColorsList[0].darkSquare);
+                setLightSquare(boardColorsList[0].lightSquare);
+              }
+              setTheme(theme === "dark" ? "light" : "dark");
+            }}
             className="flex justify-center"
           >
             {theme === "dark" ? (

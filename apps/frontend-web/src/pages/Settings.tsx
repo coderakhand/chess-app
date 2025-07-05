@@ -26,11 +26,9 @@ import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
 import ChessBoard from "../components/ChessBoard";
-import { useBgImageStore } from "../store/atoms";
 import SideBar from "../components/SideBar";
 
 export default function Settings() {
-  const bgImage = useBgImageStore((state) => state.bgImage);
   const { theme, setTheme } = useTheme();
   const [boardTheme, setBoardTheme] = useState("classic");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -53,7 +51,7 @@ export default function Settings() {
   ];
   return (
     <div
-      className={`min-h-screen min-w-screen ${bgImage} bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`min-h-screen min-w-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position="fixed" />
       <div className={`pl-[30px] min-w-screen min-h-screen p-4`}>

@@ -2,16 +2,6 @@ import { create } from "zustand";
 import { boardColorsList } from "../config";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
 
-interface bgImageStore {
-  bgImage: string;
-  setBgImage: (newImage: string) => void;
-}
-
-export const useBgImageStore = create<bgImageStore>((set) => ({
-  bgImage: "bg-[url(/background/bg-1.jpg)]",
-  setBgImage: (newImage: string) => set({ bgImage: newImage }),
-}));
-
 interface BoardStoreType {
   darkSquare: string;
   lightSquare: string;
@@ -35,7 +25,12 @@ interface UserInfoType {
   isGuest: boolean;
   id: string;
   username: string;
-  rating: number;
+  email: string;
+  ratings: {
+    bullet: number;
+    blitz: number;
+    rapid: number;
+  };
 }
 interface UserInfoStoreType {
   userInfo: UserInfoType;
@@ -43,7 +38,17 @@ interface UserInfoStoreType {
 }
 
 export const useUserInfoStore = create<UserInfoStoreType>((set) => ({
-  userInfo: { isGuest: true, id: "", username: "Guest", rating: 800 },
+  userInfo: {
+    isGuest: true,
+    id: "",
+    username: "Guest",
+    email: "",
+    ratings: {
+      bullet: 800,
+      rapid: 800,
+      blitz: 800,
+    },
+  },
   setUserInfo: (newUserInfo: UserInfoType) => set({ userInfo: newUserInfo }),
 }));
 

@@ -4,7 +4,6 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import SideBar from "./SideBar";
-import { useBgImageStore } from "../store/atoms";
 import { RatingChart } from "./RatingChart";
 import {
   Play,
@@ -16,23 +15,15 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import useAuth from "../hooks/useAuth";
+import { Link } from "react-router-dom";
 
 type TimeControl = "blitz" | "bullet" | "rapid";
 
 export default function SignedInUserHome() {
-  const bgImage = useBgImageStore((state) => state.bgImage);
+  const { user } = useAuth();
   const [selectedTimeControl, setSelectedTimeControl] =
     useState<TimeControl>("blitz");
-
-  const user = {
-    username: "ChessPlayer",
-    rank: "#1,247",
-    ratings: {
-      rapid: 1290,
-      blitz: 1245,
-      bullet: 1180,
-    },
-  };
 
   const recentGames = [
     {
@@ -90,18 +81,21 @@ export default function SignedInUserHome() {
   const quickPlayOptions = [
     {
       title: "New Game",
+      link: "/play",
       description: "Play with someone at your level",
       icon: Play,
       color: "bg-green-600 hover:bg-green-700",
     },
     {
       title: "Play a Friend",
+      link: "/play",
       description: "Challenge your friends",
       icon: Users,
       color: "bg-blue-600 hover:bg-blue-700",
     },
     {
       title: "Analyze Games",
+      link: "/analyze",
       description: "Review your recent games",
       icon: BarChart3,
       color: "bg-purple-600 hover:bg-purple-700",
@@ -110,7 +104,7 @@ export default function SignedInUserHome() {
 
   return (
     <div
-      className={`flex min-h-screen ${bgImage} bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`flex min-h-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position="fixed" />
       <div className="flex justify-center items-center min-h-screen min-w-screen">
@@ -132,7 +126,7 @@ export default function SignedInUserHome() {
                   className="bg-white/20 text-white border-white/30 dark:bg-[#27272A] dark:hover:bg-[#212124] dark:text-[#A1A1AA]"
                 >
                   <Trophy className="w-3 h-3 mr-1 text-yellow-400" />
-                  Rank {user.rank}
+                  Rank {8000}
                 </Badge>
               </div>
             </div>
@@ -145,7 +139,7 @@ export default function SignedInUserHome() {
                     <span className="text-sm font-medium">Rapid</span>
                   </div>
                   <div className="text-2xl font-bold dark:text-[#A1A1AA]">
-                    {user.ratings.rapid}
+                    {user.ratings?.rapid}
                   </div>
                 </div>
                 <div className="text-center">
@@ -154,7 +148,7 @@ export default function SignedInUserHome() {
                     <span className="text-sm font-medium">Blitz</span>
                   </div>
                   <div className="text-2xl font-bold dark:text-[#A1A1AA]">
-                    {user.ratings.blitz}
+                    {user.ratings?.blitz}
                   </div>
                 </div>
                 <div className="text-center">
@@ -163,7 +157,7 @@ export default function SignedInUserHome() {
                     <span className="text-sm font-medium">Bullet</span>
                   </div>
                   <div className="text-2xl font-bold dark:text-[#A1A1AA]">
-                    {user.ratings.bullet}
+                    {user.ratings?.bullet}
                   </div>
                 </div>
               </div>
@@ -187,15 +181,17 @@ export default function SignedInUserHome() {
                       key={index}
                       className={`w-full justify-start h-auto p-4 ${option.color}`}
                     >
-                      <div className="flex items-center gap-3 w-full">
-                        <option.icon className="w-5 h-5" />
-                        <div className="flex-1 text-left">
-                          <div className="font-medium">{option.title}</div>
-                          <div className="text-sm opacity-90">
-                            {option.description}
+                      <Link to={option.link}>
+                        <div className="flex items-center gap-3 w-full">
+                          <option.icon className="w-5 h-5" />
+                          <div className="flex-1 text-left">
+                            <div className="font-medium">{option.title}</div>
+                            <div className="text-sm opacity-90">
+                              {option.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     </Button>
                   ))}
                 </CardContent>

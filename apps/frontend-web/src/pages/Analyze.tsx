@@ -1,56 +1,56 @@
-import { useState } from "react";
-import type { Square, PieceSymbol, Color } from "chess.js";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import SideBar from "../components/SideBar";
+import DroppableSquare from "../components/DroppableSquare";
+import ChessPiece from "../components/ChessPiece";
+import { useState } from "react";
+import { Chess, type PieceSymbol, type Square, type Color } from "chess.js";
+import { useBoardStore } from "../store/atoms";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { useBoardStore, useGameInfoStore } from "../store/atoms";
-import ChessPiece from "./ChessPiece";
-import GameResultCard from "./GameResultCard";
-import DroppableSquare from "./DroppableSquare";
 
-interface ChessBoardProps {
-  socket: WebSocket | null;
-  winner: string | null;
+export default function Analyze() {
+  const [color, setColor] = useState("w");
+
+  return (
+    <div className="min-h-screen min-w-screen flex justify-center items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]">
+      <SideBar position="absolute" />
+      <div className="">
+        <AnalysisChessBoard color={color} />
+        <div className=""></div>
+      </div>
+    </div>
+  );
+}
+
+interface AnalysisChessBoardProps {
+  color: string;
   customClass?: string;
   customClassPieces?: string;
 }
 
-export default function ChessBoard({
-  socket,
-  winner,
+function AnalysisChessBoard({
+  color,
   customClass,
   customClassPieces,
-}: ChessBoardProps) {
-  const color = useGameInfoStore((state) => state.color);
-  const chess = useGameInfoStore((state) => state.chess);
-  const board = useGameInfoStore((state) => state.board);
-  const setBoard = useGameInfoStore((state) => state.setBoard);
+}: AnalysisChessBoardProps) {
   const lightSquare = useBoardStore((state) => state.lightSquare);
   const darkSquare = useBoardStore((state) => state.darkSquare);
-
   const [source, setSource] = useState<string | null>(null);
-
-  const setMoves = useGameInfoStore((state) => state.setMoves);
+  const [chess, setChess] = useState(new Chess());
+  const [board, setBoard] = useState(chess.board());
 
   const handleMovement = (
-    i: number,
-    j: number,
+    cellCode: string,
     square: {
       square: Square;
       type: PieceSymbol;
       color: Color;
     } | null
   ) => {
-    const cellCode = String.fromCharCode(97 + (j % 8)) + (8 - i);
     if (source === null) {
       if (square === null) return;
-      if (square.color != color) return;
+      if (color !== chess.turn()) return;
       setSource(cellCode);
     } else {
-      if (socket === null) {
-        setSource(null);
-        return;
-      }
-
       const move = {
         from: source,
         to: cellCode,
@@ -64,17 +64,6 @@ export default function ChessBoard({
       }
 
       setBoard(chess.board());
-
-      setMoves(move);
-
-      socket.send(
-        JSON.stringify({
-          type: "move",
-          payload: {
-            move: move,
-          },
-        })
-      );
     }
   };
 
@@ -82,21 +71,11 @@ export default function ChessBoard({
     const from = event.active.id as string;
     const to = event.over?.id as string;
     if (!to || from === to) return;
-    if (color === null || color !== chess.turn()) return;
+    if (color !== chess.turn()) return;
     const move = { from, to };
 
     if (chess.move(move)) {
       setBoard(chess.board());
-      if (socket === null) return;
-      setMoves(move);
-      socket.send(
-        JSON.stringify({
-          type: "move",
-          payload: {
-            move: move,
-          },
-        })
-      );
     }
   };
 
@@ -110,7 +89,6 @@ export default function ChessBoard({
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
         } relative ${customClass ?? "w-[600px] h-[600px] max-w-[580px] max-h-[580px]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
-        {winner !== null ? <GameResultCard winner={winner} /> : <></>}
         {board.map((row, i) => {
           return (
             <div key={i} className="grid grid-cols-8">
@@ -121,7 +99,7 @@ export default function ChessBoard({
                   <DroppableSquare
                     key={j}
                     id={cellCode}
-                    onClick={() => handleMovement(i, j, square)}
+                    onClick={() => handleMovement(cellCode, square)}
                     color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
                   >
                     {square !== null ? (

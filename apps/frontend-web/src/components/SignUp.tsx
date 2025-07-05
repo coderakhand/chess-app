@@ -3,6 +3,7 @@ import { DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useUserInfoStore } from "../store/atoms";
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,6 +11,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
 
   const handleSignup = async () => {
     if (isLoading) return;
@@ -23,7 +25,17 @@ export default function SignUp() {
         { headers: { "csrf-token": csrf.csrfToken } }
       );
 
-      console.log(res.data);
+      const data = res.data;
+
+      setUserInfo({
+        isGuest: false,
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        ratings: data.ratings,
+      });
+
+      console.log(data);
       navigate("/home");
     } catch (e) {
       setIsLoading(false);

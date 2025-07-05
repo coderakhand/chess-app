@@ -209,11 +209,18 @@ export class GameManager {
       } = //@ts-ignore
         await this.calculateTimeAndMoves(lastActiveGame.id, timeControl);
 
+      const rating =
+        timeControl.name === "BLITZ"
+          ? "blitzRating"
+          : timeControl.name === "BULLET"
+            ? "bulletRating"
+            : "rapidRating";
+
       const playerUser = new User(
         user.isGuest,
         user.id,
         user.username,
-        user.rating,
+        dbUser[rating],
         user.socket,
         userTimeLeft
       );
@@ -222,7 +229,7 @@ export class GameManager {
         false,
         opponent.id,
         opponent.username,
-        opponent.rating,
+        opponent[rating],
         null,
         opponentTimeLeft
       );

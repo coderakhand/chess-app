@@ -17,6 +17,7 @@ import { useTheme } from "./ThemeProvider";
 import { Settings } from "lucide-react";
 import { useBoardStore, useUserInfoStore } from "../store/atoms";
 import { boardColorsList } from "../config";
+import api from "../api/axios";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md  dark:hover:shadow-none dark:hover:bg-[#27272A]";
@@ -34,7 +35,7 @@ export default function SideBar({ position }: { position: string }) {
 
   return (
     <div
-      className={`${position} left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B]`}
+      className={`${position} z-100 left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B]`}
     >
       <div className="grid grid-rows-2 h-screen">
         <HoverCard
@@ -144,8 +145,23 @@ function SideBarComponentContent({ component }: { component: string | null }) {
 }
 
 function ChezzBarContent() {
-  const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
-
+  const userInfo = useUserInfoStore((state) => state.userInfo);
+  const userLogout = async () => {
+    try {
+      const { data: csrf } = await api.get("/csrf-token");
+      console.log("sending request");
+      const response = await api.post(
+        "/logout",
+        {},
+        { headers: { "csrf-token": csrf.csrfToken } }
+      );
+      const data = response.data;
+      console.log(data);
+      console.log("did");
+    } catch (e) {
+      console.log(e);
+    }
+  };
   return (
     <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
       <Link
@@ -156,15 +172,16 @@ function ChezzBarContent() {
         Home
       </Link>
       <Link
-        to={"/profile"}
+        to={`/profile/${userInfo.username}`}
         className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <img src="/user.png" className="h-[40px] overflow-hidden" />
         Profile
       </Link>
-      {!isGuest && (
+      {!userInfo.isGuest && (
         <button
           className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect} cursor-pointer`}
+          onClick={userLogout}
         >
           <VscSignOut className="text-3xl text-red-400" /> Log Out
         </button>

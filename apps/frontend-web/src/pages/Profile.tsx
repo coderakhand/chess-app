@@ -16,7 +16,7 @@ import {
 } from "../components/ui/tabs";
 import { Progress } from "../components/ui/progress";
 import SideBar from "../components/SideBar";
-import { useBgImageStore, useUserInfoStore } from "../store/atoms";
+import { useUserInfoStore } from "../store/atoms";
 import { RatingChart } from "../components/RatingChart";
 // import { GameHistory } from "./GameHistory";
 import {
@@ -29,20 +29,14 @@ import {
   Star,
   Crown,
 } from "lucide-react";
+import useAuth from "../hooks/useAuth";
 
 type TimeControl = "blitz" | "bullet" | "rapid";
 
 export default function Profile() {
-  const bgImage = useBgImageStore((state) => state.bgImage);
+  const { user } = useAuth();
   const [selectedTimeControl, setSelectedTimeControl] =
     useState<TimeControl>("blitz");
-
-  // Mock user data
-  const user = {
-    username: "ChessPlayer",
-    avatar: "/placeholder.svg?height=96&width=96",
-    isPremium: true,
-  };
 
   const userStats = {
     blitz: {
@@ -117,7 +111,7 @@ export default function Profile() {
 
   return (
     <div
-      className={`flex min-h-screen ${bgImage} bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`flex min-h-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position="fixed" />
       <div className={`min-w-screen min-h-screen p-4`}>
@@ -127,7 +121,7 @@ export default function Profile() {
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                   <Avatar className="w-24 h-24 dark:bg-white dark:text-black">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} />
+                    <AvatarImage src={"/placeholder.svg"} />
                     <AvatarFallback className="text-4xl">
                       {user.username[0]}
                     </AvatarFallback>
@@ -136,15 +130,15 @@ export default function Profile() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h1 className="text-3xl font-bold">{user.username}</h1>
-                      {user.isPremium && (
+                      {
                         <Badge
                           variant="secondary"
                           className="flex items-center gap-1 bg-[#27272A] hover:bg-[#212124] rounded-xl font-semibold text-white"
                         >
                           <Star className="w-3 h-3" />
-                          Premium
+                          Rising Star
                         </Badge>
-                      )}
+                      }
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">

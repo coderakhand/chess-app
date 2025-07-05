@@ -4,7 +4,7 @@ import { INIT_GAME, GAME_OVER, MOVE, PENDING_GAME } from "../config";
 import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
-import { useBgImageStore, useGameInfoStore } from "../store/atoms";
+import { useGameInfoStore } from "../store/atoms";
 import useAuth from "../hooks/useAuth";
 import PlayerCard from "../components/PlayerCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
@@ -20,8 +20,6 @@ import { Calendar, ChevronsUpDown, Clock, Zap } from "lucide-react";
 
 export default function Play() {
   const { user } = useAuth();
-
-  const bgImage = useBgImageStore((state) => state.bgImage);
 
   const socket = useSocket();
 
@@ -56,6 +54,13 @@ export default function Play() {
 
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
   const [isGameLoading, setIsGameLoading] = useState(false);
+
+  const rating =
+    timeControl.name === "BULLET"
+      ? user.ratings.bullet
+      : timeControl.name === "BLITZ"
+        ? user.ratings.blitz
+        : user.ratings.rapid;
 
   useEffect(() => {
     const handleGame = () => {
@@ -197,6 +202,7 @@ export default function Play() {
 
   const createGame = () => {
     if (!socket) return;
+
     socket.send(
       JSON.stringify({
         type: INIT_GAME,
@@ -207,7 +213,7 @@ export default function Play() {
             isGuest: user.id ? true : false,
             id: user.id,
             username: user.username,
-            rating: user.rating,
+            rating: rating,
           },
         },
       })
@@ -234,7 +240,7 @@ export default function Play() {
 
   return (
     <div
-      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] ${bgImage} bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position={"fixed"} />
 
@@ -251,7 +257,7 @@ export default function Play() {
 
           <PlayerCard
             player={user.username}
-            rating={user.rating}
+            rating={rating}
             color={color}
             time={timeLeft}
           />

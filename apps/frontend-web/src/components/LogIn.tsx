@@ -30,7 +30,8 @@ export default function LogIn() {
         isGuest: false,
         id: data.id,
         username: data.username,
-        rating: data.rating,
+        email: data.email,
+        ratings: data.ratings,
       });
 
       console.log(data);

@@ -113,7 +113,11 @@ app.post("/signup", csrfProtection, async (req, res): Promise<void> => {
         user: {
           id: user.id,
           username: user.username,
-          rating: user.rating,
+          ratings: {
+            bullet: user.bulletRating,
+            blitz: user.blitzRating,
+            rapid: user.rapidRating,
+          },
         },
       });
     });
@@ -132,8 +136,13 @@ app.post(
     res.json({
       message: "Login successful",
       user: {
+        id: user.id,
         username: user.username,
-        rating: user.rating,
+        ratings: {
+          bullet: user.bulletRating,
+          blitz: user.blitzRating,
+          rapid: user.rapidRating,
+        },
       },
     });
   }
@@ -152,10 +161,13 @@ app.get("/me", requireAuth, (req, res) => {
   res.json({
     user: {
       id: user.id,
-      username: user.username,
-      rating: user.rating,
       email: user.email,
-      lastLogin: user.lastLogin,
+      username: user.username,
+      ratings: {
+        bullet: user.bulletRating,
+        blitz: user.blitzRating,
+        rapid: user.rapidRating,
+      },
     },
   });
 });

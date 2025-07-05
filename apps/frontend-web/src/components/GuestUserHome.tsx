@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import SignUp from "./SignUp";
 import LogIn from "./LogIn";
 import { Link } from "react-router-dom";
-import { useBgImageStore, useBoardStore } from "../store/atoms";
+import { useBoardStore } from "../store/atoms";
 import { Button } from "./ui/button";
 import SideBar from "./SideBar";
 import { useTheme } from "./ThemeProvider";
@@ -23,7 +23,6 @@ import PlayerCard from "./PlayerCard";
 type CardValues = "LOG_IN" | "SIGN_UP" | null;
 
 export default function GuestUserHome() {
-  const bgImage = useBgImageStore((state) => state.bgImage);
   const [card, setCard] = useState<CardValues>(null);
   const closeDialog = () => setCard(null);
   const { theme } = useTheme();
@@ -43,7 +42,7 @@ export default function GuestUserHome() {
 
   return (
     <div
-      className={`min-h-screen min-w-screen flex flex-col items-center ${bgImage} bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`min-h-screen min-w-screen flex flex-col items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar position="fixed" />
       <div className="flex flex-col items-center min-h-screen min-w-screen">

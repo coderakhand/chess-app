@@ -23,7 +23,7 @@ export const useBoardStore = create<BoardStoreType>((set) => ({
 
 interface UserInfoType {
   isGuest: boolean;
-  id: string;
+  id: string | null;
   username: string;
   email: string;
   ratings: {
@@ -40,7 +40,7 @@ interface UserInfoStoreType {
 export const useUserInfoStore = create<UserInfoStoreType>((set) => ({
   userInfo: {
     isGuest: true,
-    id: "",
+    id: null,
     username: "Guest",
     email: "",
     ratings: {
@@ -72,6 +72,7 @@ interface gameInfoStoreType {
   opponentTimeLeft: number | null;
   timeLeft: number | null;
   gameCreationTime: number | null;
+  result: { winner: string | null; reason: string };
   setChess: (newChess: Chess) => void;
   setBoard: (
     newBoard: ({
@@ -91,6 +92,7 @@ interface gameInfoStoreType {
   setOpponentTimeLeft: (newOpponentTimeLeft: number) => void;
   setTimeLeft: (newTimeLeft: number) => void;
   setGameCreationTime: (newGameCreationTime: number) => void;
+  setResult: (newResult: { winner: string | null; reason: string }) => void;
 }
 
 export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
@@ -104,6 +106,7 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
   opponentTimeLeft: 1 * 60 * 1000,
   timeLeft: 1 * 60 * 1000,
   gameCreationTime: null,
+  result: { winner: null, reason: "" },
 
   setChess: (newChess: Chess) => set({ chess: newChess }),
   setBoard: (
@@ -134,4 +137,7 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
 
   setGameCreationTime: (newGameCreationTime: number) =>
     set({ gameCreationTime: newGameCreationTime }),
+
+  setResult: (newResult: { winner: string | null; reason: string }) =>
+    set({ result: newResult }),
 }));

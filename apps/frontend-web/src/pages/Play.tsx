@@ -31,7 +31,7 @@ export default function Play() {
 
   const color = useGameInfoStore((state) => state.color);
   const setColor = useGameInfoStore((state) => state.setColor);
-  const [winner, setWinner] = useState(null);
+  const setResult = useGameInfoStore((state) => state.setResult);
 
   const setMove = useGameInfoStore((state) => state.setMoves);
   const setOpponentInfo = useGameInfoStore((state) => state.setOpponentInfo);
@@ -53,6 +53,7 @@ export default function Play() {
   const opponentTimeLeftRef = useRef<number | null>(null);
 
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
+  const setGameStatus = useGameInfoStore((state) => state.setGameStatus);
   const [isGameLoading, setIsGameLoading] = useState(false);
 
   const rating =
@@ -97,6 +98,7 @@ export default function Play() {
             setGameCreationTime(Date.now());
             timeLeftRef.current = timeControl.baseTime;
             opponentTimeLeftRef.current = timeControl.baseTime;
+            setGameStatus("ACTIVE");
             break;
           }
 
@@ -121,9 +123,8 @@ export default function Play() {
           }
 
           case GAME_OVER: {
-            if (payload.winner) {
-              setWinner(payload.winner);
-            }
+            setResult({ winner: payload.winner, reason: payload.reason });
+            setGameStatus("OVER");
             console.log(payload.reason);
             break;
           }
@@ -163,12 +164,14 @@ export default function Play() {
     setColor,
     color,
     setTimeControl,
+    setGameStatus,
+    setResult,
   ]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (isGameStarted && winner === null) {
+    if (isGameStarted && gameStatus != "OVER") {
       interval = setInterval(() => {
         if (chess.turn() === color) {
           if (timeLeftRef.current === null) return;
@@ -191,13 +194,14 @@ export default function Play() {
     };
   }, [
     isGameStarted,
-    winner,
     color,
     setTimeLeft,
     setOpponentTimeLeft,
     chess,
     opponentTimeLeft,
     timeLeft,
+    timeControl,
+    gameStatus,
   ]);
 
   const createGame = () => {
@@ -210,7 +214,7 @@ export default function Play() {
           isRated: true,
           timeControl: timeControl,
           userInfo: {
-            isGuest: user.id ? true : false,
+            isGuest: user.isGuest,
             id: user.id,
             username: user.username,
             rating: rating,
@@ -253,7 +257,7 @@ export default function Play() {
             time={opponentTimeLeft}
           />
 
-          <ChessBoard socket={socket} winner={winner} />
+          <ChessBoard socket={socket} />
 
           <PlayerCard
             player={user.username}
@@ -270,22 +274,22 @@ export default function Play() {
             >
               <div className="w-full h-full flex rounded-xl">
                 <Tabs
-                  defaultValue="new/move"
+                  defaultValue="new_moves_chat"
                   className="flex flex-col w-full gap-3"
                 >
-                  <TabsList className="h-[40px] py-[5px] px-[20px] grid w-full grid-cols-3 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
+                  <TabsList className="h-[40px] py-[5px] px-[20px] grid w-full grid-cols-3 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none font-medium">
                     <TabsTrigger
-                      value="new/move"
+                      value="new_moves_chat"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
                     >
-                      {gameStatus === null ? "New" : "Move"}
+                      {gameStatus === null ? "New" : "Moves"}
                     </TabsTrigger>
 
                     <TabsTrigger
-                      value="chat"
+                      value="games"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
                     >
-                      Chat
+                      Games
                     </TabsTrigger>
 
                     <TabsTrigger
@@ -297,14 +301,16 @@ export default function Play() {
                   </TabsList>
 
                   <TabsContent
-                    value="new/move"
+                    value="new_moves_chat"
                     className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   >
                     {gameStatus !== null ? (
-                      <div>
+                      <div className="grid grid-rows-10">
                         <MovesTable />
-                        <Button onClick={resignGame}>Resign</Button>
-                        <Button onClick={offerDraw}>Draw</Button>
+                        <div className="flex w-full justify-start items-center gap-5">
+                          <Button onClick={resignGame}>Resign</Button>
+                          <Button onClick={offerDraw}>Draw</Button>
+                        </div>
                         <ChatBox />
                       </div>
                     ) : (
@@ -381,7 +387,7 @@ export default function Play() {
                   </TabsContent>
 
                   <TabsContent
-                    value="chat"
+                    value="games"
                     className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   ></TabsContent>
 
@@ -402,7 +408,7 @@ export default function Play() {
 function MovesTable() {
   const moves = useGameInfoStore((state) => state.moves);
   return (
-    <div className="w-full bg-white">
+    <div className="w-full bg-white max-h-[300px] border-2">
       <div className="w-full flex">
         <div className="w-full flex justify-center">White</div>
         <div className="w-full flex justify-center">Black</div>
@@ -444,5 +450,5 @@ function Move({
 }
 
 function ChatBox() {
-  return <div></div>;
+  return <div className="w-full h-[150px]"></div>;
 }

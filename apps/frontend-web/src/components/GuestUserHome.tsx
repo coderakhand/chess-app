@@ -50,7 +50,7 @@ export default function GuestUserHome() {
           <h1 className="pb-[4px] text-6xl font-bold mb-4 bg-gradient-to-br dark:bg-gradient-to-r dark:from-green-600 dark:to-blue-600 dark:bg-clip-text dark:text-transparent">
             Play Chess Online
           </h1>
-          <h2 className="flex justify-center text-3xl font-semibold text-[] dark:text-[#A1A1AA]">
+          <h2 className="flex justify-center text-3xl font-semibold text-[] dark:text-[#A1A1AA] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-transparent bg-clip-text">
             # New World of Chess
           </h2>
         </div>

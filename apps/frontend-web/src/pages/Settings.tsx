@@ -156,7 +156,7 @@ export default function Settings() {
                     </Label>
                     <div className="flex justify-center">
                       <div className="scale-75">
-                        <ChessBoard socket={null} winner={null} />
+                        <ChessBoard socket={null} />
                       </div>
                     </div>
                   </div>

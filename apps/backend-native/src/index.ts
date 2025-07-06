@@ -9,6 +9,7 @@ import { db } from "./db";
 import bcrypt from "bcryptjs";
 import { Strategy as LocalStrategy } from "passport-local";
 import dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
 
@@ -170,6 +171,21 @@ app.get("/me", requireAuth, (req, res) => {
       },
     },
   });
+});
+
+app.post("/engine", async (req, res) => {
+  const { fen, depth } = req.body;
+  console.log(fen, depth);
+  try {
+    const response = await axios.get("https://stockfish.online/api/s/v2.php", {
+      params: { fen, depth },
+    });
+
+    res.json(response.data);
+  } catch (err: any) {
+    console.error("Stockfish error:", err.message);
+    res.status(500).json({ error: "Stockfish failed" });
+  }
 });
 
 app.get(

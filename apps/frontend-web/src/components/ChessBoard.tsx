@@ -9,14 +9,12 @@ import DroppableSquare from "./DroppableSquare";
 
 interface ChessBoardProps {
   socket: WebSocket | null;
-  winner: string | null;
   customClass?: string;
   customClassPieces?: string;
 }
 
 export default function ChessBoard({
   socket,
-  winner,
   customClass,
   customClassPieces,
 }: ChessBoardProps) {
@@ -30,6 +28,7 @@ export default function ChessBoard({
   const [source, setSource] = useState<string | null>(null);
 
   const setMoves = useGameInfoStore((state) => state.setMoves);
+  const gameStatus = useGameInfoStore((state) => state.gameStatus);
 
   const handleMovement = (
     i: number,
@@ -110,7 +109,7 @@ export default function ChessBoard({
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
         } relative ${customClass ?? "w-[600px] h-[600px] max-w-[580px] max-h-[580px]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
-        {winner !== null ? <GameResultCard winner={winner} /> : <></>}
+        {gameStatus === "OVER" ? <GameResultCard /> : <></>}
         {board.map((row, i) => {
           return (
             <div key={i} className="grid grid-cols-8">

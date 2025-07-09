@@ -107,7 +107,7 @@ export default function ChessBoard({
       <div
         className={`${
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
-        } relative ${customClass ?? "w-[600px] h-[600px] max-w-[580px] max-h-[580px]"} grid grid-rows-8 rounded-md overflow-hidden`}
+        } relative ${customClass ?? " aspect-square max-w-[min(90vh,580px)]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
         {gameStatus === "OVER" ? <GameResultCard /> : <></>}
         {board.map((row, i) => {

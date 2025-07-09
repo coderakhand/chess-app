@@ -19,6 +19,7 @@ import {
 } from "./ui/card";
 import AnimatedChessBoard from "./AnimatedChessBoard";
 import PlayerCard from "./PlayerCard";
+import { motion } from "framer-motion";
 
 type CardValues = "LOG_IN" | "SIGN_UP" | null;
 
@@ -44,7 +45,18 @@ export default function GuestUserHome() {
     <div
       className={`min-h-screen min-w-screen flex flex-col items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
-      <SideBar position="fixed" />
+      <motion.div
+        initial={{ x: -100 }}
+        animate={{ x: 0.8 }}
+        transition={{
+          duration: 1,
+          ease: "easeInOut",
+        }}
+        className="absolute left-0"
+      >
+        <SideBar position="fixed" />
+      </motion.div>
+
       <div className="flex flex-col items-center min-h-screen min-w-screen">
         <div className="mt-[40px]">
           <h1 className="pb-[4px] text-6xl font-bold mb-4 bg-gradient-to-br dark:bg-gradient-to-r dark:from-green-600 dark:to-blue-600 dark:bg-clip-text dark:text-transparent">
@@ -55,7 +67,7 @@ export default function GuestUserHome() {
           </h2>
         </div>
         <div className="flex-grow pl-[30px] flex flex-col justify-center">
-          <div className="flex justify-center items-center md:gap-5">
+          <div className="flex justify-center items-center md:gap-10">
             <div className="flex flex-col">
               <PlayerCard
                 player="Sergey Karjakin"
@@ -76,8 +88,20 @@ export default function GuestUserHome() {
                 rating={2751}
               />
             </div>
-            <div className="flex flex-col justify-center px-[20px] gap-6 w-[350px] h-[500px]">
-              <div className="flex flex-col justify-center  w-full px-[20px] h-[200px] bg-[#8CA2AD] rounded-xl  dark:bg-[#09090B] dark:border-2 dark:border-[#27272A]">
+            <div className="flex flex-col justify-center px-[20px] gap-6 w-[350px] h-[500px] relative">
+              <motion.img
+                src="/monster_nobg.png"
+                className="absolute top-3 inset-x-1 mx-auto w-[280px] z-0 dark:opacity-80"
+                animate={{ translateY: [38, -22, 38] }}
+                transition={{
+                  duration: 8,
+                  ease: "anticipate",
+                  repeat: Infinity,
+                  repeatDelay: 4,
+                }}
+              ></motion.img>
+
+              <div className="z-10 flex flex-col justify-center  w-full px-[20px] h-[200px] bg-[#8CA2AD] rounded-xl  dark:bg-[#09090B] dark:border-2 dark:border-[#27272A]">
                 <a className="flex justify-center items-center h-[50px] gap-2 text-lg bg-[#d6dce0] dark:bg-white dark:hover:bg-[#E2E2E2] hover:shadow-lg transition-shadow rounded-full cursor-pointer">
                   <FcGoogle className="my-[3px] text-2xl" /> Continue with
                   Google
@@ -114,8 +138,12 @@ export default function GuestUserHome() {
               </Dialog>
               <Button
                 size="lg"
-                className={`w-full h-[80px] ${theme === "light" ? "bg-[#272730] text-white hover:text-black hover:border-2" : ""} dark:bg-green-600 dark:hover:bg-green-700`}
+                className={`relative w-full h-[80px] ${theme === "light" ? "bg-[#272730] text-white hover:text-black hover:border-2" : ""} dark:bg-green-600 dark:hover:bg-green-700 duration-400 transition-normal ease-out cursor-pointer`}
               >
+                <div className="absolute -top-2 w-full h-2 blur-md dark:bg-green-700" />
+                <div className="absolute -right-2 w-2 h-full blur-md dark:bg-green-700" />
+                <div className="absolute -left-2 w-2 h-full blur-md dark:bg-green-700" />
+                <div className="absolute -bottom-2 w-full h-2 blur-md dark:bg-green-700" />
                 <Link
                   to="/play"
                   className="flex justify-center items-center text-3xl rounded-xl"

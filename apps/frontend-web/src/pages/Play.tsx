@@ -248,8 +248,8 @@ export default function Play() {
     >
       <SideBar position={"fixed"} />
 
-      <div className="flex justify-center min-w-screen min-h-screen pt-[30px] gap-6">
-        <div className="flex flex-col gap-2 h-full">
+      <div className="flex max-lg:flex-col  max-lg:items-center justify-center min-w-screen min-h-screen py-[30px] gap-6">
+        <div className="flex-grow max-w-[560px] flex flex-col gap-2 h-full">
           <PlayerCard
             player={opponentInfo.username}
             rating={opponentInfo.rating}
@@ -267,10 +267,10 @@ export default function Play() {
           />
         </div>
 
-        <div className="flex flex-col h-full w-[400px] gap-3 pb-[30px]">
+        <div className="flex flex-col h-full w-full md:w-[400px] gap-3">
           <div className="flex justify-center w-full h-screen max-h-[900px]">
             <div
-              className={`flex flex-col items-center p-[5px] gap-3 w-[360px]`}
+              className={`flex flex-col items-center p-[5px] gap-3 w-full md:w-[360px]`}
             >
               <div className="w-full h-full flex rounded-xl">
                 <Tabs

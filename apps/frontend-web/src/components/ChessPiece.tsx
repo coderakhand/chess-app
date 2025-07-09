@@ -44,7 +44,7 @@ export default function ChessPiece({
           src={`/${square?.color}${square?.type}.svg`}
           className={`${
             color !== null && color === "b" ? "rotate-180" : ""
-          } ${customClass ?? "w-[60px]"}`}
+          } ${customClass ?? "w-[60px] object-contain"}`}
         />
       ) : (
         ""

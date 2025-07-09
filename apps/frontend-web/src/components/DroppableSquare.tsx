@@ -7,14 +7,19 @@ interface DroppableProps {
   color: string;
 }
 
-export default function DroppableSquare({ id, children, onClick, color }: DroppableProps) {
+export default function DroppableSquare({
+  id,
+  children,
+  onClick,
+  color,
+}: DroppableProps) {
   const { setNodeRef } = useDroppable({ id });
 
   return (
     <div
       ref={setNodeRef}
       onClick={onClick}
-      className={`w-full ${color} flex justify-center items-center`}
+      className={`w-full aspect-square ${color} flex justify-center items-center`}
     >
       {children}
     </div>

@@ -1,6 +1,14 @@
 import { useState } from "react";
 import type { Square, PieceSymbol, Color } from "chess.js";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  MouseSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
 import { useBoardStore, useGameInfoStore } from "../store/atoms";
 import ChessPiece from "./ChessPiece";
@@ -30,6 +38,8 @@ export default function ChessBoard({
   const setMoves = useGameInfoStore((state) => state.setMoves);
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
 
+  const [validMovesForPiece, setValidMovesForPiece] = useState<string[]>([]);
+
   const handleMovement = (
     i: number,
     j: number,
@@ -44,7 +54,16 @@ export default function ChessBoard({
       if (square === null) return;
       if (square.color != color) return;
       setSource(cellCode);
+      const validMoves = chess.moves({ square: cellCode as Square });
+      setValidMovesForPiece(validMoves);
     } else {
+      if (square && square.color == color) {
+        setSource(cellCode);
+        const validMoves = chess.moves({ square: cellCode as Square });
+        setValidMovesForPiece(validMoves);
+        return;
+      }
+
       if (socket === null) {
         setSource(null);
         return;
@@ -61,6 +80,7 @@ export default function ChessBoard({
       } catch {
         return;
       }
+      setValidMovesForPiece([]);
 
       setBoard(chess.board());
 
@@ -99,10 +119,29 @@ export default function ChessBoard({
     }
   };
 
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 4,
+    },
+  });
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 3,
+    },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      distance: 2,
+    },
+  });
+
+  const sensors = useSensors(pointerSensor, mouseSensor, touchSensor);
+
   return (
     <DndContext
       onDragEnd={handleDragEnd}
       modifiers={[restrictToFirstScrollableAncestor]}
+      sensors={sensors}
     >
       <div
         className={`${
@@ -120,7 +159,9 @@ export default function ChessBoard({
                   <DroppableSquare
                     key={j}
                     id={cellCode}
-                    onClick={() => handleMovement(i, j, square)}
+                    onClick={() => {
+                      handleMovement(i, j, square);
+                    }}
                     color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
                   >
                     {square !== null ? (
@@ -130,7 +171,17 @@ export default function ChessBoard({
                         id={cellCode}
                         customClass={customClassPieces}
                       />
-                    ) : null}
+                    ) : (
+                      <></>
+                    )}
+
+                    {validMovesForPiece.find(
+                      (value) => value.slice(-2) === cellCode
+                    ) && (
+                      <div
+                        className={`${chess.get(cellCode as Square) ? "absolute h-full w-full border-6 border-[#4A4847] rounded-full opacity-60 z-100" : "h-5 w-5 bg-[#4A4847] rounded-full opacity-30"}`}
+                      />
+                    )}
                   </DroppableSquare>
                 );
               })}

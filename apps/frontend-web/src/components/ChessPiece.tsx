@@ -37,7 +37,7 @@ export default function ChessPiece({
       {...attributes}
       {...listeners}
       style={style}
-      className="text-3xl select-none cursor-grab"
+      className="text-3xl select-none cursor-grab z-10"
     >
       {square?.type ? (
         <img

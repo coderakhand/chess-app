@@ -18,8 +18,10 @@ interface CelebrationCardProps {
 
 function CelebrationCard({ setClose }: CelebrationCardProps) {
   const result = useGameInfoStore((state) => state.result);
+  const color = useGameInfoStore((state) => state.color);
 
   useEffect(() => {
+    if (!result.winner || result.winner !== color) return;
     confetti({
       particleCount: 200,
       spread: 50,
@@ -37,7 +39,9 @@ function CelebrationCard({ setClose }: CelebrationCardProps) {
       transition={{ delay: 0.4, duration: 1.3, ease: "backInOut" }}
       className="absolute w-full h-full flex justify-center items-center"
     >
-      <div className="z-100 absolute inset-x-auto inset-y-auto w-[260px] h-[200px] text-white bg-[#262421] rounded-xl shadow-2xl border border-[#3C3A36] flex flex-col">
+      <div
+        className={`${color === "b" ? "rotate-180" : ""} z-100 absolute inset-x-auto inset-y-auto w-[260px] h-[200px] text-white bg-[#262421] rounded-xl shadow-2xl border border-[#3C3A36] flex flex-col`}
+      >
         <RxCross2
           onClick={() => setClose(true)}
           className="absolute top-[5px] right-[3px] rounded-full text-xl text-white cursor-pointer"

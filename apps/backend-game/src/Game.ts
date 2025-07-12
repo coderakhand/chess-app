@@ -388,12 +388,22 @@ export class Game {
 
   public drawAnswer(socket: WebSocket, isAccepted: boolean) {
     if (
-      this.drawAgreement.player ||
+      !this.drawAgreement.player ||
       this.drawAgreement.move !== this.moves.length
     ) {
+      socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          payload: {
+            message: "Invalid Attempt to Answer a draw Agreement",
+          },
+        })
+      );
       return;
     }
+
     let user: PlayerKey, opponent: PlayerKey;
+
     if (this.player1.socket == socket) {
       user = "player1";
       opponent = "player2";

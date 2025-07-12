@@ -1,4 +1,4 @@
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, DragOverlay, type DragEndEvent } from "@dnd-kit/core";
 import SideBar from "../components/SideBar";
 import DroppableSquare from "../components/DroppableSquare";
 import ChessPiece from "../components/ChessPiece";
@@ -11,7 +11,7 @@ import api from "../api/axios";
 import EvaluationBar from "../components/EvaluationBar";
 
 export default function Analyze() {
-  const [color, setColor] = useState("w");
+  const [color, setColor] = useState<"w" | "b">("w");
   const lightSquare = useBoardStore((state) => state.lightSquare);
   const darkSquare = useBoardStore((state) => state.darkSquare);
   const [source, setSource] = useState<string | null>(null);
@@ -19,6 +19,7 @@ export default function Analyze() {
   const [board, setBoard] = useState(chess.board());
   const [evalScore, setEvalScore] = useState(50);
   const [mateScore, setMateScore] = useState(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const handleMovement = (
     cellCode: string,
@@ -29,32 +30,27 @@ export default function Analyze() {
     } | null
   ) => {
     if (source === null) {
-      if (square === null) return;
-      if (square.color !== chess.turn()) return;
+      if (square === null || square.color !== chess.turn()) return;
       setSource(cellCode);
     } else {
-      const move = {
-        from: source,
-        to: cellCode,
-      };
-
+      const move = { from: source, to: cellCode };
       setSource(null);
       try {
         chess.move(move);
+        setBoard(chess.board());
       } catch {
         return;
       }
-
-      setBoard(chess.board());
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const from = event.active.id as string;
     const to = event.over?.id as string;
+    setActiveDragId(null);
     if (!to || from === to) return;
-    const move = { from, to };
 
+    const move = { from, to };
     if (chess.move(move)) {
       setBoard(chess.board());
     }
@@ -75,13 +71,21 @@ export default function Analyze() {
         const data = response.data;
         setEvalScore(data.evaluation);
         setMateScore(data.mate);
-        console.log(data);
       } catch (e) {
         console.log(e);
       }
     };
+
     fetchEngine();
-  });
+  }, [board]);
+
+  const getSquareFromId = (id: string) => {
+    const file = id.charAt(0);
+    const rank = id.charAt(1);
+    const rowIndex = 8 - parseInt(rank, 10);
+    const colIndex = file.charCodeAt(0) - "a".charCodeAt(0);
+    return board[rowIndex]?.[colIndex] ?? null;
+  };
 
   return (
     <div className="min-h-screen min-w-screen flex justify-center items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]">
@@ -91,41 +95,51 @@ export default function Analyze() {
         <EvaluationBar evalScore={evalScore} mateScore={mateScore} />
         <DndContext
           onDragEnd={handleDragEnd}
+          onDragStart={(e) => setActiveDragId(e.active.id as string)}
           modifiers={[restrictToFirstScrollableAncestor]}
         >
           <div
             className={`${
-              color !== null ? (color === "b" ? "rotate-180" : "") : ""
-            } relative w-[600px] h-[600px] max-w-[580px] max-h-[580px] grid grid-rows-8 rounded-md overflow-hidden`}
+              color === "b" ? "rotate-180" : ""
+            } relative w-[600px] h-[600px] max-w-[580px] max-h-[580px] grid grid-rows-8 rounded-md`}
           >
-            {board.map((row, i) => {
-              return (
-                <div key={i} className="grid grid-cols-8">
-                  {row.map((square, j) => {
-                    const cellCode =
-                      String.fromCharCode(97 + (j % 8)) + (8 - i);
+            {board.map((row, i) => (
+              <div key={i} className="grid grid-cols-8">
+                {row.map((square, j) => {
+                  const cellCode =
+                    String.fromCharCode(97 + j) + (8 - i).toString();
 
-                    return (
-                      <DroppableSquare
-                        key={j}
-                        id={cellCode}
-                        onClick={() => handleMovement(cellCode, square)}
-                        color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
-                      >
-                        {square !== null ? (
-                          <ChessPiece
-                            square={square}
-                            color={color}
-                            id={cellCode}
-                          />
-                        ) : null}
-                      </DroppableSquare>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                  return (
+                    <DroppableSquare
+                      key={cellCode}
+                      id={cellCode}
+                      onClick={() => handleMovement(cellCode, square)}
+                      color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
+                    >
+                      {square ? (
+                        <ChessPiece
+                          square={square}
+                          color={color}
+                          id={cellCode}
+                        />
+                      ) : null}
+                    </DroppableSquare>
+                  );
+                })}
+              </div>
+            ))}
           </div>
+
+          <DragOverlay dropAnimation={null}>
+            {activeDragId ? (
+              <ChessPiece
+                square={getSquareFromId(activeDragId)}
+                color={color}
+                id={activeDragId}
+                customClass="w-[60px] object-contain pointer-events-none"
+              />
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
     </div>

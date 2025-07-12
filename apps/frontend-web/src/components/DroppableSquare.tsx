@@ -21,7 +21,7 @@ export default function DroppableSquare({
     <div
       ref={setNodeRef}
       onClick={onClick}
-      className={`relative w-full aspect-square ${color} flex justify-center items-center`}
+      className={`relative w-full aspect-square ${color} flex justify-center items-center z-0`}
     >
       {playerColor === "w" && id.charAt(1) == "1" && (
         <AlphabetCoordinate coordinate={id.charAt(0)} />

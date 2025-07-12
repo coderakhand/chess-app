@@ -378,6 +378,7 @@ export class Game {
     }
 
     this.drawAgreement.player = user;
+    this.drawAgreement.move = this.moves.length;
 
     this[opponent].socket?.send(
       JSON.stringify({

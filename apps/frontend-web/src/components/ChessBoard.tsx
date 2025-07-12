@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Square, PieceSymbol, Color } from "chess.js";
 import {
+  DragOverlay,
   DndContext,
   MouseSensor,
   PointerSensor,
@@ -39,6 +40,7 @@ export default function ChessBoard({
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
 
   const [validMovesForPiece, setValidMovesForPiece] = useState<string[]>([]);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const handleMovement = (
     i: number,
@@ -100,6 +102,7 @@ export default function ChessBoard({
   const handleDragEnd = (event: DragEndEvent) => {
     const from = event.active.id as string;
     const to = event.over?.id as string;
+    setActiveDragId(null);
     if (!to || from === to) return;
     if (color === null || color !== chess.turn()) return;
     const move = { from, to };
@@ -137,9 +140,18 @@ export default function ChessBoard({
 
   const sensors = useSensors(pointerSensor, mouseSensor, touchSensor);
 
+  const getSquareFromId = (id: string) => {
+    const file = id.charAt(0);
+    const rank = id.charAt(1);
+    const rowIndex = 8 - parseInt(rank, 10);
+    const colIndex = file.charCodeAt(0) - "a".charCodeAt(0);
+    return board[rowIndex]?.[colIndex] ?? null;
+  };
+
   return (
     <DndContext
       onDragEnd={handleDragEnd}
+      onDragStart={(e) => setActiveDragId(e.active.id as string)}
       modifiers={[restrictToFirstScrollableAncestor]}
       sensors={sensors}
     >
@@ -179,7 +191,7 @@ export default function ChessBoard({
                       (value) => value.slice(-2) === cellCode
                     ) && (
                       <div
-                        className={`${chess.get(cellCode as Square) ? "absolute h-full w-full border-6 border-[#4A4847] rounded-full opacity-60 z-100" : "h-5 w-5 bg-[#4A4847] rounded-full opacity-30"}`}
+                        className={`${chess.get(cellCode as Square) ? "absolute h-full w-full border-6 border-[#4A4847] rounded-full opacity-60" : "h-5 w-5 bg-[#4A4847] rounded-full opacity-30"}`}
                       />
                     )}
                   </DroppableSquare>
@@ -189,6 +201,17 @@ export default function ChessBoard({
           );
         })}
       </div>
+
+      <DragOverlay dropAnimation={null}>
+        {activeDragId ? (
+          <ChessPiece
+            square={getSquareFromId(activeDragId)}
+            color={color}
+            id={activeDragId}
+            customClass="rotate-360 w-[60px]"
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

@@ -1,5 +1,6 @@
 import { useDraggable } from "@dnd-kit/core";
 import type { Square, PieceSymbol, Color } from "chess.js";
+import { useGameInfoStore } from "../store/atoms";
 
 interface ChessPieceProps {
   square: {
@@ -19,6 +20,8 @@ export default function ChessPiece({
   customClass,
 }: ChessPieceProps) {
   const { setNodeRef, attributes, listeners, transform } = useDraggable({ id });
+  const chess = useGameInfoStore((state) => state.chess);
+  const turn = chess.turn();
 
   const style = transform
     ? {
@@ -31,24 +34,24 @@ export default function ChessPiece({
     : undefined;
 
   return (
-    <div
-      ref={setNodeRef}
-      id={id}
-      {...attributes}
-      {...listeners}
-      style={style}
-      className="text-3xl select-none cursor-grab z-10"
-    >
-      {square?.type ? (
-        <img
-          src={`/${square?.color}${square?.type}.svg`}
-          className={`${
-            color !== null && color === "b" ? "rotate-180" : ""
-          } ${customClass ?? "w-[60px] object-contain"}`}
-        />
-      ) : (
-        ""
-      )}
-    </div>
+      <div
+        ref={setNodeRef}
+        id={id}
+        {...attributes}
+        {...listeners}
+        style={style}
+        className={`text-3xl select-none cursor-grab ${turn == color ? "" : ""} z-50`}
+      >
+        {square?.type ? (
+          <img
+            src={`/${square?.color}${square?.type}.svg`}
+            className={`${
+              color !== null && color === "b" ? "rotate-180" : ""
+            } ${customClass ?? "w-[60px] object-contain"}`}
+          />
+        ) : (
+          ""
+        )}
+      </div>
   );
 }

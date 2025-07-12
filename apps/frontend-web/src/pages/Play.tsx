@@ -54,7 +54,10 @@ export default function Play() {
 
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
   const setGameStatus = useGameInfoStore((state) => state.setGameStatus);
-  const [isGameLoading, setIsGameLoading] = useState(false);
+  const [isGameLoading, setIsGameLoading] = useState<boolean>(false);
+
+  const [chat, setChat] = useState<{ sender: string; message: string }[]>([]);
+  const [isDrawOffered, setIsDrawOffered] = useState<boolean>(false);
 
   const rating =
     timeControl.name === "BULLET"
@@ -144,6 +147,27 @@ export default function Play() {
               setTimeLeft(time.b);
               console.log("yourTime: ", time.b, "  hisTime: ", time.w);
             }
+            break;
+          }
+
+          case "DRAW_OFFER": {
+            setIsDrawOffered(true);
+            break;
+          }
+
+          case "DRAW_ANSWER": {
+            console.log("draw answer: ", payload);
+            const isAccepted = payload.isAccepted || false;
+            if (isAccepted) {
+              alert("Draw  by opponent");
+            }
+            break;
+          }
+
+          case "PLAYER_CHAT": {
+            const message = payload.message;
+            if (!message) return;
+            setChat([...chat, { sender: "opponent", message: message }]);
           }
         }
       };
@@ -166,6 +190,7 @@ export default function Play() {
     setTimeControl,
     setGameStatus,
     setResult,
+    chat,
   ]);
 
   useEffect(() => {
@@ -228,7 +253,7 @@ export default function Play() {
     if (!socket) return;
     socket.send(
       JSON.stringify({
-        type: "OFFER_DRAW",
+        type: "DRAW_OFFER",
       })
     );
   };
@@ -240,6 +265,19 @@ export default function Play() {
         type: "RESIGN_GAME",
       })
     );
+  };
+
+  const answerDraw = (isAccepted: boolean) => {
+    if (!socket) return;
+    socket.send(
+      JSON.stringify({
+        type: "DRAW_ANSWER",
+        payload: {
+          isAccepted: isAccepted,
+        },
+      })
+    );
+    setIsDrawOffered(false);
   };
 
   return (
@@ -311,7 +349,19 @@ export default function Play() {
                           <Button onClick={resignGame}>Resign</Button>
                           <Button onClick={offerDraw}>Draw</Button>
                         </div>
-                        <ChatBox />
+                        <div className="w-full h-[150px]">
+                          {isDrawOffered && (
+                            <div>
+                              <Button onClick={() => answerDraw(true)}>
+                                Yes
+                              </Button>
+                              <Button onClick={() => answerDraw(false)}>
+                                No
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        ;
                       </div>
                     ) : (
                       <div className="flex justify-center w-full h-full py-[20px]">
@@ -447,8 +497,4 @@ function Move({
       </div>
     </div>
   );
-}
-
-function ChatBox() {
-  return <div className="w-full h-[150px]"></div>;
 }

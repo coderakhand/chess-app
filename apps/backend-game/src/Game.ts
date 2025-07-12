@@ -8,6 +8,8 @@ import { db } from "./db";
 import { timeControlType } from "@repo/utils";
 import { GameStatus } from "@prisma/client";
 import { gameManager } from "./index";
+
+type PlayerKey = "player1" | "player2";
 export class Game {
   public id: string;
   public player1: User;
@@ -20,6 +22,13 @@ export class Game {
   public moves: moveType[];
   public gameStatus: GameStatus;
   public viewersManager: ViewersManager;
+  public drawAgreement: {
+    player: PlayerKey | null;
+    move: number;
+  } = {
+    player: null,
+    move: 0,
+  };
 
   constructor(
     player1: User,
@@ -308,6 +317,142 @@ export class Game {
       });
     } catch (e) {
       console.log(`Unable to put move in Database`);
+    }
+  }
+
+  public resignGame(socket: WebSocket) {
+    let user, opponent;
+    let winner;
+    if (socket === this.player1.socket) {
+      user = this.player1;
+      opponent = this.player2;
+      winner = "b";
+    } else {
+      user = this.player2;
+      opponent = this.player1;
+      winner = "w";
+    }
+
+    if (opponent.socket) {
+      opponent.socket.send(
+        JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            winner: winner,
+            reason: "Win by Resignation",
+          },
+        })
+      );
+    }
+
+    if (user.socket) {
+      user.socket.send(
+        JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            winner: winner,
+            reason: "Win by Resignation",
+          },
+        })
+      );
+    }
+  }
+
+  public drawOffer(socket: WebSocket) {
+    let user: PlayerKey, opponent: PlayerKey;
+    if (this.player1.socket === socket) {
+      user = "player1";
+      opponent = "player2";
+    } else {
+      user = "player2";
+      opponent = "player1";
+    }
+
+    const turn = this.board.turn();
+
+    if (
+      (user === "player1" && turn !== "w") ||
+      (user === "player2" && turn !== "b")
+    ) {
+      return;
+    }
+
+    this.drawAgreement.player = user;
+
+    this[opponent].socket?.send(
+      JSON.stringify({
+        type: "DRAW_OFFER",
+      })
+    );
+  }
+
+  public drawAnswer(socket: WebSocket, isAccepted: boolean) {
+    if (
+      this.drawAgreement.player ||
+      this.drawAgreement.move !== this.moves.length
+    ) {
+      return;
+    }
+    let user: PlayerKey, opponent: PlayerKey;
+    if (this.player1.socket == socket) {
+      user = "player1";
+      opponent = "player2";
+    } else {
+      user = "player2";
+      opponent = "player1";
+    }
+
+    if (user !== this.drawAgreement.player) {
+      if (isAccepted) {
+        socket.send(
+          JSON.stringify({
+            type: GAME_OVER,
+            payload: {
+              reason: "Draw by Agreement",
+            },
+          })
+        );
+
+        this[opponent].socket?.send(
+          JSON.stringify({
+            type: GAME_OVER,
+            payload: {
+              reason: "Draw by Agreement",
+            },
+          })
+        );
+      } else {
+        this[opponent].socket?.send(
+          JSON.stringify({
+            type: "DRAW_ANSWER",
+            payload: {
+              isAccepted: false,
+            },
+          })
+        );
+      }
+    }
+  }
+
+  public chatMessage(socket: WebSocket, message: string) {
+    let user, opponent;
+    if (this.player1.socket === socket) {
+      user = this.player1;
+      opponent = this.player2;
+    } else {
+      user = this.player2;
+      opponent = this.player1;
+    }
+
+    if (opponent.socket) {
+      opponent.socket.send(
+        JSON.stringify({
+          type: "PLAYER_CHAT",
+          payload: {
+            message: message,
+          },
+        })
+      );
     }
   }
 }

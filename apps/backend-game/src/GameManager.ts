@@ -140,6 +140,45 @@ export class GameManager {
         return;
       }
 
+      if (message.type == "RESIGN_GAME") {
+        const game = this.games.find(
+          (game) =>
+            game.player1.socket === socket || game.player2.socket === socket
+        );
+
+        if (game) {
+          game.resignGame(socket);
+        }
+        return;
+      }
+
+      if (message.type == "DRAW_OFFER") {
+        const game = this.games.find(
+          (game) =>
+            game.player1.socket === socket || game.player2.socket === socket
+        );
+
+        if (game) {
+          game.drawOffer(socket);
+        }
+        return;
+      }
+
+      if (message.type == "DRAW_ANSWER") {
+        const isAccepted = message.payload.isAccepted || false;
+
+        const game = this.games.find(
+          (game) =>
+            game.player1.socket === socket || game.player2.socket === socket
+        );
+
+        if (game) {
+          game.drawAnswer(socket, isAccepted);
+        }
+
+        return;
+      }
+
       if (message.type == INIT_VIEW_GAME) {
         const gameId = message.payload.gameId;
 

@@ -51,14 +51,16 @@ export default function Settings() {
   ];
   return (
     <div
-      className={`min-h-screen min-w-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`min-h-screen min-w-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B] font-dream`}
     >
-      <SideBar position="fixed" />
-      <div className={`pl-[30px] min-w-screen min-h-screen p-4`}>
+      <SideBar />
+      <div
+        className={` max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4`}
+      >
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 dark:text-white">
             <h1 className="text-3xl font-bold mb-2">Settings</h1>
-            <p className="dark:text-[#A1A1AA]">
+            <p className="dark:text-[#A1A1AA] font-proza">
               Customize your chess experience
             </p>
           </div>
@@ -70,28 +72,28 @@ export default function Settings() {
                 className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
                 <Palette className="w-4 h-4" />
-                Appearance
+                <p className="max-smd:hidden">Appearance</p>
               </TabsTrigger>
               <TabsTrigger
                 value="game"
                 className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
-                <Monitor className="w-4 h-4" />
-                Game
+                <Monitor className="w-4 h-4 " />
+                <p className="max-smd:hidden">Game</p>
               </TabsTrigger>
               <TabsTrigger
                 value="notifications"
                 className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
-                <Bell className="w-4 h-4" />
-                Notifications
+                <Bell className="w-2 h-2 smd:w-4 smd:h-4" />
+                <p className="max-smd:hidden">Notifications</p>
               </TabsTrigger>
               <TabsTrigger
                 value="account"
                 className="flex items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
               >
                 <User className="w-4 h-4" />
-                Account
+                <p className="max-smd:hidden">Account</p>
               </TabsTrigger>
             </TabsList>
 
@@ -99,7 +101,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
                 <CardHeader>
                   <CardTitle>Theme</CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Choose your preferred color scheme
                   </CardDescription>
                 </CardHeader>
@@ -122,7 +124,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
                 <CardHeader>
                   <CardTitle>Chess Board Theme</CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Select your preferred board appearance
                   </CardDescription>
                 </CardHeader>
@@ -168,7 +170,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
                 <CardHeader>
                   <CardTitle>Game Preferences</CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Configure your gameplay settings
                   </CardDescription>
                 </CardHeader>
@@ -176,10 +178,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="sound" className="font-semibold">
-                        Sound Effects
+                        Show Valid Moves
                       </Label>
                       <p className="text-sm text-muted-foreground dark:text-[#A1A1AA]">
-                        Play sounds for moves and game events
+                        Show valid moves for a piece on click
                       </p>
                     </div>
                     <Switch
@@ -217,7 +219,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white ">
                 <CardHeader>
                   <CardTitle>Time Controls</CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Set your preferred time controls
                   </CardDescription>
                 </CardHeader>
@@ -247,7 +249,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
                 <CardHeader>
                   <CardTitle>Notification Settings</CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Manage how you receive notifications
                   </CardDescription>
                 </CardHeader>
@@ -308,7 +310,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
                 <CardHeader>
                   <CardTitle>Account Information</CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Manage your account details
                   </CardDescription>
                 </CardHeader>
@@ -365,7 +367,7 @@ export default function Settings() {
                     <Shield className="w-5 h-5 text-green-600" />
                     Privacy & Security
                   </CardTitle>
-                  <CardDescription className="dark:text-[#A1A1AA]">
+                  <CardDescription className="dark:text-[#A1A1AA] font-proza">
                     Control your privacy settings
                   </CardDescription>
                 </CardHeader>

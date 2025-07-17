@@ -4,7 +4,7 @@ import SideBar from "../components/SideBar";
 export default function Error() {
   return (
     <div className="min-h-screen min-w-screen flex justify-center items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]">
-      <SideBar position="absolute" />
+      <SideBar />
       <div className="z-10 min-h-screen min-w-screen flex flex-col gap-3 justify-center items-center bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
         <div className="dark:text-white text-6xl font-extrabold">
           Page Not Found

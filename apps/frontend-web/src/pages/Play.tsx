@@ -282,11 +282,11 @@ export default function Play() {
 
   return (
     <div
-      className={`flex min-w-screen min-h-screen lg:h-screen  gap-[100px] bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`flex max-lg:flex-col w-screen lg:h-screen  lg:gap-[100px] bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
-      <SideBar position={"fixed"} />
+      <SideBar />
 
-      <div className="flex max-lg:flex-col  max-lg:items-center justify-center min-w-screen min-h-screen py-[30px] gap-6">
+      <div className="flex max-lg:flex-col  max-lg:items-center justify-center w-screen min-h-screen py-[30px] gap-6 sm:pl-[60px] px-1 max-sm:px-3 max-sm:pt-[100px]">
         <div className="flex-grow max-w-[560px] flex flex-col gap-2 h-full">
           <PlayerCard
             player={opponentInfo.username}
@@ -305,10 +305,10 @@ export default function Play() {
           />
         </div>
 
-        <div className="flex flex-col h-full w-full md:w-[400px] gap-3">
-          <div className="flex justify-center w-full h-screen max-h-[900px]">
+        <div className="flex flex-col h-full w-full sm:w-[580px] md:w-[640px] lg:w-[400px] gap-3 md:px-10">
+          <div className="flex justify-center w-full min-h-[600px] lg:h-screen max-h-[900px]">
             <div
-              className={`flex flex-col items-center p-[5px] gap-3 w-full md:w-[360px]`}
+              className={`flex flex-col items-center py-[5px] gap-3 w-full lg:w-[360px]`}
             >
               <div className="w-full h-full flex rounded-xl">
                 <Tabs
@@ -384,7 +384,7 @@ export default function Play() {
                             <CollapsibleContent className="rounded-xl">
                               {games.map((game) => (
                                 <Card className="w-full h-[100px] flex flex-col justify-center gap-2 border-none ">
-                                  <CardHeader className="h-full flex items-center font-bold">
+                                  <CardHeader className="h-full flex items-center font-bold font-dream">
                                     {game.name.toLowerCase() === "rapid" ? (
                                       <Calendar className="w-4 h-4 text-purple-600" />
                                     ) : game.name.toLowerCase() === "blitz" ? (
@@ -409,7 +409,7 @@ export default function Play() {
                                               gameTimeControl.increment * 1000,
                                           })
                                         }
-                                        className="dark:bg-white dark:hover:bg-[#E2E2E2] text-black font-medium cursor-pointer"
+                                        className="dark:bg-white dark:hover:bg-[#E2E2E2] text-black font-medium cursor-pointer font-dream"
                                       >
                                         {gameTimeControl.baseTime} |{" "}
                                         {gameTimeControl.increment}
@@ -427,7 +427,7 @@ export default function Play() {
                               createGame();
                             }}
                             disabled={isGameLoading}
-                            className="w-[200px] h-[50px] text-white bg-[#8CA2AD] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer"
+                            className="w-[200px] h-[50px] text-white bg-[#8CA2AD] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer font-dream"
                           >
                             Start Game
                           </Button>

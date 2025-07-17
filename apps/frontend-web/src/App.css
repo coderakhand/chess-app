@@ -3,8 +3,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@font-face {
+  font-family: SourceSans3;
+  src: url("../src/assets/font/SourceSans3-VariableFont_wght.ttf");
+}
+@font-face {
+  font-family: ProzaLibre;
+  src: url("../src/assets/font/ProzaLibre-Italic.ttf");
 }
 
 @layer utilities {
@@ -15,7 +20,11 @@ body {
 
 @theme {
   --breakpoint-xsm: 300px;
+  --breakpoint-xsmd: 450px;
+  --breakpoint-smd: 560px;
   --breakpoint-mdl: 950px;
+  --font-dream: SourceSans3, "sans-serif";
+  --font-proza: ProzaLibre, "sans-serif";
 }
 
 @theme inline {

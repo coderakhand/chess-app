@@ -113,7 +113,7 @@ export default function Profile() {
     <div
       className={`flex min-h-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
-      <SideBar position="fixed" />
+      <SideBar />
       <div className={`min-w-screen min-h-screen p-4`}>
         <div className="ml-[40px] flex-1 p-6">
           <div className="max-w-4xl mx-auto space-y-6">

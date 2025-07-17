@@ -59,6 +59,12 @@ export default function ChessBoard({
       const validMoves = chess.moves({ square: cellCode as Square });
       setValidMovesForPiece(validMoves);
     } else {
+      if (source == cellCode) {
+        setSource(null);
+        setValidMovesForPiece([]);
+        return;
+      }
+
       if (square && square.color == color) {
         setSource(cellCode);
         const validMoves = chess.moves({ square: cellCode as Square });
@@ -158,7 +164,7 @@ export default function ChessBoard({
       <div
         className={`${
           color !== null ? (color === "b" ? "rotate-180" : "") : ""
-        } relative ${customClass ?? " aspect-square max-w-[min(90vh,580px)]"} grid grid-rows-8 rounded-md overflow-hidden`}
+        } relative touch-none ${customClass ?? " aspect-square max-w-[min(90vh,580px)]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
         {gameStatus === "OVER" ? <GameResultCard /> : <></>}
         {board.map((row, i) => {
@@ -189,11 +195,16 @@ export default function ChessBoard({
 
                     {validMovesForPiece.find(
                       (value) => value.slice(-2) === cellCode
-                    ) && (
-                      <div
-                        className={`${chess.get(cellCode as Square) ? "absolute h-full w-full border-6 border-[#4A4847] rounded-full opacity-60" : "h-5 w-5 bg-[#4A4847] rounded-full opacity-30"}`}
-                      />
-                    )}
+                    ) &&
+                      (chess.get(cellCode as Square) ? (
+                        <div className="absolute h-full w-full bg-red-600  opacity-60"></div>
+                      ) : (
+                        <div
+                          className={`absolute h-full w-full bg-[#3F46D0] opacity-60`}
+                        >
+                          <div className="w-full h-full bg-gradient-to-br from-[#3F46D0] via-white/60 to-[#3F46D0] blur-md"></div>
+                        </div>
+                      ))}
                   </DroppableSquare>
                 );
               })}

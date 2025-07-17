@@ -12,7 +12,7 @@ export default function Home() {
   if (isUserLoading) {
     return (
       <div className="min-h-screen min-w-screen flex justify-center items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]">
-        <SideBar position="absolute" />
+        <SideBar />
         <div className="flex flex-col gap-3">
           <div className="relative h-[140px] aspect-square border-[3px] border-transparent">
             <motion.div

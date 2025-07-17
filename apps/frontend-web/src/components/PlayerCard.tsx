@@ -44,8 +44,12 @@ export default function PlayerCard({
             <p className="text-white text-xs p-0.5">{title}</p>
           </div>
         )}
-        <div className={`dark:text-white`}>{player} </div>
-        <div className={`text-xs px-1 rounded-sm bg-[#27272A] text-[#A1A1AA]`}>
+        <div className={`dark:text-white font-dream font-semibold`}>
+          {player}{" "}
+        </div>
+        <div
+          className={`text-xs px-1 rounded-sm bg-[#27272A] text-[#A1A1AA] font-proza`}
+        >
           {rating}
         </div>
       </div>

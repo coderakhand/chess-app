@@ -18,11 +18,13 @@ import { Settings } from "lucide-react";
 import { useBoardStore, useUserInfoStore } from "../store/atoms";
 import { boardColorsList } from "../config";
 import api from "../api/axios";
+import { Button } from "./ui/button";
+import { motion } from "framer-motion";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md  dark:hover:shadow-none dark:hover:bg-[#27272A]";
 
-export default function SideBar({ position }: { position: string }) {
+export default function SideBar() {
   const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
   const [component, setComponent] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
@@ -32,28 +34,30 @@ export default function SideBar({ position }: { position: string }) {
 
   const commonStyle =
     "text-3xl transition delay-80 duration-600 cursor-pointer";
+  const [isToggling, setIsToggling] = useState(false);
 
   return (
     <div
-      className={`${position} z-100 left-0 min-h-screen bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B]`}
+      className={`absolute w-screen sm:w-[48px] z-100 bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B] overflow-hidden`}
     >
-      <div className="grid grid-rows-2 h-screen">
+      <div className="flex sm:grid sm:grid-rows-2 sm:h-screen">
         <HoverCard
           openDelay={150}
           closeDelay={150}
           onOpenChange={() => setComponent(null)}
         >
           <HoverCardContent
-            className="rounded-none bg-white/30 backdrop-blur-2xl shadow-md border-none w-[300px] h-screen dark:bg-[#18181B] dark:text-white"
-            side="right"
+            className="z-1000 rounded-none bg-white/30 backdrop-blur-2xl shadow-md border-none w-screen sm:w-[300px] sm:h-screen dark:bg-[#18181B] dark:text-white font-dream"
+            side={window.innerWidth < 640 ? "bottom" : "left"}
           >
             <SideBarComponentContent component={component} />
           </HoverCardContent>
-          <div className="pt-[20px] pb-[50px] w-full flex flex-col">
+          <div className="sm:pt-[20px] sm:pb-[50px] w-full flex sm:flex-col max-sm:gap-4 max-sm:pl-4">
             <HoverCardTrigger>
               <button
-                className={`flex justify-center items-center ${component == "chezz" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
+                className={`flex justify-center items-center ${component == "chezz" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
                 onMouseOver={() => setComponent("chezz")}
+                onTouchEnd={() => setComponent("chezz")}
               >
                 <FaChessBoard
                   className={`${commonStyle} border dark:text-white`}
@@ -64,7 +68,8 @@ export default function SideBar({ position }: { position: string }) {
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("playTab")}
-                className={`flex justify-center items-center ${component == "playTab" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
+                onTouchEnd={() => setComponent("playTab")}
+                className={`flex justify-center items-center ${component == "playTab" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
               >
                 <Play
                   className={`${commonStyle} p-1 h-10 w-10 text-green-600`}
@@ -75,7 +80,8 @@ export default function SideBar({ position }: { position: string }) {
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("find_users")}
-                className={`flex justify-center items-center ${component == "find_users" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
+                onTouchEnd={() => setComponent("find_users")}
+                className={`flex justify-center items-center ${component == "find_users" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
               >
                 <MdPersonSearch className={`${commonStyle} text-blue-600`} />
               </button>
@@ -84,7 +90,8 @@ export default function SideBar({ position }: { position: string }) {
             <HoverCardTrigger>
               <button
                 onMouseOver={() => setComponent("messages")}
-                className={`flex justify-center items-center ${component == "messages" ? "bg-white/30 backdrop-blur-2xl shadow-md dark:bg-[#27272A]" : ""} my-[5px] h-[50px] w-full`}
+                onTouchEnd={() => setComponent("messages")}
+                className={`flex justify-center items-center ${component == "messages" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
               >
                 <Binoculars className={`${commonStyle} text-yellow-600`} />
               </button>
@@ -92,28 +99,56 @@ export default function SideBar({ position }: { position: string }) {
           </div>
         </HoverCard>
 
-        <div className="py-[20px] px-[10px] w-full gap-4 flex flex-col justify-end">
-          <div
+        <div className="sm:py-[20px] px-2 xsmd:px-[10px] w-full gap-2 xsmd:gap-4 flex max-sm:items-center sm:flex-col justify-end">
+          {isGuest && (
+            <Button
+              className={`shrink-0 sm:hidden relative w-16 xsm:w-20  ${theme === "light" ? "bg-[#272730] text-white hover:text-black hover:border-2" : ""} dark:bg-green-600 dark:hover:bg-green-700 duration-400 transition-normal ease-out cursor-pointer`}
+            >
+              <div className="absolute -top-2 w-full h-2 blur-md dark:bg-green-700" />
+              <div className="absolute -right-2 w-2 h-full blur-md dark:bg-green-700" />
+              <div className="absolute -left-2 w-2 h-full blur-md dark:bg-green-700" />
+              <div className="absolute -bottom-2 w-full h-2 blur-md dark:bg-green-700" />
+              <Link
+                to="/play"
+                className="flex justify-center items-center xsm:text-lg rounded-xl flex-wrap font-dream font-semibold"
+              >
+                Log In
+              </Link>
+            </Button>
+          )}
+          <motion.div
             onClick={() => {
-              if (theme === "dark") {
-                setDarkSquare(boardColorsList[1].darkSquare);
-                setLightSquare(boardColorsList[1].lightSquare);
-              } else {
-                setDarkSquare(boardColorsList[0].darkSquare);
-                setLightSquare(boardColorsList[0].lightSquare);
-              }
-              setTheme(theme === "dark" ? "light" : "dark");
+              if (isToggling) return;
+              setIsToggling(true);
+
+              setTimeout(() => {
+                if (theme === "dark") {
+                  setDarkSquare(boardColorsList[1].darkSquare);
+                  setLightSquare(boardColorsList[1].lightSquare);
+                } else {
+                  setDarkSquare(boardColorsList[0].darkSquare);
+                  setLightSquare(boardColorsList[0].lightSquare);
+                }
+                setTheme(theme === "dark" ? "light" : "dark");
+                setIsToggling(false);
+              }, 400);
             }}
-            className="flex justify-center"
+            whileTap={{ scale: 0.8, rotate: 360 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 20,
+            }}
+            className="flex justify-center max-xsmd:hidden cursor-pointer"
           >
             {theme === "dark" ? (
-              <Sun className="w-7 h-7 text-white" />
+              <Sun className="w-6 h-6 xsm:w-7 xsm:h-7 text-white" />
             ) : (
-              <Moon className="w-7 h-7" />
+              <Moon className="w-6 h-6 xsm:w-7 xsm:h-7" />
             )}
-          </div>
+          </motion.div>
           <Link to={"/settings"}>
-            <Settings className="w-7 h-7 transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer dark:text-white" />
+            <Settings className="max-xsm:hidden w-6 h-6 xsm:w-7 xsm:h-7 transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer dark:text-white" />
           </Link>
           {!isGuest && (
             <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer text-red-400" />
@@ -213,7 +248,7 @@ function PlayTabContent() {
 
 function FindUsersContent() {
   return (
-    <div className="w-full h-[600px] flex flex-col items-center">
+    <div className="w-full h-[300px] flex flex-col items-center">
       <div className="relative mt-3">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
         <input

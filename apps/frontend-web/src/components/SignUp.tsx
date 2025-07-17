@@ -45,9 +45,9 @@ export default function SignUp() {
   };
 
   return (
-    <DialogHeader className="flex justify-center items-center gap-3 ">
+    <DialogHeader className="flex justify-center items-center gap-3 font-dream">
       <DialogTitle className="text-3xl">Create your account</DialogTitle>
-      <DialogDescription className="text-center">
+      <DialogDescription className="text-center font-proza">
         Create your free account to start playing online chess!
       </DialogDescription>
 
@@ -69,21 +69,21 @@ export default function SignUp() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg"
+          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
         <input
           type="text"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg"
+          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg"
+          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
         <button
           onClick={handleSignup}

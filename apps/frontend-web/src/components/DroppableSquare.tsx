@@ -53,8 +53,7 @@ function AlphabetCoordinate({
 }) {
   return (
     <div
-      className={`absolute w-full h-full flex justify-end
-        items-end px-1 font-bold text-sm text-[#4A4847] ${rotated ? "rotate-180" : ""}`}
+      className={`absolute right-0.5 -bottom-0.5 font-bold text-[10px] xsmd:text-sm text-[#4A4847]/60 ${rotated ? "rotate-180" : ""}`}
     >
       {coordinate}
     </div>
@@ -70,7 +69,7 @@ function NumbericCoordinate({
 }) {
   return (
     <div
-      className={`absolute w-full h-full flex justify-start items-start px-1 font-bold text-sm text-[#4A4847] ${rotated ? "rotate-180" : ""}`}
+      className={`absolute w-full h-full flex justify-start items-start px-[2px] font-bold text-[10px] xsmd:text-sm text-[#4A4847]/60 ${rotated ? "rotate-180" : ""}`}
     >
       {coordinate}
     </div>

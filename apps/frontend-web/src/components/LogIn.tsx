@@ -43,9 +43,9 @@ export default function LogIn() {
   };
 
   return (
-    <DialogHeader className="flex justify-center items-center gap-8 ">
+    <DialogHeader className="flex justify-center items-center gap-8 font-dream">
       <DialogTitle className="text-3xl">Log In & Play</DialogTitle>
-      <DialogDescription className="text-center">
+      <DialogDescription className="text-center font-proza">
         Welcome back! Enter your account to continue.
       </DialogDescription>
 
@@ -67,14 +67,14 @@ export default function LogIn() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg"
+          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg"
+          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
         <button
           onClick={handleLogin}

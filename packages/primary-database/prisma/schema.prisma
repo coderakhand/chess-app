@@ -9,18 +9,24 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  username     String    @unique
-  email        String    @unique
-  password     String
-  rapidRating  Int       @default(800) @map("rating")
-  bulletRating Int       @default(800)
-  blitzRating  Int       @default(800)
-  createdAt    DateTime  @default(now())
-  lastLogin    DateTime?
-  gamesAsBlack Game[]    @relation("BlackGames")
-  gamesAsWhite Game[]    @relation("WhiteGames")
-  userSettings Settings?
+  id               String    @id @default(uuid())
+  username         String    @unique
+  email            String    @unique
+  password         String
+  rapidRating      Int       @default(800) @map("rating")
+  bulletRating     Int       @default(800)
+  blitzRating      Int       @default(800)
+  peakRapidRating  Int       @default(800)
+  peakBulletRating Int       @default(800)
+  peakBlitzRating  Int       @default(800)
+  createdAt        DateTime  @default(now())
+  lastLogin        DateTime?
+  gamesAsBlack     Game[]    @relation("BlackGames")
+  gamesAsWhite     Game[]    @relation("WhiteGames")
+  userSettings     Settings?
+  
+  friends          User[]    @relation("UserFriends")
+  friendOf         User[]    @relation("UserFriends")
 
   @@index([rapidRating, bulletRating, blitzRating])
 }
@@ -30,8 +36,12 @@ model Settings {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 
-  premove            Boolean @default(false)
-  autoPromoteToQueen Boolean @default(false)
+  themeMode            ThemeMode  @default(DARK)
+  boardTheme           BoardTheme @default(CLASSIC_GREEN)
+  premove              Boolean    @default(false)
+  autoPromoteToQueen   Boolean    @default(false)
+  showBoardCoordinates Boolean    @default(true)
+  showValidMoves       Boolean    @default(true)
 }
 
 model Guest {
@@ -104,4 +114,17 @@ enum GameResult {
   WHITE_WINS
   BLACK_WINS
   DRAW
+}
+
+enum ThemeMode {
+  DARK
+  LIGHT
+}
+
+enum BoardTheme {
+  DREAM_BLUE
+  CLASSIC_GREEN
+  WOOD
+  MARBLE
+  BREAD_BROWN
 }

@@ -10,6 +10,7 @@ import csrfRoutes from "./routes/csrf";
 import userRoutes from "./routes/user";
 import gameRoutes from "./routes/game";
 import engineRoutes from "./routes/engine";
+import fideRoutes from './routes/fide';
 
 dotenv.config();
 const app = express();
@@ -40,5 +41,6 @@ app.use(csrfRoutes);
 app.use("/user", userRoutes);
 app.use("/game", gameRoutes);
 app.use("/engine", engineRoutes);
+app.use("/fide", fideRoutes);
 
 export default app;

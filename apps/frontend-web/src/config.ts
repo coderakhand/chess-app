@@ -4,28 +4,28 @@ export const MOVE = "move";
 export const GAME_OVER = "game_over";
 export const PENDING_GAME = "pending_game";
 
-export const boardColorsList = [
-  {
+export const boardColorsList = {
+  CLASSIC_GREEN: {
     darkSquare: "bg-[#18B350] hover:brightness-110",
-    lightSquare: "bg-[#DCFCE6] hover:brightness-110",
+    lightSquare: "bg-[#DCFCE6] hover:brightness-107",
   },
-  {
+  DREAM_BLUE: {
     darkSquare: "bg-[#8CA2AD] hover:brightness-110",
     lightSquare: "bg-[#DEE3E6] hover:brightness-105",
   },
-  {
+  WOOD: {
     darkSquare: "bg-[#76402D]",
     lightSquare: "bg-[#C09762]",
   },
-  {
+  MARBLE: {
     darkSquare: "bg-[#000000]",
     lightSquare: "bg-[#ced4da]",
   },
-  {
+  BREAD_BROWN: {
     darkSquare: "bg-gradient-to-r from-slate-600 to-slate-800",
     lightSquare: "bg-gradient-to-l from-slate-200 to-slate-500",
   },
-];
+};
 
 export const sampleGame = [
   "e4",

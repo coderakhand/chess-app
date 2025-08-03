@@ -36,11 +36,13 @@ export default function ChessBoard({
 
   const [source, setSource] = useState<string | null>(null);
 
-  const setMoves = useGameInfoStore((state) => state.setMoves);
+  const setMove = useGameInfoStore((state) => state.setMove);
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
 
   const [validMovesForPiece, setValidMovesForPiece] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  const flipBoard = useGameInfoStore((state) => state.flipBoard);
 
   const handleMovement = (
     i: number,
@@ -57,6 +59,7 @@ export default function ChessBoard({
       if (square.color != color) return;
       setSource(cellCode);
       const validMoves = chess.moves({ square: cellCode as Square });
+      console.log(validMoves);
       setValidMovesForPiece(validMoves);
     } else {
       if (source == cellCode) {
@@ -83,16 +86,25 @@ export default function ChessBoard({
       };
 
       setSource(null);
+      let m;
       try {
-        chess.move(move);
+        m = chess.move(move);
       } catch {
         return;
       }
       setValidMovesForPiece([]);
 
       setBoard(chess.board());
-
-      setMoves(move);
+      setMove({
+        ...move,
+        isCapture: m.isCapture() || m.isEnPassant(),
+        piece: m.piece,
+        after: m.after,
+        before: m.before,
+        isKingsideCastle: m.isKingsideCastle(),
+        isQueensideCastle: m.isQueensideCastle(),
+        isPromotion: m.isPromotion(),
+      });
 
       socket.send(
         JSON.stringify({
@@ -112,20 +124,34 @@ export default function ChessBoard({
     if (!to || from === to) return;
     if (color === null || color !== chess.turn()) return;
     const move = { from, to };
-
-    if (chess.move(move)) {
-      setBoard(chess.board());
-      if (socket === null) return;
-      setMoves(move);
-      socket.send(
-        JSON.stringify({
-          type: "move",
-          payload: {
-            move: move,
-          },
-        })
-      );
+    let m;
+    try {
+      m = chess.move(move);
+    } catch {
+      console.log("Invalid");
+      return;
     }
+    setBoard(chess.board());
+    if (socket === null) return;
+    setMove({
+      ...move,
+      isCapture: m.isCapture() || m.isEnPassant(),
+      piece: m.piece,
+      after: m.after,
+      before: m.before,
+      isKingsideCastle: m.isKingsideCastle(),
+      isQueensideCastle: m.isQueensideCastle(),
+      isPromotion: m.isPromotion(),
+    });
+
+    socket.send(
+      JSON.stringify({
+        type: "move",
+        payload: {
+          move: move,
+        },
+      })
+    );
   };
 
   const pointerSensor = useSensor(PointerSensor, {
@@ -154,6 +180,17 @@ export default function ChessBoard({
     return board[rowIndex]?.[colIndex] ?? null;
   };
 
+  const isCastleValidMove = (value: string, cellCode: string) => {
+    if (value == "O-O") {
+      if (color == "w" && cellCode == "g1") return true;
+      if (color == "b" && cellCode == "g8") return true;
+    } else if (value == "O-O-O") {
+      if (color == "w" && cellCode == "c1") return true;
+      if (color == "b" && cellCode == "c8") return true;
+    }
+    return false;
+  };
+
   return (
     <DndContext
       onDragEnd={handleDragEnd}
@@ -163,7 +200,7 @@ export default function ChessBoard({
     >
       <div
         className={`${
-          color !== null ? (color === "b" ? "rotate-180" : "") : ""
+          flipBoard ? "rotate-180" : ""
         } relative touch-none ${customClass ?? " aspect-square max-w-[min(90vh,580px)]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
         {gameStatus === "OVER" ? <GameResultCard /> : <></>}
@@ -194,16 +231,17 @@ export default function ChessBoard({
                     )}
 
                     {validMovesForPiece.find(
-                      (value) => value.slice(-2) === cellCode
+                      (value) =>
+                        value.slice(-2) === cellCode ||
+                        ((value === "O-O" || value === "O-O-O") &&
+                          isCastleValidMove(value, cellCode))
                     ) &&
                       (chess.get(cellCode as Square) ? (
                         <div className="absolute h-full w-full bg-red-600  opacity-60"></div>
                       ) : (
                         <div
-                          className={`absolute h-full w-full bg-[#3F46D0] opacity-60`}
-                        >
-                          <div className="w-full h-full bg-gradient-to-br from-[#3F46D0] via-white/60 to-[#3F46D0] blur-md"></div>
-                        </div>
+                          className={`absolute lg:h-5 lg:w-5 rounded-full bg-radial-[at_25%_25%] from-[#4A4847]/60 to-zinc-900 to-75% opacity-30`}
+                        ></div>
                       ))}
                   </DroppableSquare>
                 );

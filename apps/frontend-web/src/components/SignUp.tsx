@@ -1,15 +1,18 @@
 import { FcGoogle } from "react-icons/fc";
 import { DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useUserInfoStore } from "../store/atoms";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
 
@@ -69,22 +72,41 @@ export default function SignUp() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
+          className="focus:outline-slate-600 focus:outline-2 font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
         <input
           type="text"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
+          className="focus:outline-slate-600 focus:outline-2 font-medium px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="font-semibold px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
-        />
+        <div className="relative w-full">
+          <input
+            ref={passwordRef}
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="focus:outline-slate-600 focus:outline-2 font-medium pl-[10px] pr-6 sm:pr-8 h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
+          />
+          <span
+            className="absolute right-1.5 inset-y-0 flex items-center"
+            onClick={() => {
+              setShowPassword((prev) => !prev);
+              setTimeout(() => {
+                passwordRef.current?.focus();
+              }, 0);
+            }}
+          >
+            {" "}
+            {showPassword ? (
+              <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+            ) : (
+              <EyeOff className=" w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+            )}
+          </span>
+        </div>
         <button
           onClick={handleSignup}
           disabled={isLoading}

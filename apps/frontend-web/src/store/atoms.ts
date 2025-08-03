@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { boardColorsList } from "../config";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
-
+import { type moveType } from "@repo/utils";
 interface BoardStoreType {
   darkSquare: string;
   lightSquare: string;
@@ -12,8 +12,8 @@ interface BoardStoreType {
 }
 
 export const useBoardStore = create<BoardStoreType>((set) => ({
-  darkSquare: boardColorsList[0].darkSquare,
-  lightSquare: boardColorsList[0].lightSquare,
+  darkSquare: boardColorsList.DREAM_BLUE?.darkSquare ?? "#000000",
+  lightSquare: boardColorsList.DREAM_BLUE?.lightSquare ?? "#FFFFFF",
   pieces: "normal",
   setDarkSquare: (newDarkSquare: string) => set({ darkSquare: newDarkSquare }),
   setLightSquare: (newLightSquare: string) =>
@@ -21,7 +21,18 @@ export const useBoardStore = create<BoardStoreType>((set) => ({
   setPieces: (newPieces: string) => set({ pieces: newPieces }),
 }));
 
-interface UserInfoType {
+interface RecentGame {
+  id: string;
+  opponent: string;
+  result: "win" | "loss" | "draw";
+  timeControl: "bullet" | "blitz" | "rapid";
+  rating: number;
+  moves: number;
+  duration: string;
+  date: string;
+}
+
+export interface UserInfoType {
   isGuest: boolean;
   id: string | null;
   username: string;
@@ -32,16 +43,21 @@ interface UserInfoType {
     rapid: number;
   };
 }
+
 interface UserInfoStoreType {
   userInfo: UserInfoType;
   setUserInfo: (newUserInfo: UserInfoType) => void;
+
+  recentGames: RecentGame[];
+  setRecentGames: (games: RecentGame[]) => void;
 }
 
 export const useUserInfoStore = create<UserInfoStoreType>((set) => ({
   userInfo: {
     isGuest: true,
     id: null,
-    username: "Guest",
+    username:
+      "Guest" + Math.round(Number(Math.random().toPrecision(6)) * 1000000),
     email: "",
     ratings: {
       bullet: 800,
@@ -49,7 +65,9 @@ export const useUserInfoStore = create<UserInfoStoreType>((set) => ({
       blitz: 800,
     },
   },
+  recentGames: [],
   setUserInfo: (newUserInfo: UserInfoType) => set({ userInfo: newUserInfo }),
+  setRecentGames: (games: RecentGame[]) => set({ recentGames: games }),
 }));
 
 interface timeControlType {
@@ -57,6 +75,7 @@ interface timeControlType {
   baseTime: number;
   increment: number;
 }
+
 interface gameInfoStoreType {
   chess: Chess;
   board: ({
@@ -65,14 +84,17 @@ interface gameInfoStoreType {
     color: Color;
   } | null)[][];
   gameStatus: string | null;
-  moves: { from: string; to: string }[];
+  moves: moveType[];
   color: string;
+  userInfo: { username: string; rating: number };
   opponentInfo: { username: string; rating: number };
   timeControl: timeControlType;
   opponentTimeLeft: number | null;
   timeLeft: number | null;
   gameCreationTime: number | null;
   result: { winner: string | null; reason: string };
+  showPositionAtMovesIndex: number | null;
+  flipBoard: boolean;
   setChess: (newChess: Chess) => void;
   setBoard: (
     newBoard: ({
@@ -82,17 +104,23 @@ interface gameInfoStoreType {
     } | null)[][]
   ) => void;
   setGameStatus: (newGameStatus: string) => void;
-  setMoves: (newMove: { from: string; to: string }) => void;
+  setMove: (newMove: moveType) => void;
+  setMoves: (newMoves: moveType[]) => void;
   setColor: (newColor: string) => void;
   setOpponentInfo: (newOpponentInfo: {
     username: string;
     rating: number;
   }) => void;
+  setUserInfo: (newUserInfo: { username: string; rating: number }) => void;
   setTimeControl: (newTimeControl: timeControlType) => void;
   setOpponentTimeLeft: (newOpponentTimeLeft: number) => void;
   setTimeLeft: (newTimeLeft: number) => void;
   setGameCreationTime: (newGameCreationTime: number) => void;
   setResult: (newResult: { winner: string | null; reason: string }) => void;
+  setShowPositionAtMovesIndex: (newIndex: number | null) => void;
+  showPositionAtMovesIndexDecrease: () => void;
+  showPositionAtMovesIndexIncrease: () => void;
+  setFlipBoard: () => void;
 }
 
 export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
@@ -107,8 +135,12 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
   timeLeft: 1 * 60 * 1000,
   gameCreationTime: null,
   result: { winner: null, reason: "" },
+  userInfo: { username: "Guest", rating: 800 },
+  showPositionAtMovesIndex: null,
+  flipBoard: false,
 
   setChess: (newChess: Chess) => set({ chess: newChess }),
+
   setBoard: (
     newBoard: ({
       square: Square;
@@ -119,10 +151,21 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
 
   setGameStatus: (newGameStatus: string) => set({ gameStatus: newGameStatus }),
 
-  setMoves: (newMove: { from: string; to: string }) =>
-    set((state) => ({ moves: [...state.moves, newMove] })),
+  setMove: (newMove: moveType) =>
+    set((state) => {
+      const newIdx = state.moves.length;
+      return {
+        moves: [...state.moves, newMove],
+        showPositionAtMovesIndex: newIdx,
+      };
+    }),
+
+  setMoves: (newMoves: moveType[]) => set({ moves: newMoves }),
 
   setColor: (newColor: string) => set({ color: newColor }),
+
+  setUserInfo: (newUserInfo: { username: string; rating: number }) =>
+    set({ userInfo: newUserInfo }),
 
   setOpponentInfo: (newOpponentInfo: { username: string; rating: number }) =>
     set({ opponentInfo: newOpponentInfo }),
@@ -140,4 +183,38 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
 
   setResult: (newResult: { winner: string | null; reason: string }) =>
     set({ result: newResult }),
+
+  setShowPositionAtMovesIndex: (newIndex) =>
+    set({ showPositionAtMovesIndex: newIndex }),
+
+  showPositionAtMovesIndexDecrease: () =>
+    set((state) => {
+      const newIdx =
+        state.showPositionAtMovesIndex !== null &&
+        state.showPositionAtMovesIndex > 0
+          ? state.showPositionAtMovesIndex - 1
+          : state.showPositionAtMovesIndex;
+      const chess = new Chess(state.moves[newIdx || 0]?.after);
+      return {
+        showPositionAtMovesIndex: newIdx,
+        board: chess.board(),
+      };
+    }),
+
+  showPositionAtMovesIndexIncrease: () =>
+    set((state) => {
+      const newIdx =
+        state.showPositionAtMovesIndex !== null &&
+        state.showPositionAtMovesIndex < state.moves.length - 1
+          ? state.showPositionAtMovesIndex + 1
+          : state.showPositionAtMovesIndex;
+
+      const chess = new Chess(state.moves[newIdx || 0]?.after);
+      return {
+        showPositionAtMovesIndex: newIdx,
+        board: chess.board(),
+      };
+    }),
+
+  setFlipBoard: () => set((state) => ({ flipBoard: !state.flipBoard })),
 }));

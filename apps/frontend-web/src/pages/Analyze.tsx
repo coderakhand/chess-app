@@ -88,7 +88,7 @@ export default function Analyze() {
   };
 
   return (
-    <div className="min-h-screen min-w-screen flex justify-center items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]">
+    <div className="min-h-screen min-w-screen flex  items-center bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]">
       <SideBar />
 
       <div className="flex w-full h-full max-w-screen-xl justify-center items-center px-4 gap-4">

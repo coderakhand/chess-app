@@ -1,3 +1,5 @@
+import { PieceSymbol } from "chess.js";
+
 export enum TimeControl {
   CLASSICAL = "CLASSICAL",
   RAPID = "RAPID",
@@ -15,6 +17,14 @@ export interface timeControlType {
 export interface moveType {
   from: string;
   to: string;
+  before?: string;
+  after?: string;
+  timeTaken?: number;
+  isCapture?: boolean;
+  piece?: PieceSymbol;
+  isKingsideCastle?: boolean;
+  isQueensideCastle?: boolean;
+  isPromotion?: boolean;
 }
 
 export enum GameStatus {

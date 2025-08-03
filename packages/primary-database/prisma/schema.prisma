@@ -24,9 +24,9 @@ model User {
   gamesAsBlack     Game[]    @relation("BlackGames")
   gamesAsWhite     Game[]    @relation("WhiteGames")
   userSettings     Settings?
-  
-  friends          User[]    @relation("UserFriends")
-  friendOf         User[]    @relation("UserFriends")
+
+  friends  User[] @relation("UserFriends")
+  friendOf User[] @relation("UserFriends")
 
   @@index([rapidRating, bulletRating, blitzRating])
 }

@@ -3,23 +3,24 @@ import { MdPersonSearch } from "react-icons/md";
 import { VscSignOut } from "react-icons/vsc";
 import { Link } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Binoculars,
   Brain,
   Crown,
+  History,
   Moon,
   Play,
   Search,
   Sun,
+  TrendingUp,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { Settings } from "lucide-react";
-import { useBoardStore, useUserInfoStore } from "../store/atoms";
-import { boardColorsList } from "../config";
+import { useUserInfoStore } from "../store/atoms";
 import api from "../api/axios";
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
+import { FaRankingStar } from "react-icons/fa6";
 
 const hoverEffect =
   " hover:bg-white/30 hover:backdrop-blur-2xl hover:shadow-md  dark:hover:shadow-none dark:hover:bg-[#27272A]";
@@ -28,9 +29,6 @@ export default function SideBar() {
   const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
   const [component, setComponent] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
-
-  const setDarkSquare = useBoardStore((state) => state.setDarkSquare);
-  const setLightSquare = useBoardStore((state) => state.setLightSquare);
 
   const commonStyle =
     "text-3xl transition delay-80 duration-600 cursor-pointer";
@@ -79,21 +77,21 @@ export default function SideBar() {
 
             <HoverCardTrigger>
               <button
-                onMouseOver={() => setComponent("find_users")}
-                onTouchEnd={() => setComponent("find_users")}
-                className={`flex justify-center items-center ${component == "find_users" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
+                onMouseOver={() => setComponent("rankings")}
+                onTouchEnd={() => setComponent("rankings")}
+                className={`flex justify-center items-center ${component == "rankings" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
               >
-                <MdPersonSearch className={`${commonStyle} text-blue-600`} />
+                <TrendingUp className={`${commonStyle} text-purple-600`} />
               </button>
             </HoverCardTrigger>
 
             <HoverCardTrigger>
               <button
-                onMouseOver={() => setComponent("messages")}
-                onTouchEnd={() => setComponent("messages")}
-                className={`flex justify-center items-center ${component == "messages" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
+                onMouseOver={() => setComponent("find_users")}
+                onTouchEnd={() => setComponent("find_users")}
+                className={`flex justify-center items-center ${component == "find_users" ? "sm:bg-white/30 sm:backdrop-blur-2xl sm:shadow-md sm:dark:bg-[#27272A]" : ""} my-[5px] h-[30px] xsm:h-[40px] sm:h-[50px] w-full`}
               >
-                <Binoculars className={`${commonStyle} text-yellow-600`} />
+                <MdPersonSearch className={`${commonStyle} text-blue-600`} />
               </button>
             </HoverCardTrigger>
           </div>
@@ -122,13 +120,6 @@ export default function SideBar() {
               setIsToggling(true);
 
               setTimeout(() => {
-                if (theme === "dark") {
-                  setDarkSquare(boardColorsList[1].darkSquare);
-                  setLightSquare(boardColorsList[1].lightSquare);
-                } else {
-                  setDarkSquare(boardColorsList[0].darkSquare);
-                  setLightSquare(boardColorsList[0].lightSquare);
-                }
                 setTheme(theme === "dark" ? "light" : "dark");
                 setIsToggling(false);
               }, 400);
@@ -142,13 +133,13 @@ export default function SideBar() {
             className="flex justify-center max-xsmd:hidden cursor-pointer"
           >
             {theme === "dark" ? (
-              <Sun className="w-6 h-6 xsm:w-7 xsm:h-7 text-white" />
+              <Sun className="w-6 h-6 xsm:w-7 xsm:h-7  stroke-white fill-white" />
             ) : (
-              <Moon className="w-6 h-6 xsm:w-7 xsm:h-7" />
+              <Moon className="w-6 h-6 xsm:w-7 xsm:h-7 fill-black" />
             )}
           </motion.div>
           <Link to={"/settings"}>
-            <Settings className="max-xsm:hidden w-6 h-6 xsm:w-7 xsm:h-7 transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer dark:text-white" />
+            <Settings className="text-amber-100 max-xsm:hidden w-6 h-6 xsm:w-7 xsm:h-7 cursor-pointer " />
           </Link>
           {!isGuest && (
             <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer text-red-400" />
@@ -170,8 +161,25 @@ function SideBarComponentContent({ component }: { component: string | null }) {
     return <FindUsersContent />;
   }
 
-  if (component === "messages") {
-    return <div></div>;
+  if (component === "rankings") {
+    return (
+      <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
+        <Link
+          to={"/fide/ratings"}
+          className={`px-[20px] flex items-center gap-2.5 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
+        >
+          <FaRankingStar className="text-yellow-600 w-5 h-5" />
+          <p className="h-full flex items-center py-1">Chess Rankings </p>
+        </Link>
+        <Link
+          to={`/games/history`}
+          className={`px-[20px] flex items-center gap-2 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
+        >
+          <History className="text-slate-700" />
+          <p className="h-full flex items-center py-1">Game History</p>
+        </Link>
+      </div>
+    );
   }
 
   if (component === "playTab") {
@@ -201,17 +209,17 @@ function ChezzBarContent() {
     <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
       <Link
         to={"/home"}
-        className={`px-[15px] flex items-center gap-1 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+        className={`px-[15px] flex items-center gap-1 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <img src="/home.png" className="w-[40px]" />
-        Home
+        <p className="h-full flex items-center py-1">Home </p>
       </Link>
       <Link
-        to={`/profile/${userInfo.username}`}
-        className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+        to={`/player/${userInfo.username}`}
+        className={`px-[20px] flex items-center gap-2 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <img src="/user.png" className="h-[40px] overflow-hidden" />
-        Profile
+        <p className="h-full flex items-center py-1">Profile</p>
       </Link>
       {!userInfo.isGuest && (
         <button
@@ -230,14 +238,14 @@ function PlayTabContent() {
     <div className="my-[20px] px-[5px] flex flex-col gap-4 text-xl">
       <Link
         to={"/play"}
-        className={`px-[15px] flex items-center gap-3 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+        className={`px-[15px] flex items-center gap-3 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <Crown className="w-5 h-5 font-bold overflow-hidden text-yellow-600" />
         New Game
       </Link>
       <Link
         to={"/analyze"}
-        className={`pl-[15px] flex items-center gap-3 text-xl w-full h-[40px] rounded-2xl ${hoverEffect}`}
+        className={`pl-[15px] flex items-center gap-3 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <Brain className="w-5 h-5 overflow-hidden text-blue-600" />
         Analyze Game
@@ -247,6 +255,9 @@ function PlayTabContent() {
 }
 
 function FindUsersContent() {
+  const [searchUser, setSearchUser] = useState("");
+
+  useEffect(() => {});
   return (
     <div className="w-full h-[300px] flex flex-col items-center">
       <div className="relative mt-3">
@@ -254,10 +265,18 @@ function FindUsersContent() {
         <input
           placeholder="Search Users"
           className="pl-10 bg-muted/50 outline-1 outline-blue-500  rounded-sm h-[30px]"
+          value={searchUser}
+          onChange={(e) => {
+            setSearchUser(e.target.value);
+          }}
         />
       </div>
       <div className="w-full px-[10px] py-[20px]">
-        <UserCard username="akhand" rating={800} />
+        {searchUser !== "" ? (
+          <div className="w-full flex justify-center">No User Found</div>
+        ) : (
+          <UserCard username="akhand" rating={800} />
+        )}
       </div>
     </div>
   );
@@ -271,7 +290,10 @@ interface UserCardProps {
 
 function UserCard({ username, rating, imageUrl }: UserCardProps) {
   return (
-    <button className="w-full flex justify-start items-center px-[10px] gap-3 h-8  bg-white/40  hover:bg-transparent hover:border-1 dark:bg-black dark:hover:bg-transparent dark:border-[#27272A] dark:text-white rounded-sm cursor-pointer transition-all duration-600">
+    <Link
+      to={`/player/${username}`}
+      className="w-full flex justify-start items-center px-[10px] gap-3 h-8  bg-white/40  hover:bg-transparent border-[0.5px] dark:bg-black dark:hover:bg-transparent dark:border-[#27272A] dark:text-white rounded-sm cursor-pointer transition-all duration-600"
+    >
       <img
         src={`${imageUrl ?? "/chezz.png"}`}
         alt=""
@@ -279,10 +301,10 @@ function UserCard({ username, rating, imageUrl }: UserCardProps) {
       />
       <div className="flex items-center gap-1">
         <div>{username}</div>
-        <div className="flex justify-center items-center h-4 px-1 dark:bg-white dark:text-black rounded-xs text-xs">
+        <div className="flex justify-center items-center h-4 px-1 bg-[#27272A] text-[#A1A1AA] rounded-xs text-xs">
           {rating}
         </div>
       </div>
-    </button>
+    </Link>
   );
 }

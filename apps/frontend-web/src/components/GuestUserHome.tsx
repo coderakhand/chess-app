@@ -24,14 +24,12 @@ export default function GuestUserHome() {
   const setLightSquare = useBoardStore((state) => state.setLightSquare);
 
   useEffect(() => {
-    if (theme === "light") {
-      setDarkSquare(boardColorsList[1].darkSquare);
-      setLightSquare(boardColorsList[1].lightSquare);
-    } else {
-      setDarkSquare(boardColorsList[0].darkSquare);
-      setLightSquare(boardColorsList[0].lightSquare);
-    }
-  }, [theme, setDarkSquare, setLightSquare]);
+    const boardColor =
+      (localStorage.getItem("BOARD_COLOR") as keyof typeof boardColorsList) ||
+      "DREAM_BLUE";
+    setDarkSquare(boardColorsList[boardColor].darkSquare);
+    setLightSquare(boardColorsList[boardColor].lightSquare);
+  }, [setDarkSquare, setLightSquare]);
 
   return (
     <div
@@ -68,7 +66,7 @@ export default function GuestUserHome() {
           <h1 className="pb-[4px] text-3xl xsmd:text-5xl smd:text-6xl font-bold font-dream smd:mb-2 bg-gradient-to-br dark:bg-gradient-to-r dark:from-green-600 dark:to-blue-600 dark:bg-clip-text dark:text-transparent">
             Play Chess Online
           </h1>
-          <h2 className="flex justify-center text-lg xsmd:text-2xl smd:text-3xl font-semibold font-proza text-[] dark:text-[#A1A1AA] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-transparent bg-clip-text">
+          <h2 className="flex justify-center text-lg xsmd:text-2xl smd:text-3xl font-semibold font-proza text-[] dark:text-[#A1A1AA] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-transparent bg-clip-text text-shadow-lg/12  dark:text-shadow-lg/25 dark:text-shadow-[#A1A1AA]/90">
             # New World of Chess
           </h2>
         </div>
@@ -152,7 +150,7 @@ export default function GuestUserHome() {
                 <div className="absolute -bottom-2 w-full h-2 blur-md dark:bg-green-700" />
                 <Link
                   to="/play"
-                  className="flex justify-center items-center text-3xl rounded-xl flex-wrap font-dream"
+                  className="flex justify-center items-center text-3xl  rounded-xl flex-wrap font-dream"
                 >
                   Play as Guest
                 </Link>

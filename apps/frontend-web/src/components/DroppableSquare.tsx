@@ -15,7 +15,11 @@ export default function DroppableSquare({
   color,
 }: DroppableProps) {
   const { setNodeRef } = useDroppable({ id });
-  const playerColor = useGameInfoStore((state) => state.color);
+  const flipBoard = useGameInfoStore((state) => state.flipBoard);
+  const moves = useGameInfoStore((state) => state.moves);
+  const showPositionAtMovesIndex = useGameInfoStore(
+    (state) => state.showPositionAtMovesIndex
+  );
 
   return (
     <div
@@ -23,19 +27,26 @@ export default function DroppableSquare({
       onClick={onClick}
       className={`relative w-full aspect-square ${color} flex justify-center items-center z-0`}
     >
-      {playerColor === "w" && id.charAt(1) == "1" && (
+      {showPositionAtMovesIndex !== null &&
+        (id == moves[showPositionAtMovesIndex]?.from ||
+          id == moves[showPositionAtMovesIndex]?.to) && (
+          <div
+            className={`absolute bg-yellow-300/50 blur-xs h-full w-full inset-0 overflow-hidden`}
+          ></div>
+        )}
+      {!flipBoard && id.charAt(1) == "1" && (
         <AlphabetCoordinate coordinate={id.charAt(0)} />
       )}
 
-      {playerColor === "w" && id.charAt(0) == "a" && (
+      {!flipBoard && id.charAt(0) == "a" && (
         <NumbericCoordinate coordinate={id.charAt(1)} />
       )}
 
-      {playerColor === "b" && id.charAt(1) == "8" && (
+      {flipBoard && id.charAt(1) == "8" && (
         <AlphabetCoordinate coordinate={id.charAt(0)} rotated={true} />
       )}
 
-      {playerColor === "b" && id.charAt(0) == "h" && (
+      {flipBoard && id.charAt(0) == "h" && (
         <NumbericCoordinate coordinate={id.charAt(1)} rotated={true} />
       )}
 
@@ -53,7 +64,7 @@ function AlphabetCoordinate({
 }) {
   return (
     <div
-      className={`absolute right-0.5 -bottom-0.5 font-bold text-[10px] xsmd:text-sm text-[#4A4847]/60 ${rotated ? "rotate-180" : ""}`}
+      className={`absolute font-proza font-bold text-[10px] xsmd:text-sm text-[#4A4847]/60 ${rotated ? "rotate-180 left-0.5 -top-0.5" : "right-0.5 -bottom-0.5"}`}
     >
       {coordinate}
     </div>
@@ -69,7 +80,7 @@ function NumbericCoordinate({
 }) {
   return (
     <div
-      className={`absolute w-full h-full flex justify-start items-start px-[2px] font-bold text-[10px] xsmd:text-sm text-[#4A4847]/60 ${rotated ? "rotate-180" : ""}`}
+      className={`absolute w-full h-full flex justify-start items-start px-[2px] font-proza font-bold text-[10px] xsmd:text-sm text-[#4A4847]/60 ${rotated ? "rotate-180" : ""}`}
     >
       {coordinate}
     </div>

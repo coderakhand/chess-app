@@ -33,7 +33,7 @@ export default function AnimatedChessBoard({
         idx = 0;
         return;
       }
-      chessRef.current.move(sampleGame[idx]);
+      chessRef.current.move(sampleGame[idx] || "");
       setBoard(chessRef.current.board());
       idx++;
     }, 900);

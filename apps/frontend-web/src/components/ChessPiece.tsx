@@ -21,12 +21,13 @@ export default function ChessPiece({
 }: ChessPieceProps) {
   const { setNodeRef, attributes, listeners, transform } = useDraggable({ id });
   const chess = useGameInfoStore((state) => state.chess);
+  const flipBoard = useGameInfoStore((state) => state.flipBoard);
   const turn = chess.turn();
 
   const style = transform
     ? {
         transform:
-          color === "b"
+          flipBoard
             ? `translate(${-transform.x}px, ${-transform.y}px)`
             : `translate(${transform.x}px, ${transform.y}px)`,
         zIndex: 10,
@@ -46,7 +47,7 @@ export default function ChessPiece({
           <img
             src={`/${square?.color}${square?.type}.svg`}
             className={`${
-              color !== null && color === "b" ? "rotate-180" : ""
+              flipBoard  ? "rotate-180" : ""
             } ${customClass ?? "w-[60px] object-contain"}`}
           />
         ) : (

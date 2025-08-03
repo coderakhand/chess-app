@@ -9,7 +9,7 @@ export default function useAuth() {
 
   const fetchMe = async () => {
     try {
-      const { data } = await api.get("/me");
+      const { data } = await api.get("/user/me");
       setUserInfo({ ...data.user, isGuest: false });
       console.log(data.user);
       setIsUserLoading(false);

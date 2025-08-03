@@ -16,9 +16,32 @@ import {
 } from "../components/ui/collapsible";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { games } from "../config";
-import { Calendar, ChevronsUpDown, Clock, Zap } from "lucide-react";
+import {
+  ArrowUpDown,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Clock,
+  RotateCw,
+  SendHorizonal,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
+import MovesTable from "../components/MovesTable";
+import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
 
-export default function Play() {
+export default function Game() {
+  interface Friend {
+    id: string;
+    username: string;
+    status: "online" | "offline" | "playing";
+    rating: number;
+  }
+  const friends: Friend[] = [
+    { id: "1", username: "akhand", status: "offline", rating: 800 },
+  ];
   const { user } = useAuth();
 
   const socket = useSocket();
@@ -33,7 +56,8 @@ export default function Play() {
   const setColor = useGameInfoStore((state) => state.setColor);
   const setResult = useGameInfoStore((state) => state.setResult);
 
-  const setMove = useGameInfoStore((state) => state.setMoves);
+  const setMove = useGameInfoStore((state) => state.setMove);
+  const setMoves = useGameInfoStore((state) => state.setMoves);
   const setOpponentInfo = useGameInfoStore((state) => state.setOpponentInfo);
   const opponentInfo = useGameInfoStore((state) => state.opponentInfo);
 
@@ -59,6 +83,16 @@ export default function Play() {
   const [chat, setChat] = useState<{ sender: string; message: string }[]>([]);
   const [isDrawOffered, setIsDrawOffered] = useState<boolean>(false);
 
+  const showPositionAtMovesIndexDecrease = useGameInfoStore(
+    (state) => state.showPositionAtMovesIndexDecrease
+  );
+  const showPositionAtMovesIndexIncrease = useGameInfoStore(
+    (state) => state.showPositionAtMovesIndexIncrease
+  );
+
+  const flipBoard = useGameInfoStore((state) => state.flipBoard);
+  const setFlipBoard = useGameInfoStore((state) => state.setFlipBoard);
+
   const rating =
     timeControl.name === "BULLET"
       ? user.ratings.bullet
@@ -76,6 +110,7 @@ export default function Play() {
         switch (type) {
           case PENDING_GAME: {
             console.log(payload);
+            setMoves([]);
             const newChess = new Chess(payload.position);
             setChess(newChess);
             setBoard(newChess.board());
@@ -93,6 +128,7 @@ export default function Play() {
 
           case INIT_GAME: {
             const newChess = new Chess();
+            setMoves([]);
             setChess(newChess);
             setBoard(newChess.board());
             setColor(payload.userInfo.color);
@@ -108,10 +144,18 @@ export default function Play() {
           case MOVE: {
             const move = payload.move;
             const time = payload.time;
-            console.log(move);
-            chess.move(move);
+            const m = chess.move(move);
             setBoard(chess.board());
-            setMove(move);
+            setMove({
+              ...move,
+              piece: m.piece,
+              after: m.after,
+              before: m.before,
+              isCapture: m.isCapture() || m.isEnPassant(),
+              isKingsideCastle: m.isKingsideCastle(),
+              isQueensideCastle: m.isQueensideCastle(),
+              isPromotion: m.isPromotion(),
+            });
             if (color === "w") {
               timeLeftRef.current = time.w;
               opponentTimeLeftRef.current = time.b;
@@ -191,6 +235,7 @@ export default function Play() {
     setGameStatus,
     setResult,
     chat,
+    setMoves,
   ]);
 
   useEffect(() => {
@@ -280,6 +325,8 @@ export default function Play() {
     setIsDrawOffered(false);
   };
 
+  const sendChatMessage = () => {};
+
   return (
     <div
       className={`flex max-lg:flex-col w-screen lg:h-screen  lg:gap-[100px] bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
@@ -289,23 +336,23 @@ export default function Play() {
       <div className="flex max-lg:flex-col  max-lg:items-center justify-center w-screen min-h-screen py-[30px] gap-6 sm:pl-[60px] px-1 max-sm:px-3 max-sm:pt-[100px]">
         <div className="flex-grow max-w-[560px] flex flex-col gap-2 h-full">
           <PlayerCard
-            player={opponentInfo.username}
-            rating={opponentInfo.rating}
-            color={color === "w" ? "b" : "w"}
-            time={opponentTimeLeft}
+            player={flipBoard ? user.username : opponentInfo.username}
+            rating={flipBoard ? user.ratings.rapid : opponentInfo.rating}
+            color={flipBoard ? color : color === "w" ? "b" : "w"}
+            time={flipBoard ? timeLeft : opponentTimeLeft}
           />
 
           <ChessBoard socket={socket} />
 
           <PlayerCard
-            player={user.username}
-            rating={rating}
-            color={color}
-            time={timeLeft}
+            player={flipBoard ? opponentInfo.username : user.username}
+            rating={flipBoard ? opponentInfo.rating : user.ratings.rapid}
+            color={flipBoard ? (color === "w" ? "b" : "w") : color}
+            time={flipBoard ? opponentTimeLeft : timeLeft}
           />
         </div>
 
-        <div className="flex flex-col h-full w-full sm:w-[580px] md:w-[640px] lg:w-[400px] gap-3 md:px-10">
+        <div className="flex flex-col h-full w-full sm:w-[580px] md:w-[640px] lg:w-[400px] gap-3 md:px-10 ">
           <div className="flex justify-center w-full min-h-[600px] lg:h-screen max-h-[900px]">
             <div
               className={`flex flex-col items-center py-[5px] gap-3 w-full lg:w-[360px]`}
@@ -324,7 +371,7 @@ export default function Play() {
                     </TabsTrigger>
 
                     <TabsTrigger
-                      value="games"
+                      value="games_archieve"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
                     >
                       Games
@@ -343,31 +390,111 @@ export default function Play() {
                     className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   >
                     {gameStatus !== null ? (
-                      <div className="grid grid-rows-10">
-                        <MovesTable />
-                        <div className="flex w-full justify-start items-center gap-5">
-                          <Button onClick={resignGame}>Resign</Button>
-                          <Button onClick={offerDraw}>Draw</Button>
-                        </div>
-                        <div className="w-full h-[150px]">
-                          {isDrawOffered && (
-                            <div>
-                              <Button onClick={() => answerDraw(true)}>
-                                Yes
+                      <div
+                        className="h-full pt-1 grid grid-rows-[66%_34%]"
+                        onKeyDown={(event) => {
+                          if (event.key === "ArrowRight")
+                            showPositionAtMovesIndexIncrease();
+                          if (event.key === "ArrowLeft")
+                            showPositionAtMovesIndexDecrease();
+                        }}
+                      >
+                        <div className="flex flex-col">
+                          <div className="w-full flex items-center justify-center font-semibold font-dream dark:text-white">
+                            Moves
+                          </div>
+                          <div className="flex-grow overflow-y-auto">
+                            <MovesTable />
+                          </div>
+                          <div className=" flex items-center gap-2 dark:bg-[#7b7b7f] px-2 py-1 bg-white/40 backdrop-blur-lg shadow-xl">
+                            {gameStatus == "ACTIVE" && (
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={offerDraw}
+                                  className="text-sm font-bold text-black/80 p-1 rounded-lg cursor-pointer"
+                                >
+                                  1/2 Draw
+                                </button>
+                                <button
+                                  onClick={resignGame}
+                                  className="text-sm font-bold text-black/80 p-1  rounded-lg cursor-pointer"
+                                >
+                                  Resign
+                                </button>
+                              </div>
+                            )}
+
+                            <div className="flex-grow flex justify-end items-center gap-2">
+                              <Button
+                                size="icon"
+                                className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl  rounded-xl cursor-pointer"
+                                onClick={showPositionAtMovesIndexDecrease}
+                              >
+                                <ChevronLeft className="w-8 h-8 stroke-3" />
                               </Button>
-                              <Button onClick={() => answerDraw(false)}>
-                                No
+
+                              <Button
+                                size="icon"
+                                className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl rounded-xl cursor-pointer"
+                                onClick={showPositionAtMovesIndexIncrease}
+                              >
+                                <ChevronRight className="w-8 h-8 stroke-3" />
+                              </Button>
+
+                              {gameStatus == "OVER" && (
+                                <Button
+                                  size="icon"
+                                  className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl rounded-xl cursor-pointer"
+                                >
+                                  <RotateCw className="w-8 h-8 stroke-3" />
+                                </Button>
+                              )}
+
+                              <Button
+                                size="icon"
+                                className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl  rounded-xl cursor-pointer"
+                                onClick={setFlipBoard}
+                              >
+                                <ArrowUpDown className="w-8 h-8 stroke-3" />
                               </Button>
                             </div>
-                          )}
+                          </div>
                         </div>
-                        ;
+                        <div className=" h-full flex flex-col overflow-y-auto">
+                          <div className="flex-grow">
+                            {isDrawOffered && (
+                              <div>
+                                <Button onClick={() => answerDraw(true)}>
+                                  Yes
+                                </Button>
+                                <Button onClick={() => answerDraw(false)}>
+                                  No
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="w-full flex items-center border-white/40 border-t-1">
+                            <div
+                              className="w-full flex items-center h-full pr-2"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") sendChatMessage();
+                              }}
+                            >
+                              <input
+                                type="text"
+                                placeholder="Send a message...."
+                                className="w-full h-8 px-2 outline-none text-sm dark:text-white/90 dark:placeholder-[#A1A1A1]"
+                              />
+                              <SendHorizonal className="w-5 h-5 stroke-gray-600 dark:stroke-gray-300" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex justify-center w-full h-full py-[20px]">
                         <div className="flex flex-col items-center gap-6">
-                          <Collapsible className="w-[240px] dark:bg-black dark:text-white dark:border-none rounded-sm overflow-hidden">
-                            <CollapsibleTrigger className="flex gap-2 w-full justify-center items-center h-[50px]">
+                          <Collapsible className="w-[240px]  dark:text-white dark:border-none rounded-sm overflow-hidden">
+                            <CollapsibleTrigger className="flex gap-2 w-full justify-center items-center h-[50px] bg-white/18 dark:bg-black/70">
                               {timeControl.name === "RAPID" ? (
                                 <Calendar className="w-4 h-4 text-purple-600" />
                               ) : timeControl.name === "BLITZ" ? (
@@ -381,9 +508,9 @@ export default function Play() {
                               <ChevronsUpDown></ChevronsUpDown>
                             </CollapsibleTrigger>
 
-                            <CollapsibleContent className="rounded-xl">
+                            <CollapsibleContent className="flex flex-col rounded-xl p-1 gap-2">
                               {games.map((game) => (
-                                <Card className="w-full h-[100px] flex flex-col justify-center gap-2 border-none ">
+                                <Card className="w-full h-[100px] flex flex-col justify-center gap-2 border-none bg-white/10 dark:bg-black/70">
                                   <CardHeader className="h-full flex items-center font-bold font-dream">
                                     {game.name.toLowerCase() === "rapid" ? (
                                       <Calendar className="w-4 h-4 text-purple-600" />
@@ -409,7 +536,7 @@ export default function Play() {
                                               gameTimeControl.increment * 1000,
                                           })
                                         }
-                                        className="dark:bg-white dark:hover:bg-[#E2E2E2] text-black font-medium cursor-pointer font-dream"
+                                        className="bg-white/10 hover:bg-white/20 dark:bg-white dark:hover:bg-[#E2E2E2] text-black font-medium cursor-pointer font-dream"
                                       >
                                         {gameTimeControl.baseTime} |{" "}
                                         {gameTimeControl.increment}
@@ -427,7 +554,7 @@ export default function Play() {
                               createGame();
                             }}
                             disabled={isGameLoading}
-                            className="w-[200px] h-[50px] text-white bg-[#8CA2AD] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer font-dream"
+                            className="w-[200px] h-[50px] text-white bg-[#8CA2AD] hover:bg-[#879ca7] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer font-dream"
                           >
                             Start Game
                           </Button>
@@ -437,63 +564,70 @@ export default function Play() {
                   </TabsContent>
 
                   <TabsContent
-                    value="games"
+                    value="games_archieve"
                     className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   ></TabsContent>
 
                   <TabsContent
                     value="friends"
                     className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
-                  ></TabsContent>
+                  >
+                    <div className="space-y-4 px-3 py-4">
+                      <div className="flex items-center gap-2 font-dream font-bold">
+                        <Users className="w-5 h-5 stroke-3" />
+                        Friends ({friends.length})
+                      </div>
+                      <div className="overflow-y-auto">
+                        <div className="space-y-3">
+                          {friends.map((friend) => (
+                            <div
+                              key={friend.id}
+                              className="flex items-center justify-between bg-white/40 rounded-sm px-1"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback>
+                                      <User className="w-4 h-4" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div
+                                    className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background ${
+                                      friend.status === "online"
+                                        ? "bg-green-500"
+                                        : friend.status === "playing"
+                                          ? "bg-yellow-500"
+                                          : "bg-gray-400"
+                                    }`}
+                                  />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-sm">
+                                    {friend.username}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {friend.rating} • {friend.status}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs p-0.5"
+                              >
+                                Challenge
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function MovesTable() {
-  const moves = useGameInfoStore((state) => state.moves);
-  return (
-    <div className="w-full bg-white max-h-[300px] border-2">
-      <div className="w-full flex">
-        <div className="w-full flex justify-center">White</div>
-        <div className="w-full flex justify-center">Black</div>
-      </div>
-      <div className="w-full">
-        {Array.from({ length: Math.ceil(moves.length / 2) }).map((_, idx) => {
-          const whiteMove = moves[idx * 2];
-          const blackMove = moves[idx * 2 + 1];
-
-          return (
-            <div key={idx} className="flex bg-green-300 p-2">
-              <div className="w-8">{idx + 1}</div>
-              <Move whiteMove={whiteMove} blackMove={blackMove} />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function Move({
-  whiteMove,
-  blackMove,
-}: {
-  whiteMove?: { from: string; to: string };
-  blackMove?: { from: string; to: string };
-}) {
-  return (
-    <div className="flex gap-4">
-      <div className="w-32 text-left">
-        {whiteMove ? `${whiteMove.from} → ${whiteMove.to}` : ""}
-      </div>
-      <div className="w-32 text-left">
-        {blackMove ? `${blackMove.from} → ${blackMove.to}` : ""}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,35 +8,66 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
 import { Progress } from "../components/ui/progress";
 import SideBar from "../components/SideBar";
 import { useUserInfoStore } from "../store/atoms";
-import { RatingChart } from "../components/RatingChart";
-// import { GameHistory } from "./GameHistory";
-import {
-  Trophy,
-  Target,
-  Clock,
-  Zap,
-  Calendar,
-  TrendingUp,
-  Star,
-  Crown,
-} from "lucide-react";
-import useAuth from "../hooks/useAuth";
+import { Clock, Zap, Calendar, Star } from "lucide-react";
+import GameHistoryOverviewCard from "../components/GameHistoryOverviewCard";
+import { useParams } from "react-router-dom";
+import api from "../api/axios";
+import axios from "axios";
+import { formatDistanceToNow } from "date-fns";
 
 type TimeControl = "blitz" | "bullet" | "rapid";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const obj = useParams();
+  const username = obj.username || "";
   const [selectedTimeControl, setSelectedTimeControl] =
     useState<TimeControl>("blitz");
+
+  const [profileInfo, SetProfileInfo] = useState({
+    user: {
+      username: "Guest",
+      totalGames: 0,
+      blitzStats: {
+        currentRating: 800,
+        peakRating: 800,
+        otherStats: {
+          draws: 0,
+          losses: 0,
+          ratingHistory: [],
+          totalGames: 0,
+          winRate: 0,
+          wins: 0,
+        },
+      },
+      bulletStats: {
+        currentRating: 800,
+        peakRating: 800,
+        otherStats: {
+          draws: 0,
+          losses: 0,
+          ratingHistory: [],
+          totalGames: 0,
+          winRate: 0,
+          wins: 0,
+        },
+      },
+      rapidStats: {
+        currentRating: 800,
+        peakRating: 800,
+        otherStats: {
+          draws: 0,
+          losses: 0,
+          ratingHistory: [],
+          totalGames: 0,
+          winRate: 0,
+          wins: 0,
+        },
+      },
+    },
+  });
 
   const userStats = {
     blitz: {
@@ -65,77 +96,97 @@ export default function Profile() {
     },
   };
 
-  const achievements = [
-    {
-      name: "First Win",
-      description: "Won your first game",
-      icon: Trophy,
-      earned: true,
-    },
-    {
-      name: "Speed Demon",
-      description: "Won 10 bullet games",
-      icon: Zap,
-      earned: true,
-    },
-    {
-      name: "Tactician",
-      description: "Solved 50 puzzles",
-      icon: Target,
-      earned: true,
-    },
-    {
-      name: "Marathon Player",
-      description: "Played 100 games",
-      icon: Clock,
-      earned: true,
-    },
-    {
-      name: "Rating Climber",
-      description: "Gained 100 rating points",
-      icon: TrendingUp,
-      earned: false,
-    },
-    {
-      name: "Chess Master",
-      description: "Reach 1500 rating",
-      icon: Crown,
-      earned: false,
-    },
-  ];
-
   const currentStats = userStats[selectedTimeControl];
   const winRate = Math.round((currentStats.wins / currentStats.games) * 100);
 
   const isGuest = useUserInfoStore((state) => state.userInfo.isGuest);
+
+  const profileStats = profileInfo.user;
+
+  interface recentGamesType {
+    id: string;
+    opponent: string;
+    result: string;
+    timeControl: string;
+    rating: number;
+    moves: number;
+    date: string;
+  }
+  const [recentGames, SetRecentGames] = useState<recentGamesType[]>([]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get(`/user/profile/${username}`);
+        const data = response.data;
+        SetProfileInfo(data);
+        console.log(data);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    fetchProfile();
+  }, [username]);
+
+  useEffect(() => {
+    const fetchGameHistory = async () => {
+      try {
+        const { data: csrf } = await api.get("/csrf-token");
+
+        const response = await axios.post(
+          `http://localhost:3000/user/games/${username}`,
+          { offset: recentGames.length },
+          {
+            headers: { "csrf-token": csrf.csrfToken },
+          }
+        );
+
+        const data = response.data;
+
+        const games = data.games.map((game: recentGamesType) => ({
+          ...game,
+          date: formatDistanceToNow(new Date(game.date), { addSuffix: true }),
+        }));
+
+        SetRecentGames(games);
+        console.log(data);
+      } catch (e) {
+        console.error("Error fetching game history:", e);
+      }
+    };
+
+    fetchGameHistory();
+  }, [username]);
 
   return (
     <div
       className={`flex min-h-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar />
-      <div className={`min-w-screen min-h-screen p-4`}>
-        <div className="ml-[40px] flex-1 p-6">
+      <div className={`sm:pl-[60px] w-full h-full p-4`}>
+        <div className="flex-1 p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             <Card className="bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                  <Avatar className="w-24 h-24 dark:bg-white dark:text-black">
+                  <Avatar className="w-24 h-24 bg-slate-500 text-white/80 ">
                     <AvatarImage src={"/placeholder.svg"} />
-                    <AvatarFallback className="text-4xl">
-                      {user.username[0]}
+                    <AvatarFallback className="text-5xl font-proza">
+                      {profileInfo.user.username[0]}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h1 className="text-3xl font-bold">{user.username}</h1>
+                    <div className="ml-8 flex items-center gap-3 mb-2">
+                      <h1 className="text-5xl font-bold font-dream">
+                        {profileInfo.user.username}
+                      </h1>
                       {
                         <Badge
                           variant="secondary"
                           className="flex items-center gap-1 bg-[#27272A] hover:bg-[#212124] rounded-xl font-semibold text-white"
                         >
-                          <Star className="w-3 h-3" />
+                          <Star className="w-3 h-3 fill-yellow-400 stroke-none" />
                           Rising Star
                         </Badge>
                       }
@@ -144,29 +195,31 @@ export default function Profile() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-green-600">
-                          {userStats.blitz.rating}
+                          {profileInfo.user.blitzStats.currentRating}
                         </div>
-                        <div className="text-sm dark:text-[#A1A1AA]">Blitz</div>
+                        <div className="text-sm dark:text-[#A1A1AA] font-proza">
+                          Blitz
+                        </div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-blue-600">
-                          {userStats.bullet.rating}
+                          {profileInfo.user.bulletStats.currentRating}
                         </div>
-                        <div className="text-sm dark:text-[#A1A1AA]">
+                        <div className="text-sm dark:text-[#A1A1AA] font-proza">
                           Bullet
                         </div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-purple-600">
-                          {userStats.rapid.rating}
+                          {profileInfo.user.rapidStats.currentRating}
                         </div>
-                        <div className="text-sm dark:text-[#A1A1AA]">Rapid</div>
+                        <div className="text-sm dark:text-[#A1A1AA] font-proza">
+                          Rapid
+                        </div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold">
-                          {userStats.blitz.games +
-                            userStats.bullet.games +
-                            userStats.rapid.games}
+                          {profileInfo.user.totalGames}
                         </div>
                         <div className="text-sm dark:text-[#A1A1AA]">
                           Total Games
@@ -194,253 +247,129 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="px-[10px] py-[2px] grid w-full grid-cols-4 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/40 dark:bg-[#27272A] dark:border-none">
-                <TabsTrigger
-                  value="overview"
-                  className="data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
-                >
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger
-                  value="stats"
-                  className="data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
-                >
-                  Statistics
-                </TabsTrigger>
-                <TabsTrigger
-                  value="games"
-                  className="data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
-                >
-                  Game History
-                </TabsTrigger>
-                <TabsTrigger
-                  value="achievements"
-                  className="data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none"
-                >
-                  Achievements
-                </TabsTrigger>
-              </TabsList>
+            <div className="flex gap-3">
+              <div className="flex-grow">
+                <Card className="w-full  backdrop-blur-md rounded-xl shadow-xl border-none dark:bg-[#09090B] dark:text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between font-dream">
+                      Game History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 grid">
+                      {recentGames.map((game) => (
+                        <GameHistoryOverviewCard game={game} />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <TabsContent value="overview" className="space-y-6">
-                <div className="grid lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <Card className="bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          Rating Progress
-                          <div className="flex gap-2">
-                            {(
-                              ["blitz", "bullet", "rapid"] as TimeControl[]
-                            ).map((type) => (
-                              <Button
-                                key={type}
-                                variant={
-                                  selectedTimeControl === type
-                                    ? "default"
-                                    : "outline"
-                                }
-                                size="sm"
-                                onClick={() => setSelectedTimeControl(type)}
-                                className={`capitalize dark:border-[#27272A] dark:bg-[#09090B] dark:text-white`}
-                              >
-                                {type}
-                              </Button>
-                            ))}
-                          </div>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <RatingChart timeControl={selectedTimeControl} />
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="space-y-4">
-                    <Card className="bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
-                      <CardHeader>
-                        <CardTitle className="text-lg capitalize">
-                          {selectedTimeControl} Stats
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="dark:text-[#A1A1AA]">
-                            Current Rating
-                          </span>
-                          <span className="font-bold text-lg">
-                            {currentStats.rating}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="dark:text-[#A1A1AA]">
-                            Peak Rating
-                          </span>
-                          <span className="font-bold text-green-600">
-                            {currentStats.peak}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="dark:text-[#A1A1AA]">
-                            Games Played
-                          </span>
-                          <span className="font-bold">
-                            {currentStats.games}
-                          </span>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="dark:text-[#A1A1AA]">
-                              Win Rate
-                            </span>
-                            <span className="font-bold">{winRate}%</span>
-                          </div>
-                          <Progress value={winRate} className="h-2" />
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                          <div>
-                            <div className="font-bold text-green-600">
-                              {currentStats.wins}
-                            </div>
-                            <div className="dark:text-[#A1A1AA]">Wins</div>
-                          </div>
-                          <div>
-                            <div className="font-bold text-red-600">
-                              {currentStats.losses}
-                            </div>
-                            <div className="dark:text-[#A1A1AA]">Losses</div>
-                          </div>
-                          <div>
-                            <div className="font-bold text-yellow-600">
-                              {currentStats.draws}
-                            </div>
-                            <div className="dark:text-[#A1A1AA]">Draws</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="stats" className="space-y-6">
-                <div className="grid md:grid-cols-3 gap-6">
-                  {(["blitz", "bullet", "rapid"] as TimeControl[]).map(
-                    (timeControl) => {
-                      const stats = userStats[timeControl];
-                      const rate = Math.round((stats.wins / stats.games) * 100);
-
-                      return (
-                        <Card
-                          key={timeControl}
-                          className="bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white"
-                        >
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2 capitalize text-2xl">
-                              {timeControl === "blitz" && (
-                                <Clock className="w-5 h-5 text-green-600" />
-                              )}
-                              {timeControl === "bullet" && (
-                                <Zap className="w-5 h-5 text-blue-600" />
-                              )}
-                              {timeControl === "rapid" && (
-                                <Calendar className="w-5 h-5 text-purple-600" />
-                              )}
-                              {timeControl}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="text-center">
-                              <div className="text-3xl font-bold">
-                                {stats.rating}
-                              </div>
-                              <div className="text-sm dark:text-[#A1A1AA]">
-                                Current Rating
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span>Peak</span>
-                                <span className="font-bold">{stats.peak}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Games</span>
-                                <span className="font-bold">{stats.games}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Win Rate</span>
-                                <span className="font-bold">{rate}%</span>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-1 text-center text-xs">
-                              <div className="bg-green-100 dark:bg-green-900 p-2 rounded">
-                                <div className="font-bold">{stats.wins}</div>
-                                <div className="dark:text-[#A1A1AA]">W</div>
-                              </div>
-                              <div className="bg-red-100 dark:bg-red-900 p-2 rounded">
-                                <div className="font-bold">{stats.losses}</div>
-                                <div className="dark:text-[#A1A1AA]">L</div>
-                              </div>
-                              <div className="bg-yellow-100 dark:bg-yellow-900 p-2 rounded">
-                                <div className="font-bold">{stats.draws}</div>
-                                <div className="dark:text-[#A1A1AA]">D</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    }
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="games">{/* <GameHistory /> */}</TabsContent>
-
-              <TabsContent value="achievements" className="space-y-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {achievements.map((achievement, index) => (
-                    <Card
-                      key={index}
-                      className={`bg-card/50 backdrop-blur-sm ${achievement.earned ? "border-green-500" : "opacity-60"} dark:bg-[#09090B] dark:text-white`}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`p-2 rounded-full ${
-                              achievement.earned
-                                ? "bg-green-100 dark:bg-green-900"
-                                : "bg-muted"
-                            }`}
+              <div className="">
+                <Card className="w-[300px] bg-white/30 backdrop-blur-md shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
+                  <CardHeader className="flex flex-col items-center gap-3">
+                    <div className="flex gap-4">
+                      {(["blitz", "bullet", "rapid"] as TimeControl[]).map(
+                        (type) => (
+                          <button
+                            onClick={() => setSelectedTimeControl(type)}
+                            className={` bg-white/40 border-1 border-white/50 ${selectedTimeControl === type ? "border-black" : ""} px-2 rounded-sm capitalize dark:border-[#27272A] dark:bg-[#09090B] dark:text-white`}
                           >
-                            <achievement.icon
-                              className={`w-5 h-5 ${achievement.earned ? "text-green-600" : "dark:text-[#A1A1AA]"}`}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {achievement.name}
-                            </div>
-                            <div className="text-sm dark:text-[#A1A1AA]">
-                              {achievement.description}
-                            </div>
-                          </div>
-                          {achievement.earned && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            >
-                              Earned
-                            </Badge>
-                          )}
+                            {type}
+                          </button>
+                        )
+                      )}
+                    </div>
+                    <CardTitle className="text-lg capitalize flex items-center gap-2 font-dream">
+                      {selectedTimeControl == "blitz" ? (
+                        <Clock className="w-5 h-5 text-green-600" />
+                      ) : selectedTimeControl == "rapid" ? (
+                        <Calendar className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <Zap className="w-5 h-5 text-blue-600" />
+                      )}
+                      {selectedTimeControl} Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="dark:text-[#A1A1AA]">
+                        Current Rating
+                      </span>
+                      <span className="font-bold text-lg">
+                        {
+                          profileStats[`${selectedTimeControl}Stats`]
+                            .currentRating
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="dark:text-[#A1A1AA]">Peak Rating</span>
+                      <span className="font-bold text-green-600">
+                        {profileStats[`${selectedTimeControl}Stats`].peakRating}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="dark:text-[#A1A1AA]">Games Played</span>
+                      <span className="font-bold">
+                        {
+                          profileStats[`${selectedTimeControl}Stats`].otherStats
+                            .totalGames
+                        }
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="dark:text-[#A1A1AA]">Win Rate</span>
+                        <span className="font-bold">
+                          {
+                            profileStats[`${selectedTimeControl}Stats`]
+                              .otherStats.winRate
+                          }
+                          %
+                        </span>
+                      </div>
+                      <Progress value={winRate} className="h-2" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                      <div>
+                        <div className="font-bold text-green-600">
+                          {
+                            profileStats[`${selectedTimeControl}Stats`]
+                              .otherStats.wins
+                          }
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+                        <div className="dark:text-[#A1A1AA] font-proza">
+                          Wins
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-red-600">
+                          {
+                            profileStats[`${selectedTimeControl}Stats`]
+                              .otherStats.losses
+                          }
+                        </div>
+                        <div className="dark:text-[#A1A1AA] font-proza">
+                          Losses
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-yellow-600">
+                          {
+                            profileStats[`${selectedTimeControl}Stats`]
+                              .otherStats.draws
+                          }
+                        </div>
+                        <div className="dark:text-[#A1A1AA] font-proza">
+                          Draws
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>

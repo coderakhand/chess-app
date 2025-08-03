@@ -287,13 +287,6 @@ export default function Settings() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="tournament-updates" className="font-medium">
-                      Tournament Updates
-                    </Label>
-                    <Switch id="tournament-updates" defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
                     <Label
                       htmlFor="email-notifications"
                       className="font-medium"

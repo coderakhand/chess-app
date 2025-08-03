@@ -103,6 +103,8 @@ export class Game {
           data: {
             whiteUserId: player1.id,
             blackUserId: player2.id,
+            whitePlayerRating: player1.rating,
+            blackPlayerRating: player2.rating,
             status: "ACTIVE",
             timeControl: timeControl.name,
             baseTime: timeControl.baseTime,

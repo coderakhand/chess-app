@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface RecentGame {
   id: string;
@@ -16,18 +17,23 @@ interface RecentGame {
 
 export default function GameHistoryOverviewCard({
   game,
+  idx,
 }: {
   game: RecentGame;
+  idx: number;
 }) {
   return (
     <Link to={`/game/${game.id}`}>
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 + idx * 0.15, duration: 0.3 }}
         key={game.id}
-        className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors border-white/40 dark:border-[#27272A]"
+        className="flex items-center gap-4 px-4 py-2 rounded-lg border hover:border-black hover:bg-muted/50 transition-colors bg-black/30 border-white/40 dark:border-[#27272A]"
       >
         <div className="flex items-center gap-3 flex-1">
           <div
-            className={`w-3 h-3 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               game.result === "win"
                 ? "bg-green-500"
                 : game.result === "loss"
@@ -35,7 +41,7 @@ export default function GameHistoryOverviewCard({
                   : "bg-yellow-500"
             }`}
           />
-          <Avatar className="flex justify-center items-center w-8 h-8 bg-black text-white dark:bg-white dark:text-black">
+          <Avatar className="flex justify-center items-center w-7 h-7 bg-black text-white dark:bg-white dark:text-black">
             <AvatarFallback className="text-xs">
               {game.opponent[0]}
             </AvatarFallback>
@@ -53,12 +59,12 @@ export default function GameHistoryOverviewCard({
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className={`text-xs ${
+            className={`text-xs text-white/60 ${
               game.timeControl === "blitz"
                 ? "border-green-500 text-green-700 dark:text-green-400"
                 : game.timeControl === "bullet"
                   ? "border-blue-500 text-blue-700 dark:text-blue-400"
-                  : "border-purple-500 text-purple-700 dark:text-purple-400"
+                  : "border-purple-500 bg-purple-700 dark:text-purple-400"
             }`}
           >
             {game.timeControl}
@@ -91,7 +97,7 @@ export default function GameHistoryOverviewCard({
         <Button variant="ghost" size="sm">
           <BarChart3 className="w-4 h-4" />
         </Button>
-      </div>
+      </motion.div>
     </Link>
   );
 }

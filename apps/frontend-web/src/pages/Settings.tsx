@@ -57,7 +57,7 @@ export default function Settings() {
       <div
         className={` max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4`}
       >
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="mb-8 dark:text-white">
             <h1 className="text-3xl font-bold mb-2">Settings</h1>
             <p className="dark:text-[#A1A1AA] font-proza">

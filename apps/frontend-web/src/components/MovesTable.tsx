@@ -22,7 +22,7 @@ export default function MovesTable() {
           return (
             <div
               key={idx}
-              className={`flex items-center p-2 h-6 ${idx % 2 == 0 ? "shadow-sm border-white/20 border-1" : "backdrop-blur-2xl"}`}
+              className={` flex items-center py-[3px] px-2 ${idx % 2 == 0 ? " border-white/20 border-1" : "backdrop-blur-2xl dark:bg-white/20"}`}
             >
               <div className="w-8 text-xs font-extrabold font-proza dark:text-[#A1A1AA]">
                 {idx + 1}
@@ -135,7 +135,7 @@ function Move({
         onClick={() => setPositionIndex(whiteMove?.idx)}
       >
         <div
-          className={`max-w-14 flex items-center justify-center rounded-lg overflow-hidden ${whiteMove && showPositionAtMovesIndex == whiteMove.idx ? "bg-white/30 shadow-xl dark:bg-slate-600" : ""}`}
+          className={`max-w-14 flex items-center justify-center rounded-lg overflow-hidden ${whiteMove && showPositionAtMovesIndex == whiteMove.idx ? "bg-white/30 shadow-xl dark:bg-gray-200 dark:text-black" : ""}`}
         >
           {whiteMove && whiteMove.move && refinedMove(whiteMove.move)}
         </div>
@@ -145,7 +145,7 @@ function Move({
         onClick={() => setPositionIndex(blackMove?.idx)}
       >
         <div
-          className={`max-w-14 flex items-center justify-center rounded-lg overflow-hidden ${blackMove && showPositionAtMovesIndex == blackMove.idx ? "bg-white/30 shadow-xl dark:bg-slate-600" : ""}`}
+          className={`max-w-14 flex items-center justify-center rounded-lg overflow-hidden ${blackMove && showPositionAtMovesIndex == blackMove.idx ? "bg-white/30 shadow-xl dark:bg-gray-200 dark:text-black" : ""}`}
         >
           {blackMove && blackMove.move && refinedMove(blackMove.move)}
         </div>

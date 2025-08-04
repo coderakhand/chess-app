@@ -4,10 +4,10 @@ import Game from "./pages/Game";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Error from "./pages/Error";
-import Profile from "./pages/Profile";
 import Analyze from "./pages/Analyze";
 import ViewGame from "./pages/ViewGame";
-import ViewStandings from "./pages/viewStandings";
+import ViewStandings from "./pages/ViewStandings";
+import SignedInUserHome from "./components/SignedInUserHome";
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
           <Route path="/fide/ratings" element={<ViewStandings />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/analyze" element={<Analyze />} />
-          <Route path="/player/:username" element={<Profile />} />
+          <Route path="/player/:username" element={<SignedInUserHome />} />
           <Route path="*" element={<Error />}></Route>
         </Routes>
       </BrowserRouter>

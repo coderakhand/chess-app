@@ -358,6 +358,8 @@ export class Game {
         })
       );
     }
+
+    gameManager.removeGame(this.id);
   }
 
   public drawOffer(socket: WebSocket) {
@@ -447,7 +449,7 @@ export class Game {
     }
   }
 
-  public chatMessage(socket: WebSocket, message: string) {
+  public sendChatMessage(socket: WebSocket, message: string) {
     let user, opponent;
     if (this.player1.socket === socket) {
       user = this.player1;

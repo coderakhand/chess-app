@@ -24,7 +24,7 @@ function CelebrationCard({ setClose}: CelebrationCardProps) {
   useEffect(() => {
     if (!result.winner || result.winner !== color) return;
     confetti({
-      particleCount: 200,
+      particleCount: 100,
       spread: 50,
       origin: {
         x: 0.35,
@@ -32,7 +32,7 @@ function CelebrationCard({ setClose}: CelebrationCardProps) {
       },
       ticks: 260,
     });
-  });
+  },[result.winner]);
 
 
   return (

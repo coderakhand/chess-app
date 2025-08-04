@@ -18,8 +18,10 @@ export default function AnimatedChessBoard({
   const chessRef = useRef(new Chess());
   const [chess, setChess] = useState(new Chess());
   const [board, setBoard] = useState(chess.board());
+  const setFlipBoard = useGameInfoStore((state) => state.setFlipBoard);
 
   useEffect(() => {
+    setFlipBoard(false);
     setChess(chessRef.current);
     setBoard(chessRef.current.board());
 

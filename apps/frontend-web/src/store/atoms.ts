@@ -120,7 +120,8 @@ interface gameInfoStoreType {
   setShowPositionAtMovesIndex: (newIndex: number | null) => void;
   showPositionAtMovesIndexDecrease: () => void;
   showPositionAtMovesIndexIncrease: () => void;
-  setFlipBoard: () => void;
+  setFlipBoard: (newFlipValue: boolean) => void;
+  toggleFlipBoard: () => void;
 }
 
 export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
@@ -216,5 +217,6 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
       };
     }),
 
-  setFlipBoard: () => set((state) => ({ flipBoard: !state.flipBoard })),
+  setFlipBoard: (newFlipValue: boolean) => set({ flipBoard: newFlipValue }),
+  toggleFlipBoard: () => set((state) => ({ flipBoard: !state.flipBoard })),
 }));

@@ -214,13 +214,13 @@ function ChezzBarContent() {
         <img src="/home.png" className="w-[40px]" />
         <p className="h-full flex items-center py-1">Home </p>
       </Link>
-      <Link
+      {/* <Link
         to={`/player/${userInfo.username}`}
         className={`px-[20px] flex items-center gap-2 text-lg font-bold font-proza w-full h-[40px] rounded-2xl ${hoverEffect}`}
       >
         <img src="/user.png" className="h-[40px] overflow-hidden" />
         <p className="h-full flex items-center py-1">Profile</p>
-      </Link>
+      </Link> */}
       {!userInfo.isGuest && (
         <button
           className={`px-[20px] flex items-center gap-2 text-xl w-full h-[40px] rounded-2xl ${hoverEffect} cursor-pointer`}

@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Clock,
+  Plus,
   RotateCw,
   SendHorizonal,
   User,
@@ -92,6 +93,9 @@ export default function Game() {
 
   const flipBoard = useGameInfoStore((state) => state.flipBoard);
   const setFlipBoard = useGameInfoStore((state) => state.setFlipBoard);
+  const toggleFlipBoard = useGameInfoStore((state) => state.toggleFlipBoard);
+
+  const [chatMessage, setChatMessage] = useState("");
 
   const rating =
     timeControl.name === "BULLET"
@@ -116,6 +120,7 @@ export default function Game() {
             setBoard(newChess.board());
             setTimeControl(payload.timeControl);
             setIsGameStarted(true);
+            setIsGameLoading(false);
             setColor(payload.userInfo.color);
             setTimeLeft(payload.userInfo.timeLeft);
             setOpponentInfo({
@@ -123,6 +128,7 @@ export default function Game() {
               rating: payload.opponentInfo.rating,
             });
             setOpponentTimeLeft(payload.opponentInfo.timeLeft);
+            setChat([]);
             break;
           }
 
@@ -132,12 +138,19 @@ export default function Game() {
             setChess(newChess);
             setBoard(newChess.board());
             setColor(payload.userInfo.color);
+            if (payload.userInfo.color == "w") {
+              setFlipBoard(false);
+            } else {
+              setFlipBoard(true);
+            }
             setIsGameStarted(true);
+            setIsGameLoading(false);
             setOpponentInfo(payload.opponentInfo);
             setGameCreationTime(Date.now());
             timeLeftRef.current = timeControl.baseTime;
             opponentTimeLeftRef.current = timeControl.baseTime;
             setGameStatus("ACTIVE");
+            setChat([]);
             break;
           }
 
@@ -211,7 +224,10 @@ export default function Game() {
           case "PLAYER_CHAT": {
             const message = payload.message;
             if (!message) return;
-            setChat([...chat, { sender: "opponent", message: message }]);
+            setChat([
+              ...chat,
+              { sender: opponentInfo.username, message: message },
+            ]);
           }
         }
       };
@@ -236,6 +252,8 @@ export default function Game() {
     setResult,
     chat,
     setMoves,
+    setFlipBoard,
+    opponentInfo,
   ]);
 
   useEffect(() => {
@@ -294,6 +312,26 @@ export default function Game() {
     );
   };
 
+  const rematch = () => {
+    if (!socket) return;
+
+    socket.send(
+      JSON.stringify({
+        type: INIT_GAME,
+        payload: {
+          isRated: true,
+          timeControl: timeControl,
+          userInfo: {
+            isGuest: user.isGuest,
+            id: user.id,
+            username: user.username,
+            rating: rating,
+          },
+        },
+      })
+    );
+  };
+
   const offerDraw = () => {
     if (!socket) return;
     socket.send(
@@ -325,7 +363,35 @@ export default function Game() {
     setIsDrawOffered(false);
   };
 
-  const sendChatMessage = () => {};
+  const sendChatMessage = () => {
+    if (!socket || chatMessage.trim() === "") return;
+    setChat([...chat, { sender: "You", message: chatMessage }]);
+    socket.send(
+      JSON.stringify({
+        type: "PLAYER_CHAT",
+        payload: {
+          message: chatMessage,
+        },
+      })
+    );
+    setChatMessage("");
+  };
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const images = ["Oliver", "Ryan", "Nolan", "Leah"];
+  const [imgIdx, setImgIdx] = useState(0);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat]);
+
+  useEffect(() => {
+    if (isGameLoading) {
+      setInterval(() => {
+        setImgIdx((prev) => (prev + 1) % 4);
+      }, 1000);
+    }
+  }, [isGameLoading]);
 
   return (
     <div
@@ -334,22 +400,55 @@ export default function Game() {
       <SideBar />
 
       <div className="flex max-lg:flex-col  max-lg:items-center justify-center w-screen min-h-screen py-[30px] gap-6 sm:pl-[60px] px-1 max-sm:px-3 max-sm:pt-[100px]">
-        <div className="flex-grow max-w-[560px] flex flex-col gap-2 h-full">
-          <PlayerCard
-            player={flipBoard ? user.username : opponentInfo.username}
-            rating={flipBoard ? user.ratings.rapid : opponentInfo.rating}
-            color={flipBoard ? color : color === "w" ? "b" : "w"}
-            time={flipBoard ? timeLeft : opponentTimeLeft}
-          />
+        <div className="relative flex-grow max-w-[560px] flex flex-col gap-2 h-full">
+          {isGameLoading ? (
+            <PlayerCard
+              player={"Searching..."}
+              color={"b"}
+              time={timeControl.baseTime}
+              imageUrl={`https://api.dicebear.com/9.x/avataaars/svg?seed=${images[imgIdx]}&size=36&backgroundColor=b6e3f4,c0aede,d1d4f9
+`}
+            />
+          ) : color == "w" ? (
+            <PlayerCard
+              player={!flipBoard ? opponentInfo.username : user.username}
+              rating={!flipBoard ? opponentInfo.rating : user.ratings.rapid}
+              color={!flipBoard ? (color == "w" ? "b" : "w") : color}
+              time={!flipBoard ? opponentTimeLeft : timeLeft}
+            />
+          ) : (
+            <PlayerCard
+              player={flipBoard ? opponentInfo.username : user.username}
+              rating={flipBoard ? opponentInfo.rating : user.ratings.rapid}
+              color={flipBoard ? (color == "w" ? "b" : "w") : color}
+              time={flipBoard ? opponentTimeLeft : timeLeft}
+            />
+          )}
 
           <ChessBoard socket={socket} />
 
-          <PlayerCard
-            player={flipBoard ? opponentInfo.username : user.username}
-            rating={flipBoard ? opponentInfo.rating : user.ratings.rapid}
-            color={flipBoard ? (color === "w" ? "b" : "w") : color}
-            time={flipBoard ? opponentTimeLeft : timeLeft}
-          />
+          {isGameLoading ? (
+            <PlayerCard
+              player={user.username}
+              rating={user.ratings.rapid}
+              color={"w"}
+              time={timeControl.baseTime}
+            />
+          ) : color == "w" ? (
+            <PlayerCard
+              player={flipBoard ? opponentInfo.username : user.username}
+              rating={flipBoard ? opponentInfo.rating : user.ratings.rapid}
+              color={flipBoard ? (color == "w" ? "b" : "w") : color}
+              time={flipBoard ? opponentTimeLeft : timeLeft}
+            />
+          ) : (
+            <PlayerCard
+              player={!flipBoard ? opponentInfo.username : user.username}
+              rating={!flipBoard ? opponentInfo.rating : user.ratings.rapid}
+              color={!flipBoard ? (color == "w" ? "b" : "w") : color}
+              time={!flipBoard ? opponentTimeLeft : timeLeft}
+            />
+          )}
         </div>
 
         <div className="flex flex-col h-full w-full sm:w-[580px] md:w-[640px] lg:w-[400px] gap-3 md:px-10 ">
@@ -406,6 +505,26 @@ export default function Game() {
                           <div className="flex-grow overflow-y-auto">
                             <MovesTable />
                           </div>
+                          {isGameLoading && (
+                            <div className="backdrop-blur-3xl w-full flex py-1 justify-center items-center gap-3">
+                              <p className="text-sm font-bold font-proza">Searching for Opponent...</p>
+                              <Button
+                                onClick={() => {
+                                  setIsGameLoading(false);
+                                  socket?.send(
+                                    JSON.stringify({
+                                      type: "ABANDON_GAME",
+                                    })
+                                  );
+                                }}
+                                className=" bg-white hover:bg-white/70 hover:backdrop-blur-2xl  rounded-xl cursor-pointer"
+
+                              >
+                                cancel
+                              </Button>
+                            </div>
+                          )}
+
                           <div className=" flex items-center gap-2 dark:bg-[#7b7b7f] px-2 py-1 bg-white/40 backdrop-blur-lg shadow-xl">
                             {gameStatus == "ACTIVE" && (
                               <div className="flex gap-1">
@@ -442,18 +561,36 @@ export default function Game() {
                               </Button>
 
                               {gameStatus == "OVER" && (
-                                <Button
-                                  size="icon"
-                                  className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl rounded-xl cursor-pointer"
-                                >
-                                  <RotateCw className="w-8 h-8 stroke-3" />
-                                </Button>
+                                <>
+                                  <Button
+                                    size="icon"
+                                    onClick={() => {
+                                      setIsGameLoading(true);
+                                      createGame();
+                                    }}
+                                    disabled={isGameLoading}
+                                    className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl rounded-xl cursor-pointer"
+                                  >
+                                    <Plus className="w-6 h-6 stroke-3" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    onClick={() => {
+                                      setIsGameLoading(true);
+                                      rematch();
+                                    }}
+                                    disabled={isGameLoading}
+                                    className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl rounded-xl cursor-pointer"
+                                  >
+                                    <RotateCw className="w-8 h-8 stroke-3" />
+                                  </Button>
+                                </>
                               )}
 
                               <Button
                                 size="icon"
                                 className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl  rounded-xl cursor-pointer"
-                                onClick={setFlipBoard}
+                                onClick={toggleFlipBoard}
                               >
                                 <ArrowUpDown className="w-8 h-8 stroke-3" />
                               </Button>
@@ -473,6 +610,19 @@ export default function Game() {
                               </div>
                             )}
                           </div>
+
+                          <div className="relative overflow-y-auto flex flex-col gap-1 h-full p-1">
+                            {chat.map((p) => (
+                              <div className="flex gap-1 text-sm">
+                                <span className="font-bold text-black/40 dark:text-slate-300">
+                                  {p.sender}:
+                                </span>
+                                <p className="dark:text-white">{p.message}</p>
+                              </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                          </div>
+
                           <div className="w-full flex items-center border-white/40 border-t-1">
                             <div
                               className="w-full flex items-center h-full pr-2"
@@ -483,7 +633,9 @@ export default function Game() {
                               <input
                                 type="text"
                                 placeholder="Send a message...."
+                                value={chatMessage}
                                 className="w-full h-8 px-2 outline-none text-sm dark:text-white/90 dark:placeholder-[#A1A1A1]"
+                                onChange={(e) => setChatMessage(e.target.value)}
                               />
                               <SendHorizonal className="w-5 h-5 stroke-gray-600 dark:stroke-gray-300" />
                             </div>

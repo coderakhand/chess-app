@@ -2,8 +2,8 @@ import { useUserInfoStore } from "../store/atoms";
 import GuestUserHome from "../components/GuestUserHome";
 import SignedInUserHome from "../components/SignedInUserHome";
 import useAuth from "../hooks/useAuth";
-import { motion } from "framer-motion";
 import SideBar from "../components/SideBar";
+import Loader from "../components/Loader";
 
 export default function Home() {
   const { isUserLoading } = useAuth();
@@ -16,29 +16,7 @@ export default function Home() {
         <div className="min-h-screen flex-grow flex justify-center items-center">
           <div className="flex flex-col gap-3">
             <div className="relative h-[140px] aspect-square border-[3px] border-transparent">
-              <motion.div
-                className="absolute left-[35%] aspect-square w-[30%] rounded-full bg-[#8CA2AD] dark:bg-green-600"
-                animate={{
-                  bottom: ["0%", "0.08%"],
-                }}
-                transition={{
-                  duration: 0.65,
-                  ease: [0, 800, 1, 800],
-                  repeat: Infinity,
-                }}
-                style={{ position: "absolute" }}
-              />
-
-              <motion.div
-                className="absolute  inset-0 border-6 border-white"
-                animate={{ rotate: [0, 0, 90, 90] }}
-                transition={{
-                  duration: 0.65,
-                  ease: "linear",
-                  times: [0, 0.3, 0.7, 1],
-                  repeat: Infinity,
-                }}
-              />
+              <Loader />
             </div>
             <div className="text-white w-full flex justify-center h-10 items-center">
               Loading...

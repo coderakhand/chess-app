@@ -6,6 +6,7 @@ import {
   INIT_VIEW_GAME,
   PENDING_GAME,
   timeControlType,
+  GAME_OVER,
 } from "@repo/utils";
 import { Viewer, ViewersManager } from "./ViewersManager";
 import { User } from "./UserManager";
@@ -85,6 +86,8 @@ export class GameManager {
           if (isPendingGame) {
             return;
           }
+        } else {
+          this.abandonGame(socket);
         }
 
         const waitingOpponent = this.pendingUsers.find(
@@ -176,6 +179,24 @@ export class GameManager {
           game.drawAnswer(socket, isAccepted);
         }
 
+        return;
+      }
+
+      if (message.type == "PLAYER_CHAT") {
+        const chatMessage = message.payload.message;
+        const game = this.games.find(
+          (game) =>
+            game.player1.socket === socket || game.player2.socket === socket
+        );
+
+        if (game) {
+          game.sendChatMessage(socket, chatMessage);
+        }
+        return;
+      }
+
+      if (message.type == "ABANDON_GAME") {
+        this.abandonGame(socket);
         return;
       }
 
@@ -390,5 +411,46 @@ export class GameManager {
     });
 
     return { userTimeLeft, opponentTimeLeft, movesList };
+  }
+
+  private abandonGame(socket: WebSocket) {
+    const waitingOpponent = this.pendingUsers.find(
+      (pendingUser) => pendingUser.user.socket === socket
+    );
+
+    this.pendingUsers = this.pendingUsers.filter(
+      (pendingUser) => pendingUser !== waitingOpponent
+    );
+
+    const game = this.games.find(
+      (game) => game.player1.socket === socket || game.player2.socket === socket
+    );
+
+    if (game) {
+      let user, opponent;
+      let winner;
+      if (socket === game.player1.socket) {
+        user = game.player1;
+        opponent = game.player2;
+        winner = "b";
+      } else {
+        user = game.player2;
+        opponent = game.player1;
+        winner = "w";
+      }
+
+      if (opponent.socket) {
+        opponent.socket.send(
+          JSON.stringify({
+            type: GAME_OVER,
+            payload: {
+              winner: winner,
+              reason: "Win by Opponent Left",
+            },
+          })
+        );
+      }
+      this.removeGame(game.id);
+    }
   }
 }

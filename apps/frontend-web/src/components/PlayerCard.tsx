@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 export default function PlayerCard({
   player,
   color,
@@ -32,10 +34,14 @@ export default function PlayerCard({
   return (
     <div className="flex items-center w-full h-[40px]">
       <div className=" flex-grow px-[5px] h-full flex items-center gap-2">
-        <img
-          src={`${imageUrl ?? "/chezz.png"}`}
+        <motion.img
+          initial={{ opacity: 0 }}
+          animate={{opacity: 1}}
+          transition={{duration: 0.7}}
+          exit={{opacity: 0}}
+          src={`${imageUrl ?? "https://api.dicebear.com/9.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4,c0aede,d1d4f9"}`}
           alt=""
-          className="w-[30px] rounded-sm"
+          className="w-[36px] rounded-sm"
         />
         {title && (
           <div

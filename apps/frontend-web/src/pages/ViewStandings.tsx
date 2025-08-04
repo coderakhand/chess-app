@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
+import { CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
   Tabs,
@@ -14,6 +14,7 @@ import {
 import { Crown, Trophy, Star, Medal } from "lucide-react";
 import api from "../api/axios";
 import SideBar from "../components/SideBar";
+import Loader from "../components/Loader";
 
 interface FidePlayer {
   rank: number;
@@ -107,7 +108,7 @@ export default function ChessRankings() {
       className={`min-h-screen min-w-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B] font-dream`}
     >
       <SideBar />
-      <div className="max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4">
+      <div className="bg-black/20 max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4">
         <div className="max-w-5xl mx-auto">
           <div className="container mx-auto px-4 py-8">
             <motion.div
@@ -179,9 +180,12 @@ export default function ChessRankings() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex justify-center items-center py-20"
+                  className="flex flex-col gap-4 justify-center items-center py-20"
                 >
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="relative w-20 h-20">
+                    <Loader/>
+                  </div>
+                  <div className="">Loading...</div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -199,7 +203,7 @@ export default function ChessRankings() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.3 }}
                     >
-                      <Card className="hover:shadow-lg transition-all duration-300 border-none backdrop-blur-xs dark:bg-white/10">
+                      <div className="hover:shadow-lg transition-all duration-300 border-none backdrop-blur-xs bg-white/40 rounded-xl dark:bg-white/10">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
@@ -257,7 +261,7 @@ export default function ChessRankings() {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>
+                      </div>
                     </motion.div>
                   ))}
                 </motion.div>

@@ -150,17 +150,17 @@ export default function SignedInUserHome() {
     fetchGameHistory();
   }, [username]);
 
-  const avatars = ["Amaya", "Destiny", "Leah", "Andrea", "Nolan", "Sarah"];
+  // const avatars = ["Amaya", "Destiny", "Leah", "Andrea", "Nolan", "Sarah"];
 
   return (
     <div
       className={`flex  min-h-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar />
-      <div className="sm:pl-[50px] flex justify-center min-h-screen w-full">
+      <div className=" bg-black/10 sm:pl-[50px] flex justify-center min-h-screen w-full">
         <div className="max-w-[1600px] lg:px-12 lg:py-10 flex w-full h-full">
           <div className="w-full flex flex-col gap-6">
-            <div className="flex justify-start gap-12 bg-black/30 border-black/60 border-1  dark:border-[#27272A] dark:bg-[#09090B] rounded-xl py-4 px-6 dark:text-white">
+            <div className="flex justify-start gap-12 bg-black/30   dark:border-[#27272A] dark:bg-[#09090B] rounded-xl py-4 px-6 dark:text-white">
               <div className="flex justify-start items-center gap-3">
                 <img
                   src="https://api.dicebear.com/9.x/lorelei/svg?seed=Andrea"
@@ -169,7 +169,7 @@ export default function SignedInUserHome() {
                 />
                 <div className="px-2">
                   <h1 className="text-3xl text-white font-proza">
-                    {user.username}
+                    {username}
                   </h1>
                   <p className="font-dream text-sm font-semibold">
                     Last Login: {"3 days ago"}
@@ -185,28 +185,28 @@ export default function SignedInUserHome() {
                       <Zap className="w-6 h-6 text-blue-600" />
                       <p>Bullet:</p>
                     </div>
-                    <div>{user.ratings?.bullet}</div>
+                    <div>{profileStats.bulletStats.currentRating}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 font-extrabold font-proza text-lg">
                       <Clock className="w-6 h-6 text-green-600" />
                       <p>Blitz:</p>
                     </div>
-                    <div>{user.ratings?.blitz}</div>
+                    <div>{profileStats.blitzStats.currentRating}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 font-bold font-proza text-lg">
                       <Calendar className="w-6 h-6 text-purple-600" />
                       <p className="">Rapid:</p>
                     </div>
-                    <div>{user.ratings?.rapid}</div>
+                    <div>{profileStats.rapidStats.currentRating}</div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex gap-6">
+            <div className="flex gap-4">
               <div className="flex-grow">
-                <div className="py-4 px-4 w-full bg-black/30 backdrop-blur-md rounded-xl shadow-xl border-black/60 border-1  dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
+                <div className="py-4 px-4 w-full bg-black/30 backdrop-blur-md rounded-xl shadow-xl  dark:border-[#27272A] dark:bg-[#09090B] dark:text-white">
                   <div className="px-2 py-2 flex items-center justify-between font-dream font-bold text-xl">
                     Game History
                   </div>
@@ -230,7 +230,7 @@ export default function SignedInUserHome() {
                 </div>
               </div>
 
-              <div className="sm:max-h-[350px] sm:w-[300px] sm:p-[20px] rounded-xl bg-black/30 border-black/60 border-1  dark:border-[#27272A]  dark:bg-[#09090B] text-white">
+              <div className="sm:max-h-[350px] sm:w-[300px] sm:p-[20px] rounded-xl bg-black/30  dark:border-[#27272A]  dark:bg-[#09090B] text-white">
                 <div className="flex flex-col items-center gap-6">
                   <div className="flex gap-4">
                     {(["blitz", "bullet", "rapid"] as TimeControl[]).map(

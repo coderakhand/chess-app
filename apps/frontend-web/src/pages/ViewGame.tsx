@@ -1,44 +1,66 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useGameInfoStore} from "../store/atoms";
+import { useGameInfoStore } from "../store/atoms";
 import api from "../api/axios";
 import PlayerCard from "../components/PlayerCard";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
 import { useSocket } from "../hooks/useSocket";
-import GameControls from "../components/GameControls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import MovesTable from "../components/MovesTable";
+import { ArrowUpDown, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Chess } from "chess.js";
+import { moveType } from "@repo/utils";
 
 export default function ViewGame() {
   const socket = useSocket();
   const obj = useParams();
   const gameId = obj.id;
   const setMoves = useGameInfoStore((state) => state.setMoves);
-  const userInfo = useGameInfoStore((state) => state.userInfo);
-  const setUserInfo = useGameInfoStore((state) => state.setUserInfo);
-
-  const color = useGameInfoStore((state) => state.color);
-  const setColor = useGameInfoStore((state) => state.setColor);
   const setResult = useGameInfoStore((state) => state.setResult);
+  const showPositionAtMovesIndex = useGameInfoStore((state) => state.showPositionAtMovesIndex);
+  const moves = useGameInfoStore((state) => state.moves);
 
   const opponentInfo = useGameInfoStore((state) => state.opponentInfo);
   const setOpponentInfo = useGameInfoStore((state) => state.setOpponentInfo);
 
   const timeControl = useGameInfoStore((state) => state.timeControl);
   const setTimeControl = useGameInfoStore((state) => state.setTimeControl);
-  const timeLeft = useGameInfoStore((state) => state.timeLeft);
-  const setTimeLeft = useGameInfoStore((state) => state.setTimeLeft);
-  const opponentTimeLeft = useGameInfoStore((state) => state.opponentTimeLeft);
-  const setOpponentTimeLeft = useGameInfoStore(
-    (state) => state.setOpponentTimeLeft
+  const [whitePlayerTime, setWhitePlayerTime] = useState<number | null>(null);
+  const [blackPlayerTime, setBlackPlayerTime] = useState<number | null>(null);
+  
+  const whiteTimeLeftRef = useRef(null);
+  const blackTimeLeftRef = useRef(null);
+
+  const showPositionAtMovesIndexDecrease = useGameInfoStore(
+    (state) => state.showPositionAtMovesIndexDecrease
   );
 
-  useEffect(() => {
-    if(!socket) return;
-    
-  })
+  const showPositionAtMovesIndexIncrease = useGameInfoStore(
+    (state) => state.showPositionAtMovesIndexIncrease
+  );
+
+  const flipBoard = useGameInfoStore((state) => state.flipBoard);
+  const setFlipBoard = useGameInfoStore((state) => state.setFlipBoard);
+  const toggleFlipBoard = useGameInfoStore((state) => state.toggleFlipBoard);
+
+  const [blackPlayer, setBlackPlayer] = useState({
+    username: "hi",
+    rating: 800,
+  });
+  const [whitePlayer, setWhitePlayer] = useState({
+    username: "hi",
+    rating: 800,
+  });
 
   useEffect(() => {
+    if (!socket) return;
+  });
+
+  useEffect(() => {
+    setMoves([]);
+    setFlipBoard(false);
     const fetchGame = async () => {
       try {
         const response = await api.get(`/game/${gameId}`);
@@ -46,14 +68,46 @@ export default function ViewGame() {
         const game = data.game;
         if (!game) return;
         console.log(data);
-        setMoves(game.moves);
+        const chess = new Chess();
+        setTimeControl({
+          baseTime: game.timeControl.baseTime,
+          increment: game.timeControl.increment,
+          name: game.timeControl.name,
+        });
+        setWhitePlayerTime(game.timeControl.baseTime);
+        setBlackPlayerTime(game.timeControl.baseTime);
+        const moves = game.moves.map((move: moveType) => {
+          const m = chess.move(move);
+          return {
+            ...move,
+            piece: m.piece,
+            after: m.after,
+            before: m.before,
+            isCapture: m.isCapture() || m.isEnPassant(),
+            isKingsideCastle: m.isKingsideCastle(),
+            isQueensideCastle: m.isQueensideCastle(),
+            isPromotion: m.isPromotion(),
+          };
+        });
+
+        setMoves(moves);
+        const whitePlayer = game.whitePlayer;
+        const blackPlayer = game.blackPlayer;
+        setWhitePlayer({
+          username: blackPlayer.username,
+          rating: blackPlayer.rating,
+        });
+        setBlackPlayer({
+          username: whitePlayer.username,
+          rating: whitePlayer.rating,
+        });
       } catch (e) {
         console.log(e);
       }
     };
 
     fetchGame();
-  }, [gameId, setOpponentInfo, setMoves]);
+  }, []);
 
   return (
     <div
@@ -64,23 +118,23 @@ export default function ViewGame() {
       <div className="flex max-lg:flex-col  max-lg:items-center justify-center w-screen min-h-screen py-[30px] gap-6 sm:pl-[60px] px-1 max-sm:px-3 max-sm:pt-[100px]">
         <div className="flex-grow max-w-[560px] flex flex-col gap-2 h-full">
           <PlayerCard
-            player={opponentInfo.username}
-            rating={opponentInfo.rating}
-            color={color === "w" ? "b" : "w"}
-            time={opponentTimeLeft}
+            player={flipBoard ? blackPlayer.username : whitePlayer.username}
+            rating={flipBoard ? blackPlayer.rating : whitePlayer.rating}
+            color={flipBoard ? "w" : "b"}
+            time={flipBoard ? blackPlayerTime : whitePlayerTime}
           />
 
           <ChessBoard socket={socket} />
 
           <PlayerCard
-            player={userInfo.username}
-            rating={userInfo.rating}
-            color={color}
-            time={timeLeft}
+            player={!flipBoard ? blackPlayer.username : whitePlayer.username}
+            rating={!flipBoard ? blackPlayer.rating : whitePlayer.rating}
+            color={!flipBoard ? "w" : "b"}
+            time={!flipBoard ? blackPlayerTime : whitePlayerTime}
           />
         </div>
 
-        <div className="flex flex-col h-full w-full sm:w-[580px] md:w-[640px] lg:w-[400px] gap-3 md:px-10 ">
+        <div className="flex flex-col h-full w-full  sm:w-[580px] lg:w-[400px] gap-3 md:px-10 ">
           <div className="flex justify-center w-full min-h-[600px] lg:h-screen max-h-[900px]">
             <div
               className={`flex flex-col items-center py-[5px] gap-3 w-full lg:w-[360px]`}
@@ -99,7 +153,7 @@ export default function ViewGame() {
                     </TabsTrigger>
 
                     <TabsTrigger
-                      value="friends"
+                      value="details"
                       className="flex justify-center items-center gap-2 data-[state=active]:bg-white/40 dark:text-[#A1A1AA] dark:data-[state=active]:bg-black dark:data-[state=active]:text-white dark:data-[state=active]:border-none rounded-xl"
                     >
                       Details
@@ -110,13 +164,70 @@ export default function ViewGame() {
                     value="analysis"
                     className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   >
-                    <GameControls />
+                    <div className="h-full pt-1 grid grid-rows-[80%_20%]">
+                      <div className="flex flex-col">
+                        <div className="flex w-full justify-center items-center"></div>
+
+                        <div className="w-full flex items-center justify-center font-semibold font-dream dark:text-white">
+                          Moves
+                        </div>
+                        <div className="flex-grow overflow-y-auto">
+                          <MovesTable />
+                        </div>
+                        <div
+                          onKeyDown={(event) => {
+                            if (event.key === "ArrowRight")
+                              showPositionAtMovesIndexIncrease();
+                            if (event.key === "ArrowLeft")
+                              showPositionAtMovesIndexDecrease();
+                          }}
+                          className=" flex items-center gap-2 dark:bg-[#7b7b7f] px-2 py-1 bg-white/40 backdrop-blur-lg shadow-xl"
+                        >
+                          <button className="w-8 h-8 p-1 hover:cursor-pointer">
+                            <Share2 className="w-4 h-4 dark:text-white" />
+                          </button>
+
+                          <div className="flex-grow flex justify-end items-center gap-2">
+                            <Button
+                              size="icon"
+                              className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl  rounded-xl cursor-pointer"
+                              onClick={showPositionAtMovesIndexDecrease}
+                            >
+                              <ChevronLeft className="w-8 h-8 stroke-3" />
+                            </Button>
+
+                            <Button
+                              size="icon"
+                              className="w-8 h-8 bg-white hover:bg-white/70 hover:backdrop-blur-2xl rounded-xl cursor-pointer"
+                              onClick={showPositionAtMovesIndexIncrease}
+                            >
+                              <ChevronRight className="w-8 h-8 stroke-3" />
+                            </Button>
+
+                            <Button
+                              size="icon"
+                              onClick={toggleFlipBoard}
+                              className="w-8 h-8 bg-white hover:bg-[#E2E2E2]  rounded-xl cursor-pointer"
+                            >
+                              <img src="/flip_board.svg" className="w-5 h-5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </TabsContent>
 
                   <TabsContent
                     value="details"
-                    className="flex-grow  bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
-                  ></TabsContent>
+                    className="flex-grow px-8 py-6 bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
+                  >
+                    <div className="h-full">
+                      <div className="p-1 w-full bg-white/30 font-bold font-dream dark:text-white rounded-sm flex justify-center items-center">
+                        White Wins
+                      </div>
+                      <div></div>
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </div>
             </div>

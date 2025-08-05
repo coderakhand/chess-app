@@ -399,7 +399,7 @@ export default function Game() {
     >
       <SideBar />
 
-      <div className="flex max-lg:flex-col  max-lg:items-center justify-center w-screen min-h-screen py-[30px] gap-6 sm:pl-[60px] px-1 max-sm:px-3 max-sm:pt-[100px]">
+      <div className="flex max-lg:flex-col  max-lg:items-center lg:justify-center w-full min-h-screen py-[30px] gap-10 sm:gap-6 sm:pl-[80px] px-1 max-sm:px-3 max-sm:pt-[100px]">
         <div className="relative flex-grow max-w-[560px] flex flex-col gap-2 h-full">
           {isGameLoading ? (
             <PlayerCard
@@ -451,7 +451,7 @@ export default function Game() {
           )}
         </div>
 
-        <div className="flex flex-col h-full w-full sm:w-[580px] md:w-[640px] lg:w-[400px] gap-3 md:px-10 ">
+        <div className="flex flex-col h-full w-full sm:w-[580px]  lg:w-[400px] gap-3 md:px-10 ">
           <div className="flex justify-center w-full min-h-[600px] lg:h-screen max-h-[900px]">
             <div
               className={`flex flex-col items-center py-[5px] gap-3 w-full lg:w-[360px]`}
@@ -507,7 +507,9 @@ export default function Game() {
                           </div>
                           {isGameLoading && (
                             <div className="backdrop-blur-3xl w-full flex py-1 justify-center items-center gap-3">
-                              <p className="text-sm font-bold font-proza">Searching for Opponent...</p>
+                              <p className="text-sm font-bold font-proza">
+                                Searching for Opponent...
+                              </p>
                               <Button
                                 onClick={() => {
                                   setIsGameLoading(false);
@@ -518,7 +520,6 @@ export default function Game() {
                                   );
                                 }}
                                 className=" bg-white hover:bg-white/70 hover:backdrop-blur-2xl  rounded-xl cursor-pointer"
-
                               >
                                 cancel
                               </Button>
@@ -762,13 +763,9 @@ export default function Game() {
                                   </div>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs p-0.5"
-                              >
+                              <button className="outline-1  rounded-xs bg-black text-white hover:brightness-80 cursor-pointer text-xs p-0.5">
                                 Challenge
-                              </Button>
+                              </button>
                             </div>
                           ))}
                         </div>

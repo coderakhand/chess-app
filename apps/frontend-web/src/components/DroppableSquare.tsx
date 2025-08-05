@@ -25,6 +25,7 @@ export default function DroppableSquare({
     <div
       ref={setNodeRef}
       onClick={onClick}
+      onTouchMove={onClick}
       className={`relative w-full aspect-square ${color} flex justify-center items-center z-0`}
     >
       {showPositionAtMovesIndex !== null &&
@@ -32,7 +33,7 @@ export default function DroppableSquare({
           id == moves[showPositionAtMovesIndex]?.to) && (
           <div
             className={`absolute bg-yellow-300/50 blur-xs h-full w-full inset-0 overflow-hidden`}
-          ></div>
+          />
         )}
       {!flipBoard && id.charAt(1) == "1" && (
         <AlphabetCoordinate coordinate={id.charAt(0)} />
@@ -49,7 +50,6 @@ export default function DroppableSquare({
       {flipBoard && id.charAt(0) == "h" && (
         <NumbericCoordinate coordinate={id.charAt(1)} rotated={true} />
       )}
-
       {children}
     </div>
   );

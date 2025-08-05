@@ -40,12 +40,12 @@ router.get("/:gameId", async (req, res) => {
           increment: game.increment,
         },
         whitePlayer: {
-          username: game.whiteUser,
+          username: game.whiteUser?.username,
           rating: game.whitePlayerRating,
           ratingChange: game.whiteUserRatingChange,
         },
         blackPlayer: {
-          username: game.blackUser,
+          username: game.blackUser?.username,
           rating: game.whitePlayerRating,
           ratingChange: game.blackUserRatingChange,
         },

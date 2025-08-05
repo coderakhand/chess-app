@@ -92,7 +92,9 @@ function Move({
       if (move.isCapture) {
         return (
           <>
-            <p>{`${move.from[0]}x${move.to}`}</p>
+            <div className="flex gap-[1px]">
+              <p>{move.from[0]}</p> <p>{"x"}</p> <p>{move.to}</p>
+            </div>
           </>
         );
       }
@@ -106,9 +108,10 @@ function Move({
     return (
       <>
         {pieceElement}
-        <p>
-          {move.isCapture ? "x" : ""} {move.to}
-        </p>
+        <div className="flex gap-[1px]">
+          <p>{move.isCapture ? "x" : ""}</p>
+          <p>{move.to}</p>
+        </div>
       </>
     );
   };
@@ -135,7 +138,7 @@ function Move({
         onClick={() => setPositionIndex(whiteMove?.idx)}
       >
         <div
-          className={`max-w-14 flex items-center justify-center rounded-lg overflow-hidden ${whiteMove && showPositionAtMovesIndex == whiteMove.idx ? "bg-white/30 shadow-xl dark:bg-gray-200 dark:text-black" : ""}`}
+          className={`max-w-14 flex gap-[1px] items-center justify-center rounded-lg overflow-hidden ${whiteMove && showPositionAtMovesIndex == whiteMove.idx ? "bg-white/30 shadow-xl dark:bg-gray-200 dark:text-black" : ""}`}
         >
           {whiteMove && whiteMove.move && refinedMove(whiteMove.move)}
         </div>

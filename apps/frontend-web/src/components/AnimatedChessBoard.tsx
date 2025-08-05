@@ -3,6 +3,7 @@ import { sampleGame } from "../config"; // assume it's an array of { from, to }
 import { useBoardStore, useGameInfoStore } from "../store/atoms";
 import ChessPiece from "./ChessPiece";
 import { Chess } from "chess.js";
+import { motion } from "framer-motion";
 interface AnimatedChessBoardProps {
   customClass?: string;
   customClassPieces?: string;
@@ -21,6 +22,7 @@ export default function AnimatedChessBoard({
   const setFlipBoard = useGameInfoStore((state) => state.setFlipBoard);
 
   useEffect(() => {
+    setTimeout(() => {}, 300);
     setFlipBoard(false);
     setChess(chessRef.current);
     setBoard(chessRef.current.board());
@@ -44,7 +46,7 @@ export default function AnimatedChessBoard({
   }, [setBoard, setChess]);
 
   return (
-    <div
+    <motion.div
       className={`${
         color !== null ? (color === "b" ? "rotate-180" : "") : ""
       } relative ${customClass ?? "w-[600px] h-[600px]"} grid grid-rows-8 rounded-md overflow-hidden`}
@@ -75,6 +77,6 @@ export default function AnimatedChessBoard({
           })}
         </div>
       ))}
-    </div>
+    </motion.div>
   );
 }

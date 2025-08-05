@@ -1,7 +1,7 @@
 import { FaChessBoard } from "react-icons/fa";
 import { MdPersonSearch } from "react-icons/md";
 import { VscSignOut } from "react-icons/vsc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { useEffect, useState } from "react";
 import {
@@ -141,9 +141,6 @@ export default function SideBar() {
           <Link to={"/settings"}>
             <Settings className="text-amber-100 max-xsm:hidden w-6 h-6 xsm:w-7 xsm:h-7 cursor-pointer " />
           </Link>
-          {!isGuest && (
-            <VscSignOut className="text-3xl transition delay-80 duration-600 hover:ease-out hover:scale-110 cursor-pointer text-red-400" />
-          )}
         </div>
       </div>
     </div>
@@ -189,6 +186,7 @@ function SideBarComponentContent({ component }: { component: string | null }) {
 
 function ChezzBarContent() {
   const userInfo = useUserInfoStore((state) => state.userInfo);
+  const navigate = useNavigate();
   const userLogout = async () => {
     try {
       const { data: csrf } = await api.get("/csrf-token");
@@ -199,8 +197,9 @@ function ChezzBarContent() {
         { headers: { "csrf-token": csrf.csrfToken } }
       );
       const data = response.data;
-      console.log(data);
-      console.log("did");
+      if (data.message) {
+        navigate("/");
+      }
     } catch (e) {
       console.log(e);
     }

@@ -1,12 +1,21 @@
 import WebSocket from "ws";
 import { Chess } from "chess.js";
-import { GAME_OVER, INIT_GAME, MOVE, moveType } from "@repo/utils";
+import {
+  DRAW_ANSWER,
+  DRAW_OFFER,
+  GAME_OVER,
+  INIT_GAME,
+  MOVE,
+  moveType,
+  PLAYER_CHAT,
+  TIME_UPDATE,
+} from "@repo/utils";
 import { ViewersManager } from "./ViewersManager";
 import { randomUUID } from "crypto";
 import { User } from "./UserManager";
 import { db } from "./db";
 import { timeControlType } from "@repo/utils";
-import { GameStatus } from "@prisma/client";
+import { GameResult, GameStatus } from "@prisma/client";
 import { gameManager } from "./index";
 
 type PlayerKey = "player1" | "player2";
@@ -18,7 +27,7 @@ export class Game {
   public timeControl: timeControlType;
   public board: Chess;
   public startDate: Date;
-  public prevTime: number;
+  public lastMoveTime: number;
   public moves: moveType[];
   public gameStatus: GameStatus;
   public viewersManager: ViewersManager;
@@ -29,6 +38,9 @@ export class Game {
     player: null,
     move: 0,
   };
+  private player1Time: number;
+  private player2Time: number;
+  private timer: NodeJS.Timeout | null;
 
   constructor(
     player1: User,
@@ -44,16 +56,67 @@ export class Game {
     this.player2 = player2;
     this.isRated = isRated;
     this.startDate = new Date();
-    this.prevTime = Date.now();
+    this.lastMoveTime = Date.now();
     this.viewersManager = viewersManager;
     this.timeControl = timeControl;
     this.board = !position ? new Chess() : new Chess(position);
     this.moves = !moves ? [] : moves;
     this.gameStatus = GameStatus.ACTIVE;
+    this.player1Time = 0;
+    this.player2Time = 0;
 
     if (!position) {
       this.createNewGame();
     }
+
+    this.timer = setInterval(() => {
+      let gameResult: boolean = false,
+        winner: string | null = null;
+      if (this.board.turn() == "w") {
+        this.player1Time += 1000;
+        if (this.player1Time >= this.player1.timeLeft) {
+          this.player2.timeLeft = 0;
+          gameResult = true;
+          this.gameStatus = GameStatus.TIME_UP;
+        }
+        console.log("player1Time => ", this.player1Time);
+      } else {
+        this.player2Time += 1000;
+        if (this.player2Time >= this.player2.timeLeft) {
+          this.player2.timeLeft = 0;
+          gameResult = true;
+          this.gameStatus = GameStatus.TIME_UP;
+        }
+        console.log("player2Time => ", this.player2Time);
+      }
+      if (gameResult) {
+        if (this.timer) clearInterval(this.timer);
+        this.player1.socket?.send(
+          JSON.stringify({
+            type: GAME_OVER,
+            payload: {
+              winner: winner,
+              reason: "Win on Time",
+              time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+            },
+          })
+        );
+        this.player2.socket?.send(
+          JSON.stringify({
+            type: GAME_OVER,
+            payload: {
+              winner: winner,
+              reason: "Win on Time",
+              time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+            },
+          })
+        );
+
+        if (!this.player1.isGuest && !this.player2.isGuest) {
+          this.storeGameResultInDB(winner);
+        }
+      }
+    }, 1000);
   }
 
   private async createNewGame() {
@@ -105,7 +168,7 @@ export class Game {
             blackUserId: player2.id,
             whitePlayerRating: player1.rating,
             blackPlayerRating: player2.rating,
-            status: "ACTIVE",
+            status: GameStatus.ACTIVE,
             timeControl: timeControl.name,
             baseTime: timeControl.baseTime,
             increment: timeControl.increment,
@@ -137,30 +200,11 @@ export class Game {
   }
 
   makeMove(socket: WebSocket, move: moveType) {
-    let user, opponent;
+    let { user, opponent } = this.findUserAndOpponent(socket);
 
-    if (socket === this.player1.socket) {
-      user = this.player1;
-      opponent = this.player2;
-    } else {
-      user = this.player2;
-      opponent = this.player1;
-    }
+    if (this.isNotSocketTurn(socket)) return;
 
-    const turn = this.board.turn();
-
-    if (
-      (turn === "w" && socket !== this.player1.socket) ||
-      (turn === "b" && socket !== this.player2.socket)
-    ) {
-      socket.send(
-        JSON.stringify({
-          type: "ERROR",
-          message: "This is not your move",
-        })
-      );
-      return;
-    }
+    const thisMoveTime = Date.now();
 
     try {
       this.board.move(move);
@@ -175,20 +219,20 @@ export class Game {
       return;
     }
 
-    console.log(`${user.username} made the move`);
+    console.log(`${this[user].username} made the move`);
 
-    const moveTime = Date.now();
-    const timeTaken = moveTime - this.prevTime;
-    this.prevTime = moveTime;
+    const timeTaken = thisMoveTime - this.lastMoveTime;
+    this[user].timeLeft = this[user].timeLeft - timeTaken;
+    this.lastMoveTime = thisMoveTime;
 
-    if (user.timeLeft - timeTaken > 0) {
-      user.timeLeft -= timeTaken;
-      user.timeLeft += Number(this.timeControl.increment);
-
-      user.socket?.send(
+    if (this[user].timeLeft > 0) {
+      this[user].timeLeft += Number(this.timeControl.increment);
+      const sendTime = Date.now();
+      this[user].socket?.send(
         JSON.stringify({
-          type: "TIME_UPDATE",
+          type: TIME_UPDATE,
           payload: {
+            sendTime: sendTime,
             time: {
               w: this.player1.timeLeft,
               b: this.player2.timeLeft,
@@ -196,19 +240,20 @@ export class Game {
           },
         })
       );
-      console.log(`updated time send to ${user.username}`);
+      console.log(`updated time send to ${this[user].username}`);
 
-      opponent.socket?.send(
+      this[opponent].socket?.send(
         JSON.stringify({
           type: MOVE,
           payload: {
             move: move,
+            sendTime: sendTime,
             time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
           },
         })
       );
 
-      console.log(`move send to ${opponent.username}`);
+      console.log(`move send to ${this[opponent].username}`);
 
       this.viewersManager.broadCast(
         this.id,
@@ -222,16 +267,19 @@ export class Game {
       );
     } else {
       this.gameStatus = GameStatus.TIME_UP;
-      const winner = this.board.turn() === "w" ? "b" : "w";
+      const winner = this.board.turn();
+      if (winner == "w") this.player1.timeLeft = 0;
+      else this.player2.timeLeft;
       const gameOverMessage = JSON.stringify({
         type: GAME_OVER,
         payload: {
           reason: "Won on Time",
           winner: winner,
+          time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
         },
       });
       socket.send(gameOverMessage);
-      opponent.socket?.send(gameOverMessage);
+      this[opponent].socket?.send(gameOverMessage);
       this.viewersManager.broadCast(this.id, gameOverMessage);
       gameManager.removeGame(this.id);
     }
@@ -247,14 +295,17 @@ export class Game {
         gameOverMessage = JSON.stringify({
           type: GAME_OVER,
           payload: {
-            reason: "Win by Checkmate",
             winner: winner,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+            reason: "Win by Checkmate",
           },
         });
       } else if (this.board.isStalemate()) {
         gameOverMessage = JSON.stringify({
           type: GAME_OVER,
           payload: {
+            winner: null,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
             reason: "Draw by Stalemate",
           },
         });
@@ -262,6 +313,8 @@ export class Game {
         gameOverMessage = JSON.stringify({
           type: GAME_OVER,
           payload: {
+            winner: null,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
             reason: "Draw by 50 Move Rule",
           },
         });
@@ -269,6 +322,8 @@ export class Game {
         gameOverMessage = JSON.stringify({
           type: GAME_OVER,
           payload: {
+            winner: null,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
             reason: "Draw by 3 Fold Repetition",
           },
         });
@@ -276,18 +331,24 @@ export class Game {
         gameOverMessage = JSON.stringify({
           type: GAME_OVER,
           payload: {
+            winner: null,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
             reason: "Draw by Insufficient Material",
           },
         });
       }
 
       socket.send(gameOverMessage);
-      opponent.socket?.send(gameOverMessage);
+      this[opponent].socket?.send(gameOverMessage);
       this.viewersManager.broadCast(this.id, gameOverMessage);
+
+      if (!this.player1.isGuest && !this.player2.isGuest)
+        this.storeGameResultInDB(null);
+
       gameManager.removeGame(this.id);
     }
 
-    if (!user.isGuest && !opponent.isGuest) {
+    if (!this[user].isGuest && !this[opponent].isGuest) {
       this.newMoveInDB(move, timeTaken);
       console.log(`move stored in database`);
     }
@@ -323,70 +384,79 @@ export class Game {
   }
 
   public resignGame(socket: WebSocket) {
-    let user, opponent;
-    let winner;
+    const { user, opponent } = this.findUserAndOpponent(socket);
+    let winner: string | null = null;
     if (socket === this.player1.socket) {
-      user = this.player1;
-      opponent = this.player2;
       winner = "b";
     } else {
-      user = this.player2;
-      opponent = this.player1;
       winner = "w";
     }
 
-    if (opponent.socket) {
-      opponent.socket.send(
+    if (this[opponent].socket) {
+      this[opponent].socket.send(
         JSON.stringify({
           type: GAME_OVER,
           payload: {
             winner: winner,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
             reason: "Win by Resignation",
           },
         })
       );
     }
 
-    if (user.socket) {
-      user.socket.send(
+    if (this[user].socket) {
+      this[user].socket.send(
         JSON.stringify({
           type: GAME_OVER,
           payload: {
             winner: winner,
+            time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
             reason: "Win by Resignation",
           },
         })
       );
     }
+
+    if (!this.player1.isGuest && !this.player2.isGuest)
+      this.storeGameResultInDB(winner);
 
     gameManager.removeGame(this.id);
   }
 
+  private async storeGameResultInDB(winner: string | null) {
+    const result = winner
+      ? winner === "w"
+        ? GameResult.WHITE_WINS
+        : GameResult.BLACK_WINS
+      : GameResult.DRAW;
+
+    try {
+      await db.game.update({
+        where: {
+          id: this.id,
+        },
+        data: {
+          status: this.gameStatus,
+          result: result,
+        },
+      });
+    } catch (e) {
+      console.log("Unable to store result in DB");
+    }
+  }
+
   public drawOffer(socket: WebSocket) {
-    let user: PlayerKey, opponent: PlayerKey;
-    if (this.player1.socket === socket) {
-      user = "player1";
-      opponent = "player2";
-    } else {
-      user = "player2";
-      opponent = "player1";
-    }
+    const { user, opponent } = this.findUserAndOpponent(socket);
 
-    const turn = this.board.turn();
-
-    if (
-      (user === "player1" && turn !== "w") ||
-      (user === "player2" && turn !== "b")
-    ) {
-      return;
-    }
+    if (this.isNotSocketTurn(socket)) return;
 
     this.drawAgreement.player = user;
     this.drawAgreement.move = this.moves.length;
 
     this[opponent].socket?.send(
       JSON.stringify({
-        type: "DRAW_OFFER",
+        type: DRAW_OFFER,
       })
     );
   }
@@ -407,15 +477,7 @@ export class Game {
       return;
     }
 
-    let user: PlayerKey, opponent: PlayerKey;
-
-    if (this.player1.socket == socket) {
-      user = "player1";
-      opponent = "player2";
-    } else {
-      user = "player2";
-      opponent = "player1";
-    }
+    const { user, opponent } = this.findUserAndOpponent(socket);
 
     if (user !== this.drawAgreement.player) {
       if (isAccepted) {
@@ -423,6 +485,8 @@ export class Game {
           JSON.stringify({
             type: GAME_OVER,
             payload: {
+              time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+              winner: null,
               reason: "Draw by Agreement",
             },
           })
@@ -432,15 +496,24 @@ export class Game {
           JSON.stringify({
             type: GAME_OVER,
             payload: {
+              time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+              winner: null,
               reason: "Draw by Agreement",
             },
           })
         );
+        if (!this.player1.isGuest && !this.player2.isGuest)
+          this.storeGameResultInDB(null);
+
+        gameManager.removeGame(this.id);
+        return;
       } else {
         this[opponent].socket?.send(
           JSON.stringify({
-            type: "DRAW_ANSWER",
+            type: DRAW_ANSWER,
             payload: {
+              time: { w: this.player1.timeLeft, b: this.player2.timeLeft },
+              winner: null,
               isAccepted: false,
             },
           })
@@ -462,12 +535,45 @@ export class Game {
     if (opponent.socket) {
       opponent.socket.send(
         JSON.stringify({
-          type: "PLAYER_CHAT",
+          type: PLAYER_CHAT,
           payload: {
             message: message,
           },
         })
       );
     }
+  }
+
+  private isNotSocketTurn(socket: WebSocket) {
+    const { user } = this.findUserAndOpponent(socket);
+    const turn = this.board.turn();
+
+    if (
+      (user === "player1" && turn !== "w") ||
+      (user === "player2" && turn !== "b")
+    ) {
+      socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "This is not your move",
+        })
+      );
+      return true;
+    }
+    return false;
+  }
+
+  private findUserAndOpponent(socket: WebSocket) {
+    let user: PlayerKey, opponent: PlayerKey;
+
+    if (this.player1.socket == socket) {
+      user = "player1";
+      opponent = "player2";
+    } else {
+      user = "player2";
+      opponent = "player1";
+    }
+
+    return { user, opponent };
   }
 }

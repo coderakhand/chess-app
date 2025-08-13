@@ -7,10 +7,16 @@ import {
   PENDING_GAME,
   timeControlType,
   GAME_OVER,
+  DRAW_OFFER,
+  DRAW_ANSWER,
+  PLAYER_CHAT,
+  ABANDON_GAME,
+  RESIGN_GAME,
 } from "@repo/utils";
 import { Viewer, ViewersManager } from "./ViewersManager";
 import { User } from "./UserManager";
 import { db } from "./db";
+import { GameStatus } from "@prisma/client";
 
 export class GameManager {
   public games: Game[];
@@ -143,7 +149,7 @@ export class GameManager {
         return;
       }
 
-      if (message.type == "RESIGN_GAME") {
+      if (message.type == RESIGN_GAME) {
         const game = this.games.find(
           (game) =>
             game.player1.socket === socket || game.player2.socket === socket
@@ -155,7 +161,7 @@ export class GameManager {
         return;
       }
 
-      if (message.type == "DRAW_OFFER") {
+      if (message.type == DRAW_OFFER) {
         const game = this.games.find(
           (game) =>
             game.player1.socket === socket || game.player2.socket === socket
@@ -167,7 +173,7 @@ export class GameManager {
         return;
       }
 
-      if (message.type == "DRAW_ANSWER") {
+      if (message.type == DRAW_ANSWER) {
         const isAccepted = message.payload.isAccepted || false;
 
         const game = this.games.find(
@@ -182,7 +188,7 @@ export class GameManager {
         return;
       }
 
-      if (message.type == "PLAYER_CHAT") {
+      if (message.type == PLAYER_CHAT) {
         const chatMessage = message.payload.message;
         const game = this.games.find(
           (game) =>
@@ -195,7 +201,7 @@ export class GameManager {
         return;
       }
 
-      if (message.type == "ABANDON_GAME") {
+      if (message.type == ABANDON_GAME) {
         this.abandonGame(socket);
         return;
       }
@@ -239,7 +245,7 @@ export class GameManager {
       ];
 
       const lastActiveGame = allGames
-        .filter((g) => g.status === "ACTIVE")
+        .filter((g) => g.status === GameStatus.ACTIVE)
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
 
       if (!lastActiveGame) return false;

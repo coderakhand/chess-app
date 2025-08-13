@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@radix-ui/react-progress";
 import GameHistoryOverviewCard from "./GameHistoryOverviewCard";
 import { useParams } from "react-router-dom";
+import { recentGamesType } from "../config";
 
 type TimeControl = "blitz" | "bullet" | "rapid";
 
@@ -93,15 +94,6 @@ export default function SignedInUserHome() {
 
   const profileStats = profileInfo.user;
 
-  interface recentGamesType {
-    id: string;
-    opponent: string;
-    result: string;
-    timeControl: string;
-    rating: number;
-    moves: number;
-    date: string;
-  }
   const [recentGames, SetRecentGames] = useState<recentGamesType[]>([]);
   const [IsLoadingGames, setIsLoadingGames] = useState(true);
 

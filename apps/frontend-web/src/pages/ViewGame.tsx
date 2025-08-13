@@ -8,7 +8,7 @@ import ChessBoard from "../components/ChessBoard";
 import { useSocket } from "../hooks/useSocket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import MovesTable from "../components/MovesTable";
-import { ArrowUpDown, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Chess } from "chess.js";
 import { moveType } from "@repo/utils";
@@ -19,7 +19,9 @@ export default function ViewGame() {
   const gameId = obj.id;
   const setMoves = useGameInfoStore((state) => state.setMoves);
   const setResult = useGameInfoStore((state) => state.setResult);
-  const showPositionAtMovesIndex = useGameInfoStore((state) => state.showPositionAtMovesIndex);
+  const showPositionAtMovesIndex = useGameInfoStore(
+    (state) => state.showPositionAtMovesIndex
+  );
   const moves = useGameInfoStore((state) => state.moves);
 
   const opponentInfo = useGameInfoStore((state) => state.opponentInfo);
@@ -29,7 +31,7 @@ export default function ViewGame() {
   const setTimeControl = useGameInfoStore((state) => state.setTimeControl);
   const [whitePlayerTime, setWhitePlayerTime] = useState<number | null>(null);
   const [blackPlayerTime, setBlackPlayerTime] = useState<number | null>(null);
-  
+
   const whiteTimeLeftRef = useRef(null);
   const blackTimeLeftRef = useRef(null);
 
@@ -48,10 +50,12 @@ export default function ViewGame() {
   const [blackPlayer, setBlackPlayer] = useState({
     username: "hi",
     rating: 800,
+    ratingChange: 0,
   });
   const [whitePlayer, setWhitePlayer] = useState({
     username: "hi",
     rating: 800,
+    ratingChange: 0,
   });
 
   useEffect(() => {
@@ -96,10 +100,12 @@ export default function ViewGame() {
         setWhitePlayer({
           username: blackPlayer.username,
           rating: blackPlayer.rating,
+          ratingChange: 0,
         });
         setBlackPlayer({
           username: whitePlayer.username,
           rating: whitePlayer.rating,
+          ratingChange: 0,
         });
       } catch (e) {
         console.log(e);
@@ -222,10 +228,30 @@ export default function ViewGame() {
                     className="flex-grow px-8 py-6 bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A] overflow-hidden"
                   >
                     <div className="h-full">
-                      <div className="p-1 w-full bg-white/30 font-bold font-dream dark:text-white rounded-sm flex justify-center items-center">
+                      <div className="mb-6 p-1 w-full bg-white/30 font-bold font-dream dark:text-white rounded-sm flex justify-center items-center">
                         White Wins
                       </div>
-                      <div></div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold font-dream">Match: </p>
+                        <p className="font-semibold font-proza text-sm">
+                          {whitePlayer.username} ({whitePlayer.rating}) vs{" "}
+                          {blackPlayer.username} ({blackPlayer.rating}){" "}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold font-dream">Time: </p>
+                        <p className="font-semibold font-proza text-sm">
+                          {`${timeControl.baseTime / 60000} | ${timeControl.increment / 1000} (${timeControl.name})`}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold font-dream">Rating Changes: </p>
+                        <p className="font-semibold font-proza text-sm">
+                          {`white: ${whitePlayer.ratingChange} black: ${blackPlayer.ratingChange}`}
+                        </p>
+                      </div>
                     </div>
                   </TabsContent>
                 </Tabs>

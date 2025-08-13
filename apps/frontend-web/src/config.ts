@@ -1,8 +1,17 @@
 export const WS_URL = "ws://localhost:8080";
+
 export const INIT_GAME = "init_game";
 export const MOVE = "move";
 export const GAME_OVER = "game_over";
+export const GUEST_USER = "guest_user";
+export const INIT_VIEW_GAME = "view_game";
 export const PENDING_GAME = "pending_game";
+export const TIME_UPDATE = "time_update";
+export const DRAW_OFFER = "draw_offer";
+export const DRAW_ANSWER = "draw_answer";
+export const PLAYER_CHAT = "player_chat";
+export const RESIGN_GAME = "resign_game";
+export const ABANDON_GAME = "abandon_game";
 
 export const boardColorsList = {
   CLASSIC_GREEN: {
@@ -152,3 +161,13 @@ export const games = [
     ],
   },
 ];
+
+export interface recentGamesType {
+  id: string;
+  opponent: string;
+  result: string;
+  timeControl: string;
+  rating: number;
+  moves: number;
+  date: string;
+}

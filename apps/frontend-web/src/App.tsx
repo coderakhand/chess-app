@@ -8,6 +8,7 @@ import Analyze from "./pages/Analyze";
 import ViewGame from "./pages/ViewGame";
 import ViewStandings from "./pages/ViewStandings";
 import SignedInUserHome from "./components/SignedInUserHome";
+import GameHistory from "./pages/GameHistory";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/analyze" element={<Analyze />} />
           <Route path="/player/:username" element={<SignedInUserHome />} />
+          <Route path="/games/history" element={<GameHistory />} />
           <Route path="*" element={<Error />}></Route>
         </Routes>
       </BrowserRouter>

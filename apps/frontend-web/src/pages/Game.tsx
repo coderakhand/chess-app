@@ -1,6 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { useSocket } from "../hooks/useSocket";
-import { INIT_GAME, GAME_OVER, MOVE, PENDING_GAME } from "../config";
+import {
+  INIT_GAME,
+  GAME_OVER,
+  MOVE,
+  PENDING_GAME,
+  DRAW_ANSWER,
+  DRAW_OFFER,
+  PLAYER_CHAT,
+  TIME_UPDATE,
+  RESIGN_GAME,
+} from "../config";
 import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
@@ -74,9 +84,6 @@ export default function Game() {
     (state) => state.setOpponentTimeLeft
   );
 
-  const timeLeftRef = useRef<number | null>(null);
-  const opponentTimeLeftRef = useRef<number | null>(null);
-
   const gameStatus = useGameInfoStore((state) => state.gameStatus);
   const setGameStatus = useGameInfoStore((state) => state.setGameStatus);
   const [isGameLoading, setIsGameLoading] = useState<boolean>(false);
@@ -133,6 +140,7 @@ export default function Game() {
           }
 
           case INIT_GAME: {
+            console.log(message);
             const newChess = new Chess();
             setMoves([]);
             setChess(newChess);
@@ -147,8 +155,8 @@ export default function Game() {
             setIsGameLoading(false);
             setOpponentInfo(payload.opponentInfo);
             setGameCreationTime(Date.now());
-            timeLeftRef.current = timeControl.baseTime;
-            opponentTimeLeftRef.current = timeControl.baseTime;
+            setTimeLeft(timeControl.baseTime);
+            setOpponentTimeLeft(timeControl.baseTime);
             setGameStatus("ACTIVE");
             setChat([]);
             break;
@@ -157,6 +165,7 @@ export default function Game() {
           case MOVE: {
             const move = payload.move;
             const time = payload.time;
+            const lag = Date.now() - payload.sendTime;
             const m = chess.move(move);
             setBoard(chess.board());
             setMove({
@@ -170,12 +179,12 @@ export default function Game() {
               isPromotion: m.isPromotion(),
             });
             if (color === "w") {
-              timeLeftRef.current = time.w;
-              opponentTimeLeftRef.current = time.b;
+              setTimeLeft(time.w + lag);
+              setOpponentTimeLeft(time.b + lag);
               console.log("yourTime: ", time.w, "  hisTime: ", time.b);
             } else {
-              timeLeftRef.current = time.b;
-              opponentTimeLeftRef.current = time.w;
+              setTimeLeft(time.b + lag);
+              setOpponentTimeLeft(time.w + lag);
               console.log("yourTime: ", time.b, "  hisTime: ", time.w);
             }
 
@@ -183,45 +192,65 @@ export default function Game() {
           }
 
           case GAME_OVER: {
+            const time = payload.time;
+            if (color === "w") {
+              setTimeLeft(time.w);
+              setOpponentTimeLeft(time.b);
+              console.log("yourTime: ", time.w, "  hisTime: ", time.b);
+            } else {
+              setTimeLeft(time.b);
+              setOpponentTimeLeft(time.w);
+              console.log("yourTime: ", time.b, "  hisTime: ", time.w);
+            }
             setResult({ winner: payload.winner, reason: payload.reason });
             setGameStatus("OVER");
             console.log(payload.reason);
             break;
           }
 
-          case "TIME_UPDATE": {
-            const { time } = payload;
+          case TIME_UPDATE: {
+            const { time, sendTime } = payload;
+            const lag = Date.now() - sendTime;
             if (color === "w") {
-              timeLeftRef.current = time.w;
-              opponentTimeLeftRef.current = time.b;
-              setTimeLeft(time.w);
-              setOpponentTimeLeft(time.b);
+              setTimeLeft(time.w + lag);
+              setOpponentTimeLeft(time.b + lag);
               console.log("yourTime: ", time.w, "  hisTime: ", time.b);
             } else {
-              timeLeftRef.current = time.b;
-              opponentTimeLeftRef.current = time.w;
-              setOpponentTimeLeft(time.w);
-              setTimeLeft(time.b);
+              setOpponentTimeLeft(time.w + lag);
+              setTimeLeft(time.b + lag);
               console.log("yourTime: ", time.b, "  hisTime: ", time.w);
             }
             break;
           }
 
-          case "DRAW_OFFER": {
+          case DRAW_OFFER: {
+            setChat((prev) => [
+              ...prev,
+              { sender: opponentInfo.username, message: "offered draw" },
+            ]);
             setIsDrawOffered(true);
             break;
           }
 
-          case "DRAW_ANSWER": {
+          case DRAW_ANSWER: {
             console.log("draw answer: ", payload);
             const isAccepted = payload.isAccepted || false;
+
             if (isAccepted) {
-              alert("Draw  by opponent");
+              setChat((prev) => [
+                ...prev,
+                { sender: opponentInfo.username, message: "accepted draw" },
+              ]);
+            } else {
+              setChat((prev) => [
+                ...prev,
+                { sender: opponentInfo.username, message: "rejected draw" },
+              ]);
             }
             break;
           }
 
-          case "PLAYER_CHAT": {
+          case PLAYER_CHAT: {
             const message = payload.message;
             if (!message) return;
             setChat([
@@ -259,22 +288,23 @@ export default function Game() {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
+    const setTime = (oldTime: number | null): number => {
+      if (oldTime === null) return 0;
+      const clock = oldTime - 100;
+      const newTime = clock > 0 ? clock : 0;
+      return newTime;
+    };
+
     if (isGameStarted && gameStatus != "OVER") {
       interval = setInterval(() => {
         if (chess.turn() === color) {
-          if (timeLeftRef.current === null) return;
-          const clock = timeLeftRef.current - 1000;
-          const newTime = clock >= 0 ? clock : 0;
-          timeLeftRef.current = newTime;
+          const newTime = setTime(timeLeft);
           setTimeLeft(newTime);
         } else {
-          if (opponentTimeLeftRef.current === null) return;
-          const clock = opponentTimeLeftRef.current - 1000;
-          const newTime = clock >= 0 ? clock : 0;
-          opponentTimeLeftRef.current = newTime;
+          const newTime = setTime(opponentTimeLeft);
           setOpponentTimeLeft(newTime);
         }
-      }, 1000);
+      }, 100);
     }
 
     return () => {
@@ -336,16 +366,17 @@ export default function Game() {
     if (!socket) return;
     socket.send(
       JSON.stringify({
-        type: "DRAW_OFFER",
+        type: DRAW_OFFER,
       })
     );
+    setChat((prev) => [...prev, { sender: "You", message: "offered draw" }]);
   };
 
   const resignGame = () => {
     if (!socket) return;
     socket.send(
       JSON.stringify({
-        type: "RESIGN_GAME",
+        type: RESIGN_GAME,
       })
     );
   };
@@ -354,12 +385,19 @@ export default function Game() {
     if (!socket) return;
     socket.send(
       JSON.stringify({
-        type: "DRAW_ANSWER",
+        type: DRAW_ANSWER,
         payload: {
           isAccepted: isAccepted,
         },
       })
     );
+    setChat((prev) => [
+      ...prev,
+      {
+        sender: "You",
+        message: isAccepted ? "accepted draw" : "rejected draw",
+      },
+    ]);
     setIsDrawOffered(false);
   };
 
@@ -368,7 +406,7 @@ export default function Game() {
     setChat([...chat, { sender: "You", message: chatMessage }]);
     socket.send(
       JSON.stringify({
-        type: "PLAYER_CHAT",
+        type: PLAYER_CHAT,
         payload: {
           message: chatMessage,
         },
@@ -392,6 +430,13 @@ export default function Game() {
       }, 1000);
     }
   }, [isGameLoading]);
+
+  const getGameTitle = (userFirst: boolean): string => {
+    if (userFirst) {
+      return `${user.username} vs ${opponentInfo.username}`;
+    }
+    return `${opponentInfo.username} vs ${opponentInfo.username}`;
+  };
 
   return (
     <div
@@ -505,6 +550,27 @@ export default function Game() {
                           <div className="flex-grow overflow-y-auto">
                             <MovesTable />
                           </div>
+                          {isDrawOffered && (
+                            <div className="backdrop-blur-3xl w-full flex py-1 justify-center items-center gap-3">
+                              <label className="text-sm font-bold">
+                                Draw Agreement
+                              </label>
+                              <div className="flex justify-around items-center gap-4">
+                                <button
+                                  className="text-sm font-bold text-black/80 p-1 rounded-lg cursor-pointe bg-white hover:bg-white/70 cursor-pointer"
+                                  onClick={() => answerDraw(true)}
+                                >
+                                  Agree
+                                </button>
+                                <button
+                                  className="text-sm font-bold text-black/80 p-1 rounded-lg cursor-pointe bg-white hover:bg-white/70 cursor-pointer"
+                                  onClick={() => answerDraw(false)}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                          )}
                           {isGameLoading && (
                             <div className="backdrop-blur-3xl w-full flex py-1 justify-center items-center gap-3">
                               <p className="text-sm font-bold font-proza">
@@ -599,20 +665,17 @@ export default function Game() {
                           </div>
                         </div>
                         <div className=" h-full flex flex-col overflow-y-auto">
-                          <div className="flex-grow">
-                            {isDrawOffered && (
-                              <div>
-                                <Button onClick={() => answerDraw(true)}>
-                                  Yes
-                                </Button>
-                                <Button onClick={() => answerDraw(false)}>
-                                  No
-                                </Button>
-                              </div>
+                          <div className="relative overflow-y-auto flex flex-col gap-1 h-full  px-2 py-1">
+                            {gameStatus == "OVER" && (
+                              <>
+                                {/* <p className="dark:text-white font-bold text-sm">
+                                  [Game Started]
+                                </p> */}
+                                <p className="dark:text-white text-sm font-semibold">
+                                  {`${timeControl.name} (${timeControl.baseTime / 60000} | ${timeControl.increment / 1000})  ${getGameTitle(color === "w")}`}{" "}
+                                </p>
+                              </>
                             )}
-                          </div>
-
-                          <div className="relative overflow-y-auto flex flex-col gap-1 h-full p-1">
                             {chat.map((p) => (
                               <div className="flex gap-1 text-sm">
                                 <span className="font-bold text-black/40 dark:text-slate-300">
@@ -622,13 +685,19 @@ export default function Game() {
                               </div>
                             ))}
                             <div ref={messagesEndRef} />
+                            {gameStatus == "OVER" && (
+                              <div className="flex gap-1 text-sm font-bold">
+                                <p className="dark:text-white">[Game Ended]</p>
+                              </div>
+                            )}
                           </div>
 
                           <div className="w-full flex items-center border-white/40 border-t-1">
                             <div
                               className="w-full flex items-center h-full pr-2"
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") sendChatMessage();
+                                if (e.key === "Enter" && gameStatus != "OVER")
+                                  sendChatMessage();
                               }}
                             >
                               <input
@@ -638,7 +707,12 @@ export default function Game() {
                                 className="w-full h-8 px-2 outline-none text-sm dark:text-white/90 dark:placeholder-[#A1A1A1]"
                                 onChange={(e) => setChatMessage(e.target.value)}
                               />
-                              <SendHorizonal className="w-5 h-5 stroke-gray-600 dark:stroke-gray-300" />
+                              <SendHorizonal
+                                onClick={() => {
+                                  if (gameStatus != "OVER") sendChatMessage();
+                                }}
+                                className="w-5 h-5 stroke-gray-600 dark:stroke-gray-300"
+                              />
                             </div>
                           </div>
                         </div>

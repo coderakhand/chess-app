@@ -29,7 +29,7 @@ export default function GameHistoryOverviewCard({
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 + idx * 0.15, duration: 0.3 }}
         key={game.id}
-        className="flex items-center gap-4 px-4 py-2 rounded-lg border hover:border-black hover:bg-muted/50 transition-colors bg-black/30 border-white/40 dark:border-[#27272A]"
+        className="flex items-center gap-4 px-4 py-2 rounded-lg border hover:border-black hover:bg-muted/50 transition-colors bg-black/30 border-white/30 dark:border-[#27272A]"
       >
         <div className="flex items-center gap-3 flex-1">
           <div

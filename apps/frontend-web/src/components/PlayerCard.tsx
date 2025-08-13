@@ -17,17 +17,9 @@ export default function PlayerCard({
 }) {
   function formatTime(time: number | null) {
     if (time === null) return "3:00";
-
-    const totalSeconds =
-      time % 1000 >= 500 ? Math.ceil(time / 1000) : Math.floor(time / 1000);
-
+    const totalSeconds = Math.ceil(time / 1000);
     const minutes = Math.floor(totalSeconds / 60);
-
-    const seconds =
-      totalSeconds % 60 >= 30
-        ? Math.ceil(totalSeconds % 60)
-        : Math.floor(totalSeconds % 60);
-
+    const seconds = totalSeconds % 60;
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   }
 
@@ -36,9 +28,9 @@ export default function PlayerCard({
       <div className=" flex-grow px-[5px] h-full flex items-center gap-2">
         <motion.img
           initial={{ opacity: 0 }}
-          animate={{opacity: 1}}
-          transition={{duration: 0.7}}
-          exit={{opacity: 0}}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.7 }}
+          exit={{ opacity: 0 }}
           src={`${imageUrl ?? "https://api.dicebear.com/9.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4,c0aede,d1d4f9"}`}
           alt=""
           className="w-[36px] rounded-sm"
@@ -59,7 +51,7 @@ export default function PlayerCard({
           {rating}
         </div>
       </div>
-      {time && (
+      {time != null && (
         <div
           className={`flex justify-end items-center px-[5px] h-[40px] w-[120px] ${color === "b" ? "text-white bg-black dark:bg-[#18181B] dark:border-1.4 dark:border-[#27272A]" : "text-black bg-white"} rounded-lg text-3xl`}
         >

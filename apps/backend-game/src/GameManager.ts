@@ -50,6 +50,9 @@ export class GameManager {
     this.users = this.users.filter((user) => user !== socket);
     this.viewersManager.removeViewer(socket);
 
+    this.pendingUsers = this.pendingUsers.filter(
+      (pendingUser) => pendingUser.user.socket != socket
+    );
     const game = this.games.find(
       (game) => game.player1.socket === socket && game.player2.socket === socket
     );

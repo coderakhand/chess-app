@@ -47,9 +47,7 @@ export default function AnimatedChessBoard({
 
   return (
     <motion.div
-      className={`${
-        color !== null ? (color === "b" ? "rotate-180" : "") : ""
-      } relative ${customClass ?? "w-[600px] h-[600px]"} grid grid-rows-8 rounded-md overflow-hidden`}
+      className={`relative ${customClass ?? "w-[600px] h-[600px]"} grid grid-rows-8 rounded-md overflow-hidden`}
     >
       {board.map((row, i) => (
         <div key={i} className="grid grid-cols-8">

@@ -4,13 +4,13 @@ import session from "express-session";
 import cookieParser from "cookie-parser";
 import passport from "./passport-config";
 import dotenv from "dotenv";
-
 import authRoutes from "./routes/auth";
 import csrfRoutes from "./routes/csrf";
 import userRoutes from "./routes/user";
 import gameRoutes from "./routes/game";
 import engineRoutes from "./routes/engine";
-import fideRoutes from './routes/fide';
+import fideRoutes from "./routes/fide";
+import checkRoutes from './routes/quickChecks';
 
 dotenv.config();
 const app = express();
@@ -42,5 +42,6 @@ app.use("/user", userRoutes);
 app.use("/game", gameRoutes);
 app.use("/engine", engineRoutes);
 app.use("/fide", fideRoutes);
+app.use('/check', checkRoutes)
 
 export default app;

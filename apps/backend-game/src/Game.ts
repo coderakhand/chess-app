@@ -38,8 +38,6 @@ export class Game {
     player: null,
     move: 0,
   };
-  private player1Time: number;
-  private player2Time: number;
   private timer: NodeJS.Timeout | null;
 
   constructor(
@@ -62,8 +60,6 @@ export class Game {
     this.board = !position ? new Chess() : new Chess(position);
     this.moves = !moves ? [] : moves;
     this.gameStatus = GameStatus.ACTIVE;
-    this.player1Time = 0;
-    this.player2Time = 0;
 
     if (!position) {
       this.createNewGame();
@@ -72,22 +68,22 @@ export class Game {
     this.timer = setInterval(() => {
       let gameResult: boolean = false,
         winner: string | null = null;
+      const timePassedSinceLastMove = Date.now() - this.lastMoveTime;
+      console.log("timePassed => ", timePassedSinceLastMove);
       if (this.board.turn() == "w") {
-        this.player1Time += 1000;
-        if (this.player1Time >= this.player1.timeLeft) {
-          this.player2.timeLeft = 0;
+        if (timePassedSinceLastMove >= this.player1.timeLeft) {
+          this.player1.timeLeft = 0;
           gameResult = true;
           this.gameStatus = GameStatus.TIME_UP;
+          winner = "b";
         }
-        console.log("player1Time => ", this.player1Time);
       } else {
-        this.player2Time += 1000;
-        if (this.player2Time >= this.player2.timeLeft) {
+        if (timePassedSinceLastMove >= this.player2.timeLeft) {
           this.player2.timeLeft = 0;
           gameResult = true;
           this.gameStatus = GameStatus.TIME_UP;
+          winner = "w";
         }
-        console.log("player2Time => ", this.player2Time);
       }
       if (gameResult) {
         if (this.timer) clearInterval(this.timer);
@@ -281,6 +277,7 @@ export class Game {
       socket.send(gameOverMessage);
       this[opponent].socket?.send(gameOverMessage);
       this.viewersManager.broadCast(this.id, gameOverMessage);
+      if (this.timer) clearInterval(this.timer);
       gameManager.removeGame(this.id);
     }
 
@@ -341,7 +338,7 @@ export class Game {
       socket.send(gameOverMessage);
       this[opponent].socket?.send(gameOverMessage);
       this.viewersManager.broadCast(this.id, gameOverMessage);
-
+      if (this.timer) clearInterval(this.timer);
       if (!this.player1.isGuest && !this.player2.isGuest)
         this.storeGameResultInDB(null);
 
@@ -418,6 +415,7 @@ export class Game {
       );
     }
 
+    if (this.timer) clearInterval(this.timer);
     if (!this.player1.isGuest && !this.player2.isGuest)
       this.storeGameResultInDB(winner);
 
@@ -502,6 +500,7 @@ export class Game {
             },
           })
         );
+        if (this.timer) clearInterval(this.timer);
         if (!this.player1.isGuest && !this.player2.isGuest)
           this.storeGameResultInDB(null);
 

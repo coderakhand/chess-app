@@ -423,12 +423,21 @@ export default function Game() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
+  const [dots, setDots] = useState("");
+
   useEffect(() => {
-    if (isGameLoading) {
-      setInterval(() => {
-        setImgIdx((prev) => (prev + 1) % 4);
-      }, 1000);
-    }
+    const interval = setInterval(() => {
+      setImgIdx((prev) => (prev + 1) % 4);
+      setDots((prev) => {
+        return prev == "..." ? "" : prev + ".";
+      });
+    }, 1000);
+    return () => {
+      if (!isGameLoading) {
+        clearInterval(interval);
+        console.log("cleared interval");
+      }
+    };
   }, [isGameLoading]);
 
   const getGameTitle = (userFirst: boolean): string => {
@@ -448,7 +457,7 @@ export default function Game() {
         <div className="relative flex-grow max-w-[560px] flex flex-col gap-2 h-full">
           {isGameLoading ? (
             <PlayerCard
-              player={"Searching..."}
+              player={`Waiting for Opponent${dots}`}
               color={"b"}
               time={timeControl.baseTime}
               imageUrl={`https://api.dicebear.com/9.x/avataaars/svg?seed=${images[imgIdx]}&size=36&backgroundColor=b6e3f4,c0aede,d1d4f9
@@ -499,7 +508,7 @@ export default function Game() {
         <div className="flex flex-col h-full w-full sm:w-[580px]  lg:w-[400px] gap-3 md:px-10 ">
           <div className="flex justify-center w-full min-h-[600px] lg:h-screen max-h-[900px]">
             <div
-              className={`flex flex-col items-center py-[5px] gap-3 w-full lg:w-[360px]`}
+              className={`flex flex-col items-center py-[5px] gap-3 w-full max-w-[480px] lg:w-[360px]`}
             >
               <div className="w-full h-full flex rounded-xl">
                 <Tabs
@@ -573,8 +582,8 @@ export default function Game() {
                           )}
                           {isGameLoading && (
                             <div className="backdrop-blur-3xl w-full flex py-1 justify-center items-center gap-3">
-                              <p className="text-sm font-bold font-proza">
-                                Searching for Opponent...
+                              <p className="text-sm font-bold font-proza w-44">
+                                {`Searching for Opponent${dots}`}
                               </p>
                               <Button
                                 onClick={() => {
@@ -775,16 +784,32 @@ export default function Game() {
                             </CollapsibleContent>
                           </Collapsible>
 
-                          <Button
-                            onClick={() => {
-                              setIsGameLoading(true);
-                              createGame();
-                            }}
-                            disabled={isGameLoading}
-                            className="w-[200px] h-[50px] text-white bg-[#8CA2AD] hover:bg-[#879ca7] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer font-dream"
-                          >
-                            Start Game
-                          </Button>
+                          {!isGameLoading ? (
+                            <Button
+                              onClick={() => {
+                                setIsGameLoading(true);
+                                createGame();
+                              }}
+                              disabled={isGameLoading}
+                              className="w-[200px] h-[50px] text-white bg-[#8CA2AD] hover:bg-[#879ca7] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer font-dream"
+                            >
+                              Start Game
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => {
+                                setIsGameLoading(false);
+                                socket?.send(
+                                  JSON.stringify({
+                                    type: "ABANDON_GAME",
+                                  })
+                                );
+                              }}
+                              className="w-[200px] h-[50px] text-white bg-[#8CA2AD] hover:bg-[#879ca7] dark:bg-green-600 dark:hover:bg-green-700 font-semibold text-xl cursor-pointer font-dream"
+                            >
+                              Cancel
+                            </Button>
+                          )}
                         </div>
                       </div>
                     )}

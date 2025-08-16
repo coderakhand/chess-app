@@ -47,7 +47,7 @@ export default function LogIn() {
 
   return (
     <DialogHeader className="flex justify-center items-center gap-8 font-dream">
-      <DialogTitle className="text-3xl">Log In & Play</DialogTitle>
+      <DialogTitle className="text-3xl">Enter your account</DialogTitle>
       <DialogDescription className="text-center font-proza">
         Welcome back! Enter your account to continue.
       </DialogDescription>

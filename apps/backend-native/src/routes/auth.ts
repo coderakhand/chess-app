@@ -3,49 +3,14 @@ import passport from "passport";
 import bcrypt from "bcryptjs";
 import { db } from "../db";
 import csrfProtection from "../middleware/csrf";
+import { generateOtp, verifyOtp } from "../utils/otp";
+import { sendOtpEmail } from "../utils/email";
+import {
+  otpRateLimiter,
+  otpVerificationRateLimiter,
+} from "../middleware/rateLimit";
 
 const router = express.Router();
-
-router.post("/signup", csrfProtection, async (req, res) => {
-  const { username, email, password } = req.body;
-
-  console.log("Signup request:", req.body);
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const user = await db.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-      },
-    });
-
-    req.login(user, (err) => {
-      if (err) {
-        console.error("Login error:", err);
-        res.status(500).send("Error logging in after signup.");
-        return;
-      }
-      res.json({
-        message: "Signup successful",
-        user: {
-          id: user.id,
-          username: user.username,
-          ratings: {
-            bullet: user.bulletRating,
-            blitz: user.blitzRating,
-            rapid: user.rapidRating,
-          },
-        },
-      });
-    });
-  } catch (err: any) {
-    console.error("Signup error:", err);
-    res.status(500).send("Signup failed: " + err.message);
-  }
-});
 
 router.post(
   "/login",
@@ -87,5 +52,63 @@ router.get(
     failureRedirect: `${process.env.FRONTEND_URL}/`,
   })
 );
+
+router.post("/send-otp", csrfProtection, otpRateLimiter, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  const otp = generateOtp(email);
+  try {
+    await sendOtpEmail(email, otp);
+    res.json({ message: "OTP sent" });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+router.post("/signup", otpVerificationRateLimiter, async (req, res) => {
+  const { username, email, password, otp } = req.body;
+  if (!email || !otp)
+    return res.status(400).json({ error: "Email and OTP are required" });
+
+  const Otp = Number(otp);
+  const valid = verifyOtp(email, Otp);
+  if (!valid) return res.status(400).json({ error: "Invalid or expired OTP" });
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await db.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Login error:", err);
+        res.status(500).send("Error logging in after signup.");
+        return;
+      }
+      res.json({
+        message: "Signup successful",
+        user: {
+          id: user.id,
+          username: user.username,
+          ratings: {
+            bullet: user.bulletRating,
+            blitz: user.blitzRating,
+            rapid: user.rapidRating,
+          },
+        },
+      });
+    });
+  } catch (err: any) {
+    console.error("Signup error:", err);
+    res.status(500).send("Signup failed: " + err.message);
+  }
+});
 
 export default router;

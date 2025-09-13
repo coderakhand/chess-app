@@ -4,19 +4,18 @@ import {
   DRAW_ANSWER,
   DRAW_OFFER,
   GAME_OVER,
-  INIT_GAME,
   MOVE,
   moveType,
   PLAYER_CHAT,
   TIME_UPDATE,
-} from "@repo/utils";
+} from "@repo/types";
 import { ViewersManager } from "./ViewersManager";
 import { randomUUID } from "crypto";
 import { User } from "./UserManager";
 import { db } from "./db";
-import { timeControlType } from "@repo/utils";
+import { INIT_GAME, timeControlType } from "@repo/types";
 import { GameResult, GameStatus } from "@prisma/client";
-import { gameManager } from "./index";
+import { GameManager } from "./GameManager";
 
 type PlayerKey = "player1" | "player2";
 export class Game {
@@ -30,7 +29,6 @@ export class Game {
   public lastMoveTime: number;
   public moves: moveType[];
   public gameStatus: GameStatus;
-  public viewersManager: ViewersManager;
   public drawAgreement: {
     player: PlayerKey | null;
     move: number;
@@ -45,7 +43,6 @@ export class Game {
     player2: User,
     isRated: boolean,
     timeControl: timeControlType,
-    viewersManager: ViewersManager,
     position?: string,
     moves?: moveType[]
   ) {
@@ -55,7 +52,6 @@ export class Game {
     this.isRated = isRated;
     this.startDate = new Date();
     this.lastMoveTime = Date.now();
-    this.viewersManager = viewersManager;
     this.timeControl = timeControl;
     this.board = !position ? new Chess() : new Chess(position);
     this.moves = !moves ? [] : moves;
@@ -251,7 +247,7 @@ export class Game {
 
       console.log(`move send to ${this[opponent].username}`);
 
-      this.viewersManager.broadCast(
+      ViewersManager.getInstance().broadCast(
         this.id,
         JSON.stringify({
           type: MOVE,
@@ -276,9 +272,9 @@ export class Game {
       });
       socket.send(gameOverMessage);
       this[opponent].socket?.send(gameOverMessage);
-      this.viewersManager.broadCast(this.id, gameOverMessage);
+      ViewersManager.getInstance().broadCast(this.id, gameOverMessage);
       if (this.timer) clearInterval(this.timer);
-      gameManager.removeGame(this.id);
+      GameManager.getInstance().removeGame(this.id);
     }
 
     if (this.board.isGameOver() && this.gameStatus !== GameStatus.TIME_UP) {
@@ -337,12 +333,12 @@ export class Game {
 
       socket.send(gameOverMessage);
       this[opponent].socket?.send(gameOverMessage);
-      this.viewersManager.broadCast(this.id, gameOverMessage);
+      ViewersManager.getInstance().broadCast(this.id, gameOverMessage);
       if (this.timer) clearInterval(this.timer);
       if (!this.player1.isGuest && !this.player2.isGuest)
         this.storeGameResultInDB(null);
 
-      gameManager.removeGame(this.id);
+      GameManager.getInstance().removeGame(this.id);
     }
 
     if (!this[user].isGuest && !this[opponent].isGuest) {
@@ -419,7 +415,7 @@ export class Game {
     if (!this.player1.isGuest && !this.player2.isGuest)
       this.storeGameResultInDB(winner);
 
-    gameManager.removeGame(this.id);
+    GameManager.getInstance().removeGame(this.id);
   }
 
   private async storeGameResultInDB(winner: string | null) {
@@ -504,7 +500,7 @@ export class Game {
         if (!this.player1.isGuest && !this.player2.isGuest)
           this.storeGameResultInDB(null);
 
-        gameManager.removeGame(this.id);
+        GameManager.getInstance().removeGame(this.id);
         return;
       } else {
         this[opponent].socket?.send(

@@ -11,7 +11,7 @@ import MovesTable from "../components/MovesTable";
 import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Chess } from "chess.js";
-import { moveType } from "@repo/utils";
+import { moveType } from "@repo/types";
 
 export default function ViewGame() {
   const socket = useSocket();

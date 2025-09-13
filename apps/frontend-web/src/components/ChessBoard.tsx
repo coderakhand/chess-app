@@ -201,7 +201,7 @@ export default function ChessBoard({
       <div
         className={`${
           flipBoard ? "rotate-180" : ""
-        } relative ${customClass ?? " aspect-square max-w-[min(80vh,580px)]"} grid grid-rows-8 rounded-md overflow-hidden`}
+        } relative ${customClass ?? " aspect-square max-w-[min(80vh,700px)]"} grid grid-rows-8 rounded-md overflow-hidden`}
       >
         {gameStatus === "OVER" ? <GameResultCard /> : <></>}
         {board.map((row, i) => {
@@ -257,7 +257,7 @@ export default function ChessBoard({
             square={getSquareFromId(activeDragId)}
             color={color}
             id={activeDragId}
-            customClass="rotate-360 w-[60px]"
+            customClass="rotate-360 w-[60px] sm:w-[78px]"
           />
         ) : null}
       </DragOverlay>

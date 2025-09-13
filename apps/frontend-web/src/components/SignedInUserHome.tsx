@@ -152,48 +152,56 @@ export default function SignedInUserHome() {
       <div className=" bg-black/10 sm:pl-[50px] flex justify-center min-h-screen w-full">
         <div className="max-w-[1600px] lg:px-12 lg:py-10 flex w-full h-full">
           <div className="w-full flex flex-col gap-6">
-            <div className="flex justify-start gap-12 bg-black/30   dark:border-[#27272A] dark:bg-[#09090B] rounded-xl py-4 px-6 dark:text-white">
-              <div className="flex justify-start items-center gap-3">
-                <img
-                  src="https://api.dicebear.com/9.x/lorelei/svg?seed=Andrea"
-                  alt=""
-                  className="h-40 w-40 bg-black/30 dark:bg-white rounded-full overflow-hidden"
-                />
-                <div className="px-2">
-                  <h1 className="text-3xl text-white font-proza">
-                    {username}
-                  </h1>
-                  <p className="font-dream text-sm font-semibold">
-                    Last Login: {"3 days ago"}
-                  </p>
+            <div className="flex w-full gap-4">
+              <div className="flex-grow flex justify-start gap-12 bg-black/30   dark:border-[#27272A] dark:bg-[#09090B] rounded-xl py-4 px-6 dark:text-white">
+                <div className="flex justify-start items-center gap-3">
+                  <img
+                    src="https://api.dicebear.com/9.x/lorelei/svg?seed=Andrea"
+                    alt=""
+                    className="h-40 w-40 bg-black/30 dark:bg-white rounded-full overflow-hidden"
+                  />
+                  <div className="px-2">
+                    <h1 className="text-3xl text-white font-proza">
+                      {username}
+                    </h1>
+                    <p className="font-dream text-sm font-semibold">
+                      Last Login: {"3 days ago"}
+                    </p>
+                  </div>
+                </div>
+                <div className=" bg-black/60 dark:bg-white/80 w-1 rounded-full" />
+                <div className="flex flex-col justify-center gap-4 flex-grow">
+                  <h1 className="font-bold text-2xl">Ratings</h1>
+                  <div className="grid grid-rows-3 gap-1 font-proza dark:text-white">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 font-extrabold font-proza text-lg">
+                        <Zap className="w-6 h-6 text-blue-600" />
+                        <p>Bullet:</p>
+                      </div>
+                      <div>{profileStats.bulletStats.currentRating}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 font-extrabold font-proza text-lg">
+                        <Clock className="w-6 h-6 text-green-600" />
+                        <p>Blitz:</p>
+                      </div>
+                      <div>{profileStats.blitzStats.currentRating}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 font-bold font-proza text-lg">
+                        <Calendar className="w-6 h-6 text-purple-600" />
+                        <p className="">Rapid:</p>
+                      </div>
+                      <div>{profileStats.rapidStats.currentRating}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className=" bg-black/60 dark:bg-white/80 w-1 rounded-full" />
-              <div className="flex flex-col justify-center gap-6 flex-grow">
-                <h1 className="font-bold text-2xl">Ratings</h1>
-                <div className="grid grid-cols-3 justify-around font-proza text-white">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 font-extrabold font-proza text-lg">
-                      <Zap className="w-6 h-6 text-blue-600" />
-                      <p>Bullet:</p>
-                    </div>
-                    <div>{profileStats.bulletStats.currentRating}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 font-extrabold font-proza text-lg">
-                      <Clock className="w-6 h-6 text-green-600" />
-                      <p>Blitz:</p>
-                    </div>
-                    <div>{profileStats.blitzStats.currentRating}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 font-bold font-proza text-lg">
-                      <Calendar className="w-6 h-6 text-purple-600" />
-                      <p className="">Rapid:</p>
-                    </div>
-                    <div>{profileStats.rapidStats.currentRating}</div>
-                  </div>
-                </div>
+              <div className="sm:max-h-[350px] sm:w-[300px] sm:p-[20px] rounded-xl bg-black/30  dark:border-[#27272A]  dark:bg-[#09090B] text-white">
+                <h2 className="font-bold text-lg text-black dark:text-white">
+                  Friends:
+                </h2>
+                <div></div>
               </div>
             </div>
             <div className="flex gap-4">

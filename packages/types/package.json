@@ -1,9 +1,9 @@
 {
-  "name": "@repo/utils",
+  "name": "@repo/types",
   "version": "1.0.0",
-  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "license": "MIT",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -11,9 +11,12 @@
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsup src/index.ts --format esm,cjs --dts"
+  },
+  "dependencies": {
+    "zod": "^4.1.5"
   },
   "devDependencies": {
-    "@types/minimatch": "^6.0.0"
+    "tsup": "^8.5.0"
   }
 }

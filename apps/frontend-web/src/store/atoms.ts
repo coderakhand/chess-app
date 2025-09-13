@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { boardColorsList } from "../config";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
-import { type moveType } from "@repo/utils";
+import { type moveType } from "@repo/types";
 interface BoardStoreType {
   darkSquare: string;
   lightSquare: string;

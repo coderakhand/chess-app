@@ -25,7 +25,6 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.12",
-    "@repo/utils": "*",
     "@tailwindcss/vite": "^4.1.8",
     "@types/canvas-confetti": "^1.9.0",
     "axios": "^1.10.0",
@@ -46,7 +45,8 @@
     "recharts": "^3.0.0",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.8",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.5",
+    "@repo/types": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

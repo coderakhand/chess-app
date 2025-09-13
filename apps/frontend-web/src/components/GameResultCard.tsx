@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import { useGameInfoStore } from "../store/atoms";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import confetti from "canvas-confetti";
 
 export default function GameResultCard() {
@@ -16,7 +16,7 @@ interface CelebrationCardProps {
   setClose: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function CelebrationCard({ setClose}: CelebrationCardProps) {
+function CelebrationCard({ setClose }: CelebrationCardProps) {
   const result = useGameInfoStore((state) => state.result);
   const color = useGameInfoStore((state) => state.color);
   const flipBoard = useGameInfoStore((state) => state.flipBoard);
@@ -32,8 +32,7 @@ function CelebrationCard({ setClose}: CelebrationCardProps) {
       },
       ticks: 260,
     });
-  },[result.winner]);
-
+  }, [result.winner]);
 
   return (
     <motion.div

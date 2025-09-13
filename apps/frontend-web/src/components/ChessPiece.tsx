@@ -48,7 +48,7 @@ export default function ChessPiece({
             src={`/${square?.color}${square?.type}.png`}
             className={`${
               flipBoard  ? "rotate-180" : ""
-            } ${customClass ?? "w-[46px] sm:w-[60px] object-contain"}`}
+            } ${customClass ?? "w-[46px] sm:w-[78px] object-contain"}`}
           />
         ) : (
           ""

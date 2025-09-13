@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSocket } from "../hooks/useSocket";
 import {
-  INIT_GAME,
   GAME_OVER,
   MOVE,
   PENDING_GAME,
@@ -10,7 +9,9 @@ import {
   PLAYER_CHAT,
   TIME_UPDATE,
   RESIGN_GAME,
-} from "../config";
+  INIT_GAME,
+  ERROR,
+} from "@repo/types";
 import { Chess } from "chess.js";
 import SideBar from "../components/SideBar";
 import ChessBoard from "../components/ChessBoard";
@@ -257,6 +258,12 @@ export default function Game() {
               ...chat,
               { sender: opponentInfo.username, message: message },
             ]);
+            break;
+          }
+
+          case ERROR: {
+            const error = payload.error;
+            console.log(error);
           }
         }
       };
@@ -333,7 +340,7 @@ export default function Game() {
           timeControl: timeControl,
           userInfo: {
             isGuest: user.isGuest,
-            id: user.id,
+            id: user.id ?? "",
             username: user.username,
             rating: rating,
           },
@@ -454,7 +461,7 @@ export default function Game() {
       <SideBar />
 
       <div className="flex max-lg:flex-col  max-lg:items-center lg:justify-center w-full min-h-screen py-[30px] gap-10 sm:gap-6 sm:pl-[80px] px-1 max-sm:px-3 max-sm:pt-[100px]">
-        <div className="relative flex-grow max-w-[560px] flex flex-col gap-2 h-full">
+        <div className="relative flex-grow max-w-[min(80vh,700px)] flex flex-col gap-2 h-full">
           {isGameLoading ? (
             <PlayerCard
               player={`Waiting for Opponent${dots}`}

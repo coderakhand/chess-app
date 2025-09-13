@@ -15,9 +15,19 @@ export class Viewer {
 
 export class ViewersManager {
   private interestedViewers: Map<string, Viewer[]>; // gameId -> viewers[]
+  private static instance: ViewersManager;
 
   constructor() {
     this.interestedViewers = new Map<string, Viewer[]>();
+  }
+
+  public static getInstance() {
+    if (ViewersManager.instance) {
+      return ViewersManager.instance;
+    }
+
+    ViewersManager.instance = new ViewersManager();
+    return ViewersManager.instance;
   }
 
   addViewer(gameId: string, newViewer: Viewer) {

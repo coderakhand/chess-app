@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { FidePlayer } from "@repo/utils";
+import { FidePlayer } from "@repo/types";
 
 const convertHtmlToJson = (html: string) => {
   try {

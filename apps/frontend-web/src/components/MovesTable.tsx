@@ -2,7 +2,7 @@ import { useGameInfoStore } from "../store/atoms";
 import { GiChessQueen, GiChessRook, GiChessKing } from "react-icons/gi";
 import { FaChessBishop, FaChessKnight } from "react-icons/fa6";
 import { useEffect } from "react";
-import type { moveType } from "@repo/utils";
+import type { moveType } from "@repo/types";
 import { Chess } from "chess.js";
 
 export default function MovesTable() {

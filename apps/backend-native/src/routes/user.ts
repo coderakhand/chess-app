@@ -2,11 +2,26 @@ import express from "express";
 import { db } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { TimeControl } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
 router.get("/me", requireAuth, (req, res) => {
   const user = req.user as any;
+
+  const jwtToken = jwt.sign(
+    {
+      id: user.id,
+      username: user.username,
+      ratings: {
+        bullet: user.bulletRating,
+        blitz: user.blitzRating,
+        rapid: user.rapidRating,
+      },
+    },
+    String(process.env.JWT_SECRET)
+  );
+
   res.json({
     user: {
       id: user.id,
@@ -17,6 +32,7 @@ router.get("/me", requireAuth, (req, res) => {
         blitz: user.blitzRating,
         rapid: user.rapidRating,
       },
+      jwtToken: jwtToken,
     },
   });
 });

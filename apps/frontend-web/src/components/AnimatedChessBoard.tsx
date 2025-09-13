@@ -3,7 +3,7 @@ import { sampleGame } from "../config"; // assume it's an array of { from, to }
 import { useBoardStore, useGameInfoStore } from "../store/atoms";
 import ChessPiece from "./ChessPiece";
 import { Chess } from "chess.js";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 interface AnimatedChessBoardProps {
   customClass?: string;
   customClassPieces?: string;

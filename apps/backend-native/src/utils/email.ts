@@ -19,7 +19,7 @@ export async function sendOtpEmail(to: string, otp: number) {
 
             <div
                 style="background:#f3f4f6; border:1px dashed #d1d5db; border-radius:8px; padding:20px; text-align:center; margin:20px 0;">
-                <span style="font-size:28px; letter-spacing:6px; font-weight:700; color:#111827;">{otp}</span>
+                <span style="font-size:28px; letter-spacing:6px; font-weight:700; color:#111827;">${otp}</span>
             </div>
 
             <p style="margin:0 0 20px 0; font-size:14px; color:#4b5563;">

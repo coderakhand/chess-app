@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "../components/ui/button";
 import { CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -183,7 +183,7 @@ export default function ChessRankings() {
                   className="flex flex-col gap-4 justify-center items-center py-20"
                 >
                   <div className="relative w-20 h-20">
-                    <Loader/>
+                    <Loader />
                   </div>
                   <div className="">Loading...</div>
                 </motion.div>

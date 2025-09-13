@@ -5,6 +5,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

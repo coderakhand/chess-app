@@ -16,7 +16,8 @@
     "@types/express": "^5.0.2",
     "chess.js": "^1.2.0",
     "ws": "^8.18.2",
-    "@repo/utils": "*"
+    "@repo/types": "*",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1"

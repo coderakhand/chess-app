@@ -1,7 +1,7 @@
 import { FaChessBoard } from "react-icons/fa";
 import { MdPersonSearch } from "react-icons/md";
 import { VscSignOut } from "react-icons/vsc";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { useEffect, useState } from "react";
 import {
@@ -19,7 +19,7 @@ import { Settings } from "lucide-react";
 import { useUserInfoStore } from "../store/atoms";
 import api from "../api/axios";
 import { Button } from "./ui/button";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { FaRankingStar } from "react-icons/fa6";
 
 const hoverEffect =
@@ -36,7 +36,7 @@ export default function SideBar() {
 
   return (
     <div
-      className={`absolute w-screen sm:w-[48px] z-100 bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B] overflow-hidden`}
+      className={`absolute w-screen sm:w-[48px] z-50 bg-white/30 backdrop-blur-md shadow-md dark:shadow-none dark:bg-[#18181B] overflow-hidden`}
     >
       <div className="flex sm:grid sm:grid-rows-2 sm:h-screen">
         <HoverCard
@@ -186,7 +186,6 @@ function SideBarComponentContent({ component }: { component: string | null }) {
 
 function ChezzBarContent() {
   const userInfo = useUserInfoStore((state) => state.userInfo);
-  const navigate = useNavigate();
   const userLogout = async () => {
     try {
       const { data: csrf } = await api.get("/csrf-token");
@@ -198,7 +197,7 @@ function ChezzBarContent() {
       );
       const data = response.data;
       if (data.message) {
-        navigate("/");
+        window.location.reload();
       }
     } catch (e) {
       console.log(e);

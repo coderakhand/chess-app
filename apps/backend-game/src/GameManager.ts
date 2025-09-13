@@ -1,6 +1,7 @@
 import WebSocket from "ws";
 import { Game } from "./Game";
 import {
+  ERROR,
   INIT_GAME,
   MOVE,
   INIT_VIEW_GAME,
@@ -12,7 +13,14 @@ import {
   PLAYER_CHAT,
   ABANDON_GAME,
   RESIGN_GAME,
-} from "@repo/utils";
+  initGameSchema,
+  moveSchema,
+  drawOfferSchema,
+  drawAnswerSchema,
+  playerChatSchema,
+  initViewGameSchema,
+  resignGameSchema,
+} from "@repo/types";
 import { Viewer, ViewersManager } from "./ViewersManager";
 import { User } from "./UserManager";
 import { db } from "./db";
@@ -32,23 +40,31 @@ export class GameManager {
     user: User;
   }[];
   public users: WebSocket[];
-  public viewersManager: ViewersManager;
+  private static instance: GameManager | null = null;
 
-  constructor() {
+  public constructor() {
     this.games = [];
     this.pendingUsers = [];
     this.users = [];
-    this.viewersManager = new ViewersManager();
   }
 
-  addUser(socket: WebSocket) {
+  public static getInstance() {
+    if (GameManager.instance) {
+      return GameManager.instance;
+    }
+    GameManager.instance = new GameManager();
+
+    return GameManager.instance;
+  }
+
+  public addUser(socket: WebSocket) {
     this.users.push(socket);
     this.addHandler(socket);
   }
 
-  removeUser(socket: WebSocket) {
+  public removeUser(socket: WebSocket) {
     this.users = this.users.filter((user) => user !== socket);
-    this.viewersManager.removeViewer(socket);
+    ViewersManager.getInstance().removeViewer(socket);
 
     this.pendingUsers = this.pendingUsers.filter(
       (pendingUser) => pendingUser.user.socket != socket
@@ -79,6 +95,15 @@ export class GameManager {
       const message = JSON.parse(data.toString());
 
       if (message.type == INIT_GAME) {
+        const res = initGameSchema.safeParse(message);
+
+        if (!res.success) {
+          console.log(message);
+          console.log(res);
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
+
         const { userInfo, isRated, timeControl } = message.payload;
         console.log(message.payload);
         const user = new User(
@@ -110,13 +135,7 @@ export class GameManager {
 
         if (waitingOpponent) {
           const opponent = waitingOpponent.user;
-          const game = new Game(
-            user,
-            opponent,
-            isRated,
-            timeControl,
-            this.viewersManager
-          );
+          const game = new Game(user, opponent, isRated, timeControl);
 
           this.games.push(game);
 
@@ -141,6 +160,12 @@ export class GameManager {
       }
 
       if (message.type == MOVE) {
+        const { success } = moveSchema.safeParse(message);
+        if (!success) {
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
+
         const game = this.games.find(
           (game) =>
             game.player1.socket === socket || game.player2.socket === socket
@@ -153,6 +178,12 @@ export class GameManager {
       }
 
       if (message.type == RESIGN_GAME) {
+        const { success } = resignGameSchema.safeParse(message);
+        if (!success) {
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
+
         const game = this.games.find(
           (game) =>
             game.player1.socket === socket || game.player2.socket === socket
@@ -165,6 +196,12 @@ export class GameManager {
       }
 
       if (message.type == DRAW_OFFER) {
+        const { success } = drawOfferSchema.safeParse(message);
+        if (!success) {
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
+
         const game = this.games.find(
           (game) =>
             game.player1.socket === socket || game.player2.socket === socket
@@ -177,6 +214,11 @@ export class GameManager {
       }
 
       if (message.type == DRAW_ANSWER) {
+        const { success } = drawAnswerSchema.safeParse(message);
+        if (!success) {
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
         const isAccepted = message.payload.isAccepted || false;
 
         const game = this.games.find(
@@ -192,6 +234,11 @@ export class GameManager {
       }
 
       if (message.type == PLAYER_CHAT) {
+        const { success } = playerChatSchema.safeParse(message);
+        if (!success) {
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
         const chatMessage = message.payload.message;
         const game = this.games.find(
           (game) =>
@@ -210,11 +257,17 @@ export class GameManager {
       }
 
       if (message.type == INIT_VIEW_GAME) {
+        const { success } = initViewGameSchema.safeParse(message);
+        if (!success) {
+          this.handleError(socket, "Invalid schema");
+          return;
+        }
+
         const gameId = message.payload.gameId;
 
         const viewer = new Viewer(message.payload.username, socket);
 
-        this.viewersManager.addViewer(gameId, viewer);
+        ViewersManager.getInstance().addViewer(gameId, viewer);
 
         console.log(`Viewer ${viewer.username} joined game ${gameId}`);
       }
@@ -309,7 +362,6 @@ export class GameManager {
             opponentUser,
             //@ts-ignore
             timeControl,
-            this.viewersManager,
             lastActiveGame.currentPosition,
             movesList
           )
@@ -318,7 +370,6 @@ export class GameManager {
             playerUser,
             //@ts-ignore
             timeControl,
-            this.viewersManager,
             lastActiveGame.currentPosition,
             movesList
           );
@@ -461,5 +512,16 @@ export class GameManager {
       }
       this.removeGame(game.id);
     }
+  }
+
+  private handleError(socket: WebSocket, error: string) {
+    socket.send(
+      JSON.stringify({
+        type: ERROR,
+        payload: {
+          error: error,
+        },
+      })
+    );
   }
 }

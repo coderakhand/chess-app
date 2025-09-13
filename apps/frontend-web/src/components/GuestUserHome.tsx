@@ -11,7 +11,7 @@ import { useTheme } from "./ThemeProvider";
 import { boardColorsList } from "../config";
 import AnimatedChessBoard from "./AnimatedChessBoard";
 import PlayerCard from "./PlayerCard";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 type CardValues = "LOG_IN" | "SIGN_UP" | null;
 
@@ -61,7 +61,7 @@ export default function GuestUserHome() {
         </motion.div>
       )}
 
-      <div className="flex flex-col items-center min-h-screen min-w-screen sm:pl-[50px] gap-10 xsmd:gap-8">
+      <div className="flex flex-col items-center min-h-screen min-w-screen sm:pl-[50px] gap-10 xsmd:gap-8 bg-black/10">
         <div className="max-sm:mt-[80px] mt-[40px]">
           <h1 className="pb-[4px] text-3xl xsmd:text-5xl smd:text-6xl font-bold font-dream smd:mb-2 bg-gradient-to-br dark:bg-gradient-to-r dark:from-green-600 dark:to-blue-600 dark:bg-clip-text dark:text-transparent">
             Play Chess Online
@@ -106,7 +106,10 @@ export default function GuestUserHome() {
               ></motion.img>
 
               <div className="z-10 flex flex-col justify-center  w-full px-[20px] h-[200px] bg-[#8CA2AD] rounded-xl  dark:bg-[#09090B] dark:border-2 dark:border-[#27272A]">
-                <a className="max-md:px-4 flex justify-center items-center h-[50px] gap-2 text-lg font-dream font-medium bg-[#d6dce0] dark:bg-white dark:hover:bg-[#E2E2E2] hover:shadow-lg transition-shadow rounded-full cursor-pointer">
+                <a
+                  href={`${"http://localhost:3000"}/auth/google`}
+                  className="max-md:px-4 flex justify-center items-center h-[50px] gap-2 text-lg font-dream font-medium bg-[#d6dce0] dark:bg-white dark:hover:bg-[#E2E2E2] hover:shadow-lg transition-shadow rounded-full cursor-pointer"
+                >
                   <FcGoogle className="my-[3px] text-2xl" /> Continue with
                   Google
                 </a>

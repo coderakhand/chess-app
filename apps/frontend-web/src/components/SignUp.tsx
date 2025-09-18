@@ -59,10 +59,13 @@ export default function SignUp() {
       );
 
       const data = res.data;
+
       if (data.error) {
         setIsLoadingVerifyOtp(false);
         return;
       }
+
+      localStorage.setItem("authToken", data.authToken);
 
       setUserInfo({
         isGuest: false,

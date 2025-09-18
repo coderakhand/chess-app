@@ -13,10 +13,12 @@
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.9.0",
+    "@repo/types": "*",
     "@types/express": "^5.0.2",
     "chess.js": "^1.2.0",
+    "dotenv": "^17.2.2",
+    "jsonwebtoken": "^9.0.2",
     "ws": "^8.18.2",
-    "@repo/types": "*",
     "zod": "^4.1.5"
   },
   "devDependencies": {

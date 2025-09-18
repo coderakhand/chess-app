@@ -191,7 +191,7 @@ export class Game {
     return;
   }
 
-  makeMove(socket: WebSocket, move: moveType) {
+  public makeMove(socket: WebSocket, move: moveType) {
     let { user, opponent } = this.findUserAndOpponent(socket);
 
     if (this.isNotSocketTurn(socket)) return;
@@ -425,6 +425,46 @@ export class Game {
         : GameResult.BLACK_WINS
       : GameResult.DRAW;
 
+    let score = 0;
+    if (winner == "w") {
+      score = 1;
+    } else if (winner == "b") {
+      score = 0;
+    }
+
+    const { newPlayer1Rating, newPlayer2Rating } = this.getNewRatings(
+      this.player1.rating,
+      this.player2.rating,
+      score,
+      32
+    );
+
+    try {
+      await db.user.update({
+        where: {
+          username: this.player1.username,
+        },data: {
+          
+        }
+      })
+    } catch(e) {
+      console.log("Unable to store new rating of player1");
+      return;
+    }
+
+    try {
+      await db.user.update({
+        where: {
+          username: this.player2.username,
+        }, data: {
+
+        }
+      })
+    } catch(e) {
+      console.log("Unable to store new rating of player2");
+      return;
+    }
+
     try {
       await db.game.update({
         where: {
@@ -515,6 +555,31 @@ export class Game {
         );
       }
     }
+  }
+
+  private getNewRatings(
+    player1Rating: number,
+    player2Rating: number,
+    player1Score: number,
+    k = 32
+  ) {
+    const expectedA =
+      1 / (1 + Math.pow(10, (player2Rating - player1Rating) / 400));
+    const expectedB = 1 - expectedA;
+
+    const scoreB = 1 - player1Score;
+
+    const newPlayer1Rating = Math.round(
+      player1Rating + k * (player1Score - expectedA)
+    );
+    const newPlayer2Rating = Math.round(
+      player2Rating + k * (scoreB - expectedB)
+    );
+
+    return {
+      newPlayer1Rating: newPlayer1Rating,
+      newPlayer2Rating: newPlayer2Rating,
+    };
   }
 
   public sendChatMessage(socket: WebSocket, message: string) {

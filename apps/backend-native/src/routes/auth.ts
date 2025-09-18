@@ -9,7 +9,9 @@ import {
   otpRateLimiter,
   otpVerificationRateLimiter,
 } from "../middleware/rateLimit";
+import jwt from "jsonwebtoken";
 
+const JWT_SECRET = process.env.JWT_SECRET || "cat";
 const router = express.Router();
 
 router.post(
@@ -18,9 +20,10 @@ router.post(
   passport.authenticate("local"),
   (req, res) => {
     const user = req.user as any;
-    res.json({
-      message: "Login successful",
-      user: {
+
+    const token = jwt.sign(
+      {
+        isGuest: false,
         id: user.id,
         username: user.username,
         ratings: {
@@ -28,6 +31,23 @@ router.post(
           blitz: user.blitzRating,
           rapid: user.rapidRating,
         },
+      },
+      JWT_SECRET,
+      {
+        expiresIn: "28d",
+      }
+    );
+
+    res.json({
+      message: "Login successful",
+      authToken: token,
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      ratings: {
+        bullet: user.bulletRating,
+        blitz: user.blitzRating,
+        rapid: user.rapidRating,
       },
     });
   }
@@ -92,9 +112,10 @@ router.post("/signup", otpVerificationRateLimiter, async (req, res) => {
         res.status(500).send("Error logging in after signup.");
         return;
       }
-      res.json({
-        message: "Signup successful",
-        user: {
+
+      const token = jwt.sign(
+        {
+          isGuest: false,
           id: user.id,
           username: user.username,
           ratings: {
@@ -102,6 +123,21 @@ router.post("/signup", otpVerificationRateLimiter, async (req, res) => {
             blitz: user.blitzRating,
             rapid: user.rapidRating,
           },
+        },
+        JWT_SECRET,
+        { expiresIn: "28d" }
+      );
+
+      res.json({
+        message: "Signup successful",
+        authToken: token,
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        ratings: {
+          bullet: user.bulletRating,
+          blitz: user.blitzRating,
+          rapid: user.rapidRating,
         },
       });
     });

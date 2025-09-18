@@ -19,6 +19,7 @@ export default function useAuth() {
   };
 
   useEffect(() => {
+
     if (!userInfo || !userInfo.id) {
       fetchMe();
     } else {

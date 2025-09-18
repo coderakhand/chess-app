@@ -4,6 +4,7 @@ import { usernameSchema } from "./AuthenticationSchema";
 const initGameSchema = z.object({
   type: z.string(),
   payload: z.object({
+    authToken: z.string(),
     isRated: z.boolean(),
     timeControl: z.object({
       name: z.string() || z.null(),

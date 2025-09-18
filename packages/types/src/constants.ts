@@ -11,3 +11,7 @@ export const PLAYER_CHAT = "player_chat";
 export const RESIGN_GAME = "resign_game";
 export const ABANDON_GAME = "abandon_game";
 export const ERROR = "error";
+export const GAME_CHALLENGE = 'game_challenge';
+export const ANSWER_GAME_CHALLENGE = 'answer_game_challenge';
+export const WITHDRAW_GAME_CHALLENGE = 'withdraw_game_challenge';
+export const VIEWERS_CHAT = 'viewers_chat';

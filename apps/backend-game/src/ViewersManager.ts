@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { randomUUID } from "crypto";
+import { VIEWERS_CHAT } from "@repo/types";
 
 export class Viewer {
   public id: string;
@@ -14,10 +15,12 @@ export class Viewer {
 }
 
 export class ViewersManager {
+  private viewers: Viewer[];
   private interestedViewers: Map<string, Viewer[]>; // gameId -> viewers[]
   private static instance: ViewersManager;
 
-  constructor() {
+  private constructor() {
+    this.viewers = [];
     this.interestedViewers = new Map<string, Viewer[]>();
   }
 
@@ -30,12 +33,13 @@ export class ViewersManager {
     return ViewersManager.instance;
   }
 
-  addViewer(gameId: string, newViewer: Viewer) {
+  public addViewer(gameId: string, newViewer: Viewer) {
+    this.viewers.push(newViewer);
     const viewers = this.interestedViewers.get(gameId) || [];
     this.interestedViewers.set(gameId, [...viewers, newViewer]);
   }
 
-  removeViewer(viewerSocket: WebSocket) {
+  public removeViewer(viewerSocket: WebSocket) {
     for (const [gameId, viewers] of this.interestedViewers.entries()) {
       const filteredViewers = viewers.filter(
         (viewer) => viewer.socket !== viewerSocket
@@ -44,12 +48,33 @@ export class ViewersManager {
     }
   }
 
-  broadCast(gameId: string, message: string) {
+  public broadCast(gameId: string, message: string) {
     const viewers = this.interestedViewers.get(gameId);
     if (!viewers) return;
 
     viewers.forEach((viewer) => {
       viewer.socket.send(message);
     });
+  }
+
+  public handleChatMessage(
+    gameId: string,
+    senderSocket: WebSocket,
+    chatMessage: string
+  ) {
+    const sender = this.viewers.find((viewer) => viewer.socket == senderSocket);
+    if (!sender) return;
+    const msg = JSON.stringify({
+      type: VIEWERS_CHAT,
+      payload: {
+        senderInfo: {
+          id: sender.id,
+          username: sender.username,
+        },
+        message: chatMessage,
+      },
+    });
+
+    this.broadCast(gameId, msg);
   }
 }

@@ -28,6 +28,7 @@ export default function LogIn() {
       );
 
       const data = res.data;
+      localStorage.setItem("authToken", data.authToken);
 
       setUserInfo({
         isGuest: false,

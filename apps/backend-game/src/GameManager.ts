@@ -20,11 +20,15 @@ import {
   playerChatSchema,
   initViewGameSchema,
   resignGameSchema,
+  type UserInfo,
+  TimeControl,
+  VIEWERS_CHAT,
 } from "@repo/types";
 import { Viewer, ViewersManager } from "./ViewersManager";
 import { User } from "./UserManager";
 import { db } from "./db";
 import { GameStatus } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 export class GameManager {
   public games: Game[];
@@ -104,8 +108,46 @@ export class GameManager {
           return;
         }
 
-        const { userInfo, isRated, timeControl } = message.payload;
+        console.log(message);
+        const { authToken, isRated, timeControl } = message.payload;
+        console.log(authToken);
+        const userInfoViaMessage = message.payload.userInfo;
+        let userInfo;
+        console.log("secret =>", process.env.JWT_SECRET);
+
+        if (!userInfoViaMessage.isGuest) {
+          try {
+            const decodedPayload = jwt.verify(
+              authToken,
+              process.env.JWT_SECRET || "cat"
+            ) as UserInfo;
+
+            const ratings = decodedPayload.ratings;
+
+            const rating =
+              timeControl.name == TimeControl.BLITZ
+                ? ratings.blitz
+                : timeControl.name == TimeControl.BULLET
+                  ? ratings.bullet
+                  : ratings.rapid;
+
+            userInfo = {
+              isGuest: decodedPayload.isGuest,
+              id: decodedPayload.id,
+              username: decodedPayload.username,
+              rating: rating,
+            };
+          } catch (err) {
+            console.error("JWT verification failed:", err);
+            this.handleError(socket, "Unauthorized Access");
+            return;
+          }
+        } else {
+          userInfo = userInfoViaMessage;
+        }
+
         console.log(message.payload);
+
         const user = new User(
           userInfo.isGuest,
           userInfo.id,
@@ -270,6 +312,16 @@ export class GameManager {
         ViewersManager.getInstance().addViewer(gameId, viewer);
 
         console.log(`Viewer ${viewer.username} joined game ${gameId}`);
+      }
+
+      if (message.type == VIEWERS_CHAT) {
+        const gameId = message.payload.gameId;
+        const chatMessage = message.payload.message;
+        ViewersManager.getInstance().handleChatMessage(
+          gameId,
+          socket,
+          chatMessage
+        );
       }
     });
   }

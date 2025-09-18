@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { boardColorsList } from "../config";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
-import { type moveType } from "@repo/types";
+import { type moveType, type UserInfo} from "@repo/types";
 interface BoardStoreType {
   darkSquare: string;
   lightSquare: string;
@@ -32,21 +32,9 @@ interface RecentGame {
   date: string;
 }
 
-export interface UserInfoType {
-  isGuest: boolean;
-  id: string | null;
-  username: string;
-  email: string;
-  ratings: {
-    bullet: number;
-    blitz: number;
-    rapid: number;
-  };
-}
-
 interface UserInfoStoreType {
-  userInfo: UserInfoType;
-  setUserInfo: (newUserInfo: UserInfoType) => void;
+  userInfo: UserInfo;
+  setUserInfo: (newUserInfo: UserInfo) => void;
 
   recentGames: RecentGame[];
   setRecentGames: (games: RecentGame[]) => void;
@@ -66,7 +54,7 @@ export const useUserInfoStore = create<UserInfoStoreType>((set) => ({
     },
   },
   recentGames: [],
-  setUserInfo: (newUserInfo: UserInfoType) => set({ userInfo: newUserInfo }),
+  setUserInfo: (newUserInfo: UserInfo) => set({ userInfo: newUserInfo }),
   setRecentGames: (games: RecentGame[]) => set({ recentGames: games }),
 }));
 

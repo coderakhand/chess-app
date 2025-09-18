@@ -331,11 +331,12 @@ export default function Game() {
 
   const createGame = () => {
     if (!socket) return;
-
+    const authToken = localStorage.getItem('authToken');
     socket.send(
       JSON.stringify({
         type: INIT_GAME,
         payload: {
+          authToken: authToken,
           isRated: true,
           timeControl: timeControl,
           userInfo: {

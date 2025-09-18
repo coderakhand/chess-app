@@ -5,12 +5,13 @@ import { TimeControl } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || "cat";
 
 router.get("/me", requireAuth, (req, res) => {
   const user = req.user as any;
-
-  const jwtToken = jwt.sign(
+  const authToken = jwt.sign(
     {
+      isGuest: false,
       id: user.id,
       username: user.username,
       ratings: {
@@ -19,10 +20,12 @@ router.get("/me", requireAuth, (req, res) => {
         rapid: user.rapidRating,
       },
     },
-    String(process.env.JWT_SECRET)
+    JWT_SECRET,
+    { expiresIn: "28d" }
   );
 
   res.json({
+    authToken: authToken,
     user: {
       id: user.id,
       email: user.email,
@@ -32,7 +35,6 @@ router.get("/me", requireAuth, (req, res) => {
         blitz: user.blitzRating,
         rapid: user.rapidRating,
       },
-      jwtToken: jwtToken,
     },
   });
 });

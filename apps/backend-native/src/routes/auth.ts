@@ -65,10 +65,11 @@ router.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["email", "profile"] })
 );
+
 router.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    successRedirect: `${process.env.FRONTEND_URL}/play`,
+    successRedirect: `${process.env.FRONTEND_URL}/`,
     failureRedirect: `${process.env.FRONTEND_URL}/`,
   })
 );

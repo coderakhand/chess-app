@@ -18,18 +18,19 @@ passport.use(
     }
   })
 );
+
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
+      clientID: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      callbackURL: `/auth/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       if (!profile.emails?.[0]) return;
       try {
         const email = profile.emails?.[0].value;
-        const username = profile.displayName || email?.split("@")[0];
+        const username = email?.split("@")[0];
 
         if (!email) {
           return done(null, false, {
@@ -42,9 +43,9 @@ passport.use(
         if (!user) {
           user = await db.user.create({
             data: {
-              username: username || "google-user",
+              username: username || `user${Math.round(Number(Math.random().toPrecision(6)) * 1000000)}`,
               email,
-              password: "",
+              password: crypto.randomUUID().slice(0, 18),
             },
           });
         }

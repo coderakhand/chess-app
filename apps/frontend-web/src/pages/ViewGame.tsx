@@ -12,6 +12,9 @@ import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Chess } from "chess.js";
 import { moveType } from "@repo/types";
+import { Alert, AlertTitle } from "../components/ui/alert";
+import { IoIosCheckmarkCircle } from "react-icons/io";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function ViewGame() {
   const socket = useSocket();
@@ -34,6 +37,8 @@ export default function ViewGame() {
 
   const whiteTimeLeftRef = useRef(null);
   const blackTimeLeftRef = useRef(null);
+
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
 
   const showPositionAtMovesIndexDecrease = useGameInfoStore(
     (state) => state.showPositionAtMovesIndexDecrease
@@ -115,9 +120,21 @@ export default function ViewGame() {
     fetchGame();
   }, []);
 
+  const copyLinkToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setIsLinkCopied(true);
+      setTimeout(() => {
+        setIsLinkCopied(false);
+      }, 3000);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div
-      className={`flex max-lg:flex-col w-screen lg:h-screen  lg:gap-[100px] bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
+      className={`relative flex max-lg:flex-col w-screen lg:h-screen  lg:gap-[100px] bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center overflow-hidden dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B]`}
     >
       <SideBar />
 
@@ -189,7 +206,10 @@ export default function ViewGame() {
                           }}
                           className=" flex items-center gap-2 dark:bg-[#7b7b7f] px-2 py-1 bg-white/40 backdrop-blur-lg shadow-xl"
                         >
-                          <button className="w-8 h-8 p-1 hover:cursor-pointer">
+                          <button
+                            className="w-8 h-8 p-1 hover:cursor-pointer"
+                            onClick={copyLinkToClipboard}
+                          >
                             <Share2 className="w-4 h-4 dark:text-white" />
                           </button>
 
@@ -260,6 +280,24 @@ export default function ViewGame() {
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {isLinkCopied && (
+          <motion.div
+            initial={{ x: 300 }}
+            animate={{ x: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            exit={{ x: 300 }}
+            className="absolute bottom-5 right-3"
+          >
+            <Alert className="mx-auto max-w-[200px] bg-white border-none p-2">
+              <AlertTitle className="flex items-center gap-1">
+                <IoIosCheckmarkCircle className="text-green-800 w-4 h-4" />{" "}
+                Copied to clipboard
+              </AlertTitle>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

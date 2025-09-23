@@ -43,7 +43,7 @@ export class Game {
     player2: User,
     isRated: boolean,
     timeControl: timeControlType,
-    position?: string,
+    position?: string | null,
     moves?: moveType[]
   ) {
     this.id = randomUUID();

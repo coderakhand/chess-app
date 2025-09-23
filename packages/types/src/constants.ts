@@ -14,4 +14,7 @@ export const ERROR = "error";
 export const GAME_CHALLENGE = 'game_challenge';
 export const ANSWER_GAME_CHALLENGE = 'answer_game_challenge';
 export const WITHDRAW_GAME_CHALLENGE = 'withdraw_game_challenge';
+export const UNSUCCESSFUL_GAME_CHALLENGE = 'unsuccessful_game_challenge';
+export const UNSUCCESSFUL_ANSWER_GAME_CHALLENGE = 'unsuccessful_answer_game_challenge';
+export const REGISTER_VERIFIED_USERNAME_CONNECTION = 'register_verified_username_connection';
 export const VIEWERS_CHAT = 'viewers_chat';

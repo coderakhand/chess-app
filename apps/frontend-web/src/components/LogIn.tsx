@@ -47,14 +47,14 @@ export default function LogIn() {
   };
 
   return (
-    <DialogHeader className="flex justify-center items-center gap-8 font-dream">
+    <DialogHeader className="flex justify-center items-center gap-2 font-dream">
       <DialogTitle className="text-3xl">Enter your account</DialogTitle>
       <DialogDescription className="text-center font-proza">
         Welcome back! Enter your account to continue.
       </DialogDescription>
 
       <div
-        className="w-[300px] flex flex-col items-center gap-3 mt-[10px]"
+        className="my-6 w-[300px] flex flex-col items-center gap-3"
         onKeyDown={(event) => {
           if (event.key === "Enter") handleLogin();
         }}

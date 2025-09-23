@@ -35,7 +35,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "flag-icons": "^7.5.0",
-    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.513.0",
     "motion": "^12.23.12",
     "react": "^19.1.0",

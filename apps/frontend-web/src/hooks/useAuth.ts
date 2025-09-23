@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useUserInfoStore } from "../store/atoms";
+import { jwtDecode } from "jwt-decode";
 
 export default function useAuth() {
   const [isUserLoading, setIsUserLoading] = useState(true);
@@ -8,6 +9,7 @@ export default function useAuth() {
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
 
   const fetchMe = async () => {
+    localStorage.removeItem("authToken");
     try {
       const { data } = await api.get("/user/me");
       setUserInfo({ ...data.user, isGuest: false });
@@ -18,13 +20,48 @@ export default function useAuth() {
     }
   };
 
-  useEffect(() => {
+  const userLogout = async () => {
+    try {
+      const { data: csrf } = await api.get("/csrf-token");
+      console.log("sending request");
+      const response = await api.post(
+        "/logout",
+        {},
+        { headers: { "csrf-token": csrf.csrfToken } }
+      );
+      const data = response.data;
+      if (data.message) {
+        window.location.assign('/');
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
-    if (!userInfo || !userInfo.id) {
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+
+    if (!authToken) {
       fetchMe();
-    } else {
-      setUserInfo(userInfo);
-      setIsUserLoading(false);
+      return;
+    }
+
+    try {
+      const { exp } = jwtDecode<{ exp: number }>(authToken);
+
+      if (!exp || Date.now() >= exp * 1000) {
+        userLogout();
+        return;
+      }
+
+      fetchMe();
+    } catch (err) {
+      fetchMe();
+    }
+
+    const { exp } = jwtDecode(String(authToken));
+    if (!authToken || !exp || Date.now() >= exp * 1000) {
+      fetchMe();
     }
   }, []);
 

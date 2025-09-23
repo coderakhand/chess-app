@@ -101,7 +101,7 @@ export default function GuestUserHome() {
                   duration: 8,
                   ease: "anticipate",
                   repeat: Infinity,
-                  repeatDelay: 4,
+                  repeatDelay: 3,
                 }}
               ></motion.img>
 

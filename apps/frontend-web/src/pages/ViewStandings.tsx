@@ -108,7 +108,7 @@ export default function ChessRankings() {
       className={`min-h-screen min-w-screen bg-[url(/background/bg-1.jpg)] bg-fixed bg-cover bg-center dark:bg-gradient-to-br dark:from-[#09090B] dark:via-[#0B0B0E] dark:to-[#09090B] font-dream`}
     >
       <SideBar />
-      <div className="bg-black/20 max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4">
+      <div className="bg-black/10 max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4">
         <div className="max-w-5xl mx-auto">
           <div className="container mx-auto px-4 py-8">
             <motion.div

@@ -186,11 +186,11 @@ export default function SignUp() {
                 </span>
               ) : doesUsernameExist != null ? (
                 doesUsernameExist ? (
-                  <span className="text-xs text-red-700 absolute -top-5 right-0">
+                  <span className="text-xs text-red-800 absolute -top-5 right-0">
                     username already taken
                   </span>
                 ) : (
-                  <span className="text-xs text-green-700 absolute -top-5 right-0">
+                  <span className="text-xs text-green-500 absolute -top-5 right-0">
                     username available
                   </span>
                 )

@@ -13,7 +13,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import { Palette, Bell, Shield, User, Monitor } from "lucide-react";
+import { Palette, Bell, User, Monitor } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,6 +27,7 @@ import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
 import ChessBoard from "../components/ChessBoard";
 import SideBar from "../components/SideBar";
+import { IoShieldCheckmarkSharp } from "react-icons/io5";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
@@ -55,7 +56,7 @@ export default function Settings() {
     >
       <SideBar />
       <div
-        className={` max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4`}
+        className={` bg-black/10 max-sm:pt-[80px] sm:pl-[60px] min-w-screen min-h-screen p-4`}
       >
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 dark:text-white">
@@ -357,7 +358,7 @@ export default function Settings() {
               <Card className="bg-white/30 backdrop-blur-md rounded-xl shadow-md border border-white/40 dark:border-[#27272A] dark:bg-[#09090B] dark:text-white ">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-green-600" />
+                    <IoShieldCheckmarkSharp className="w-5 h-5 text-green-600" />
                     Privacy & Security
                   </CardTitle>
                   <CardDescription className="dark:text-[#A1A1AA] font-proza">

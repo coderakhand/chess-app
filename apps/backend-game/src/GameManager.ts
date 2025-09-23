@@ -20,9 +20,16 @@ import {
   playerChatSchema,
   initViewGameSchema,
   resignGameSchema,
+  answerGameChallengeSchema,
   type UserInfo,
   TimeControl,
   VIEWERS_CHAT,
+  GAME_CHALLENGE,
+  ANSWER_GAME_CHALLENGE,
+  UNSUCCESSFUL_GAME_CHALLENGE,
+  UNSUCCESSFUL_ANSWER_GAME_CHALLENGE,
+  REGISTER_VERIFIED_USERNAME_CONNECTION,
+  gameChallengeSchema,
 } from "@repo/types";
 import { Viewer, ViewersManager } from "./ViewersManager";
 import { User } from "./UserManager";
@@ -35,21 +42,28 @@ export class GameManager {
   public pendingUsers: {
     gameInfo: {
       isRated: boolean;
-      timeControl: {
-        name: string;
-        baseTime: number;
-        increment: number;
-      };
+      timeControl: timeControlType;
     };
     user: User;
   }[];
   public users: WebSocket[];
   private static instance: GameManager | null = null;
+  public authorizedUsernames: Map<string, WebSocket>;
+  public pendingChallengerUsers: {
+    gameInfo: {
+      isRated: boolean;
+      opponentUsername: string;
+      timeControl: timeControlType;
+    };
+    user: User;
+  }[];
 
   public constructor() {
     this.games = [];
     this.pendingUsers = [];
     this.users = [];
+    this.pendingChallengerUsers = [];
+    this.authorizedUsernames = new Map();
   }
 
   public static getInstance() {
@@ -98,19 +112,30 @@ export class GameManager {
     socket.on("message", async (data) => {
       const message = JSON.parse(data.toString());
 
-      if (message.type == INIT_GAME) {
-        const res = initGameSchema.safeParse(message);
+      if (message.type == REGISTER_VERIFIED_USERNAME_CONNECTION) {
+        const { authToken } = message.payload;
+        try {
+          const decodedPayload = jwt.verify(
+            authToken,
+            process.env.JWT_SECRET || "cat"
+          ) as UserInfo;
+          this.authorizedUsernames.set(decodedPayload.username, socket);
+        } catch (err) {
+          console.log(err);
+          this.handleError(socket, "Invalid authToken");
+          return;
+        }
+      }
 
-        if (!res.success) {
-          console.log(message);
-          console.log(res);
+      if (message.type == INIT_GAME) {
+        const { success } = initGameSchema.safeParse(message);
+
+        if (!success) {
           this.handleError(socket, "Invalid schema");
           return;
         }
 
-        console.log(message);
         const { authToken, isRated, timeControl } = message.payload;
-        console.log(authToken);
         const userInfoViaMessage = message.payload.userInfo;
         let userInfo;
         console.log("secret =>", process.env.JWT_SECRET);
@@ -199,6 +224,231 @@ export class GameManager {
           console.log(`${user.username} is waiting`);
         }
         return;
+      }
+
+      if (message.type == GAME_CHALLENGE) {
+        const { success } = gameChallengeSchema.safeParse(message);
+
+        if (!success) {
+          this.handleError(socket, "Invalid Schema");
+          return;
+        }
+
+        let user: User | null = null;
+
+        const { authToken, timeControl, opponentUsername, isRated } =
+          message.payload;
+
+        try {
+          const decodedPayload = jwt.verify(
+            authToken,
+            process.env.JWT_SECRET || "cat"
+          ) as UserInfo;
+
+          const ratings = decodedPayload.ratings;
+
+          const rating =
+            timeControl.name == TimeControl.BLITZ
+              ? ratings.blitz
+              : timeControl.name == TimeControl.BULLET
+                ? ratings.bullet
+                : ratings.rapid;
+
+          user = new User(
+            decodedPayload.isGuest,
+            decodedPayload.id,
+            decodedPayload.username,
+            rating,
+            socket,
+            timeControl.baseTime
+          );
+        } catch {
+          this.handleError(socket, "Unauthorized User");
+          return;
+        }
+
+        const userAlreadyPlayingGame = this.games.find(
+          (game) =>
+            (game.player1.username == user.username && game.player1.isGuest) ||
+            (game.player2.username == user.username && game.player2.isGuest)
+        );
+
+        if (userAlreadyPlayingGame) {
+          socket.send(
+            JSON.stringify({
+              type: UNSUCCESSFUL_GAME_CHALLENGE,
+              payload: {
+                error: "You are already playing a game",
+              },
+            })
+          );
+          return;
+        }
+
+        const opponentSocket = this.authorizedUsernames.get(opponentUsername);
+
+        if (!opponentSocket) {
+          socket.send(
+            JSON.stringify({
+              type: UNSUCCESSFUL_GAME_CHALLENGE,
+              payload: {
+                error: `${opponentUsername} is not Online`,
+              },
+            })
+          );
+          return;
+        }
+
+        const game = this.games.find(
+          (game) =>
+            (game.player1.username == opponentUsername &&
+              game.player1.isGuest) ||
+            (game.player2.username == opponentUsername && game.player2.isGuest)
+        );
+
+        if (game) {
+          socket.send(
+            JSON.stringify({
+              type: UNSUCCESSFUL_GAME_CHALLENGE,
+              payload: {
+                error: `${opponentUsername} is currently playing`,
+              },
+            })
+          );
+        } else {
+          this.pendingChallengerUsers = [
+            ...this.pendingChallengerUsers,
+            {
+              gameInfo: {
+                isRated: isRated,
+                opponentUsername: opponentUsername,
+                timeControl: timeControl,
+              },
+              user: user,
+            },
+          ];
+
+          opponentSocket.send(
+            JSON.stringify({
+              type: GAME_CHALLENGE,
+              payload: {
+                isRated: isRated,
+                timeControl: timeControl,
+                challengerInfo: {
+                  username: user.username,
+                  rating: user.rating,
+                },
+              },
+            })
+          );
+        }
+      }
+
+      if (message.type == ANSWER_GAME_CHALLENGE) {
+        const { success } = answerGameChallengeSchema.safeParse(message);
+
+        if (!success) {
+          this.handleError(socket, "Invalid Schema");
+          return;
+        }
+
+        const { isAccepted, authToken, challengerUsername } = message.payload;
+        let user: User | null = null;
+
+        const pendingChallenger = this.pendingChallengerUsers.find(
+          (challenger) => challenger.user.username == challengerUsername
+        );
+
+        if (!pendingChallenger) {
+          socket.send(
+            JSON.stringify({
+              type: UNSUCCESSFUL_ANSWER_GAME_CHALLENGE,
+              payload: {
+                error: "opponent is not available",
+              },
+            })
+          );
+          return;
+        }
+
+        const timeControl = pendingChallenger.gameInfo.timeControl;
+
+        try {
+          const decodedPayload = jwt.verify(
+            authToken,
+            process.env.JWT_SECRET || "cat"
+          ) as UserInfo;
+
+          if (
+            pendingChallenger.gameInfo.opponentUsername !=
+            decodedPayload.username
+          ) {
+            this.handleError(
+              socket,
+              "You are not allowed to answer this request"
+            );
+            return;
+          }
+
+          const ratings = decodedPayload.ratings;
+
+          const rating =
+            timeControl.name == TimeControl.BLITZ
+              ? ratings.blitz
+              : timeControl.name == TimeControl.BULLET
+                ? ratings.bullet
+                : ratings.rapid;
+
+          user = new User(
+            decodedPayload.isGuest,
+            decodedPayload.id,
+            decodedPayload.username,
+            rating,
+            socket,
+            Number(timeControl.baseTime)
+          );
+        } catch (err) {
+          console.log(err);
+          return;
+        }
+
+        // const challengerPlayingGame = this.games.find(
+        //   (game) =>
+        //     game.player1.username == challengerUsername ||
+        //     game.player2.username == challengerUsername
+        // );
+
+        // if (challengerPlayingGame) {
+        //   socket.send(
+        //     JSON.stringify({
+        //       type: UNSUCCESSFUL_ANSWER_GAME_CHALLENGE,
+        //       payload: {
+        //         error: "opponent is already playing a game",
+        //       },
+        //     })
+        //   );
+        //   return;
+        // }
+
+        if (isAccepted) {
+          const game = new Game(
+            pendingChallenger.user,
+            user,
+            pendingChallenger.gameInfo.isRated,
+            pendingChallenger.gameInfo.timeControl
+          );
+
+          this.games.push(game);
+        } else {
+          pendingChallenger.user.socket?.send(
+            JSON.stringify({
+              type: ANSWER_GAME_CHALLENGE,
+              payload: {
+                isAccepted: false,
+              },
+            })
+          );
+        }
       }
 
       if (message.type == MOVE) {
@@ -374,13 +624,9 @@ export class GameManager {
         name: lastActiveGame.timeControl,
         baseTime: lastActiveGame.baseTime,
         increment: lastActiveGame.increment,
-      };
+      } as timeControlType;
 
-      const {
-        userTimeLeft,
-        opponentTimeLeft,
-        movesList,
-      } = //@ts-ignore
+      const { userTimeLeft, opponentTimeLeft, movesList } =
         await this.calculateTimeAndMoves(lastActiveGame.id, timeControl);
 
       const rating =
@@ -412,7 +658,7 @@ export class GameManager {
         ? new Game(
             playerUser,
             opponentUser,
-            //@ts-ignore
+            true,
             timeControl,
             lastActiveGame.currentPosition,
             movesList
@@ -420,7 +666,7 @@ export class GameManager {
         : new Game(
             opponentUser,
             playerUser,
-            //@ts-ignore
+            true,
             timeControl,
             lastActiveGame.currentPosition,
             movesList

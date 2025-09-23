@@ -1,6 +1,13 @@
 import z from "zod";
 import { usernameSchema } from "./AuthenticationSchema";
 
+const registerVerifiedUsernameConnectionSchema = z.object({
+  type: z.string(),
+  payload: {
+    authToken: z.string(),
+  },
+});
+
 const initGameSchema = z.object({
   type: z.string(),
   payload: z.object({
@@ -88,6 +95,29 @@ const initViewGameSchema = z.object({
   },
 });
 
+const gameChallengeSchema = z.object({
+  type: z.string(),
+  payload: {
+    authToken: z.string(),
+    opponentUsername: usernameSchema,
+    isRated: z.boolean(),
+    timeControl: z.object({
+      name: z.string() || z.null(),
+      baseTime: z.number() || z.null(),
+      increment: z.number() || z.null(),
+    }),
+  },
+});
+
+const answerGameChallengeSchema = z.object({
+  type: z.string(),
+  payload: {
+    isAccepted: z.boolean(),
+    authToken: z.string(),
+    challengerName: usernameSchema,
+  },
+});
+
 export {
   initGameSchema,
   moveSchema,
@@ -99,4 +129,7 @@ export {
   playerChatSchema,
   resignGameSchema,
   initViewGameSchema,
+  gameChallengeSchema,
+  answerGameChallengeSchema,
+  registerVerifiedUsernameConnectionSchema,
 };

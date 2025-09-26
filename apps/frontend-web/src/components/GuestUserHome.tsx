@@ -120,11 +120,11 @@ export default function GuestUserHome() {
                 >
                   Create an Account
                 </Button>
-                <div className="flex gap-2 mt-[10px] justify-center w-full text-sm dark:text-[#A1A1AA] font-proza">
+                <div className="flex gap-2 mt-[10px] justify-center w-full text-sm text-slate-800 dark:text-[#A1A1AA] font-proza">
                   Already on Chezz.com?
                   <div
                     onClick={() => setCard("LOG_IN")}
-                    className="underline underline-offset-2 cursor-pointer dark:text-white font-dream"
+                    className="underline underline-offset-2 cursor-pointer text-black dark:text-white font-dream"
                   >
                     LogIn
                   </div>

@@ -2,9 +2,9 @@ import { DndContext, DragOverlay, type DragEndEvent } from "@dnd-kit/core";
 import SideBar from "../components/SideBar";
 import DroppableSquare from "../components/DroppableSquare";
 import ChessPiece from "../components/ChessPiece";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Chess, type PieceSymbol, type Square, type Color } from "chess.js";
-import { useBoardStore } from "../store/atoms";
+import { useBoardStore, useGameInfoStore } from "../store/atoms";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
 import axios from "axios";
 import api from "../api/axios";
@@ -20,6 +20,9 @@ export default function Analyze() {
   const [evalScore, setEvalScore] = useState(50);
   const [mateScore, setMateScore] = useState(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const promotion = useGameInfoStore((state) => state.promotion);
+  const setPromotion = useGameInfoStore((state) => state.setPromotion);
+  const interestedRef = useRef(false);
 
   const handleMovement = (
     cellCode: string,
@@ -49,8 +52,36 @@ export default function Analyze() {
     const to = event.over?.id as string;
     setActiveDragId(null);
     if (!to || from === to) return;
+    const sq = chess.get(from as Square);
+    let move: { from: string; to: string; promotion?: PieceSymbol } = {
+      from,
+      to,
+    };
 
-    const move = { from, to };
+    if (
+      sq?.type == "p" &&
+      ((chess.turn() == "w" && to.at(-1) == "8") ||
+        (chess.turn() == "b" && to.at(-1) == "1"))
+    ) {
+      setPromotion({ interested: true, promotionToPiece: null, cellCode: to });
+      interestedRef.current = true;
+    }
+
+    while (interestedRef.current && promotion.promotionToPiece == null){
+      // continue;
+    }
+
+    if (interestedRef.current && promotion.promotionToPiece) {
+      move = {
+        from,
+        to,
+        promotion: promotion.promotionToPiece,
+      };
+    }
+
+    setPromotion({ interested: false, promotionToPiece: null, cellCode: null });
+
+    console.log(move);
     if (chess.move(move)) {
       setBoard(chess.board());
     }

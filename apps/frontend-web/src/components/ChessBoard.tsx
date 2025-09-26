@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Square, PieceSymbol, Color } from "chess.js";
 import {
   DragOverlay,
@@ -15,6 +15,7 @@ import { useBoardStore, useGameInfoStore } from "../store/atoms";
 import ChessPiece from "./ChessPiece";
 import GameResultCard from "./GameResultCard";
 import DroppableSquare from "./DroppableSquare";
+import { IoClose } from "react-icons/io5";
 
 interface ChessBoardProps {
   socket: WebSocket | null;
@@ -43,6 +44,21 @@ export default function ChessBoard({
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const flipBoard = useGameInfoStore((state) => state.flipBoard);
+  const interestedInPromotionRef = useRef<boolean | null>(null);
+  const promotionDeferredRef = useRef<ReturnType<
+    typeof createDeferred<PieceSymbol>
+  > | null>(null);
+  const promotionCellCodeRef = useRef<string | null>(null);
+
+  function createDeferred<T>() {
+    let resolve!: (value: T) => void;
+    let reject!: () => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  }
 
   const handleMovement = (
     i: number,
@@ -86,34 +102,19 @@ export default function ChessBoard({
       };
 
       setSource(null);
-      let m;
-      try {
-        m = chess.move(move);
-      } catch {
+
+      const sq = chess.get(move.from as Square);
+
+      if (
+        sq?.type == "p" &&
+        ((color == "w" && move.to.at(-1) == "8") ||
+          (color == "b" && move.to.at(-1) == "1"))
+      ) {
+        handlePawnPromotion(move.from, move.to);
         return;
       }
-      setValidMovesForPiece([]);
 
-      setBoard(chess.board());
-      setMove({
-        ...move,
-        isCapture: m.isCapture() || m.isEnPassant(),
-        piece: m.piece,
-        after: m.after,
-        before: m.before,
-        isKingsideCastle: m.isKingsideCastle(),
-        isQueensideCastle: m.isQueensideCastle(),
-        isPromotion: m.isPromotion(),
-      });
-
-      socket.send(
-        JSON.stringify({
-          type: "move",
-          payload: {
-            move: move,
-          },
-        })
-      );
+      makeMove(move);
     }
   };
 
@@ -123,14 +124,51 @@ export default function ChessBoard({
     setActiveDragId(null);
     if (!to || from === to) return;
     if (color === null || color !== chess.turn()) return;
-    const move = { from, to };
+    const move = {
+      from,
+      to,
+    };
+    const sq = chess.get(move.from as Square);
+    if (
+      sq?.type == "p" &&
+      ((color == "w" && move.to.at(-1) == "8") ||
+        (color == "b" && move.to.at(-1) == "1"))
+    ) {
+      handlePawnPromotion(from, to);
+      return;
+    }
+    makeMove(move);
+  };
+
+  const handlePawnPromotion = async (from: string, to: string) => {
+    interestedInPromotionRef.current = true;
+    promotionCellCodeRef.current = to;
+    promotionDeferredRef.current = createDeferred<PieceSymbol>();
+    const chosenPiece = await promotionDeferredRef.current.promise;
+    const move = {
+      from,
+      to,
+      promotion: chosenPiece,
+    };
+    interestedInPromotionRef.current = false;
+    promotionCellCodeRef.current = null;
+    makeMove(move);
+  };
+
+  const makeMove = (move: {
+    from: string;
+    to: string;
+    promotion?: PieceSymbol;
+  }) => {
     let m;
     try {
       m = chess.move(move);
+      console.log(m);
     } catch {
       console.log("Invalid");
       return;
     }
+
     setBoard(chess.board());
     if (socket === null) return;
     setMove({
@@ -211,39 +249,70 @@ export default function ChessBoard({
                 const cellCode = String.fromCharCode(97 + (j % 8)) + (8 - i);
 
                 return (
-                  <DroppableSquare
-                    key={j}
-                    id={cellCode}
-                    onClick={() => {
-                      handleMovement(i, j, square);
-                    }}
-                    color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
-                  >
-                    {square !== null ? (
-                      <ChessPiece
-                        square={square}
-                        color={color}
-                        id={cellCode}
-                        customClass={customClassPieces}
-                      />
-                    ) : (
-                      <></>
-                    )}
-
-                    {validMovesForPiece.find(
-                      (value) =>
-                        value.slice(-2) === cellCode ||
-                        ((value === "O-O" || value === "O-O-O") &&
-                          isCastleValidMove(value, cellCode))
-                    ) &&
-                      (chess.get(cellCode as Square) ? (
-                        <div className="absolute h-full w-full bg-red-600  opacity-60"></div>
+                  <div className="relative">
+                    {interestedInPromotionRef.current &&
+                      promotionCellCodeRef.current == cellCode && (
+                        <div className="absolute w-full z-50 bg-white rounded-sm flex flex-col items-center shadow-md shadow-black/40">
+                          <ChessPieceToSelect
+                            piece="q"
+                            promotionDeferredRef={promotionDeferredRef}
+                          />
+                          <ChessPieceToSelect
+                            piece="n"
+                            promotionDeferredRef={promotionDeferredRef}
+                          />
+                          <ChessPieceToSelect
+                            piece="r"
+                            promotionDeferredRef={promotionDeferredRef}
+                          />
+                          <ChessPieceToSelect
+                            piece="b"
+                            promotionDeferredRef={promotionDeferredRef}
+                          />
+                          <button
+                            onClick={() =>
+                              (interestedInPromotionRef.current = false)
+                            }
+                            className="w-full h-5 sm:h-8 flex justify-center items-center bg-[#F1F1F1] rounded-b-sm cursor-pointer"
+                          >
+                            <IoClose className="sm:text-2xl" />
+                          </button>
+                        </div>
+                      )}
+                    <DroppableSquare
+                      key={j}
+                      id={cellCode}
+                      onClick={() => {
+                        handleMovement(i, j, square);
+                      }}
+                      color={(i + j) % 2 !== 0 ? darkSquare : lightSquare}
+                    >
+                      {square !== null ? (
+                        <ChessPiece
+                          square={square}
+                          color={color}
+                          id={cellCode}
+                          customClass={customClassPieces}
+                        />
                       ) : (
-                        <div
-                          className={`absolute lg:h-5 lg:w-5 rounded-full bg-radial-[at_25%_25%] from-[#4A4847]/60 to-zinc-900 to-75% opacity-30`}
-                        ></div>
-                      ))}
-                  </DroppableSquare>
+                        <></>
+                      )}
+
+                      {validMovesForPiece.find(
+                        (value) =>
+                          value.slice(-2) === cellCode ||
+                          ((value === "O-O" || value === "O-O-O") &&
+                            isCastleValidMove(value, cellCode))
+                      ) &&
+                        (chess.get(cellCode as Square) ? (
+                          <div className="absolute h-full w-full bg-red-600  opacity-60"></div>
+                        ) : (
+                          <div
+                            className={`absolute lg:h-5 lg:w-5 rounded-full bg-radial-[at_25%_25%] from-[#4A4847]/60 to-zinc-900 to-75% opacity-30`}
+                          ></div>
+                        ))}
+                    </DroppableSquare>
+                  </div>
                 );
               })}
             </div>
@@ -262,5 +331,36 @@ export default function ChessBoard({
         ) : null}
       </DragOverlay>
     </DndContext>
+  );
+}
+
+function ChessPieceToSelect({
+  piece,
+  promotionDeferredRef,
+}: {
+  piece: PieceSymbol;
+  promotionDeferredRef: React.RefObject<{
+    promise: Promise<PieceSymbol>;
+    resolve: (value: PieceSymbol) => void;
+    reject: () => void;
+  } | null>;
+}) {
+  const color = useGameInfoStore((state) => state.color);
+  return (
+    <button
+      className="w-full aspect-square flex justify-center items-center cursor-pointer"
+      onClick={() => {
+        if (promotionDeferredRef.current) {
+          promotionDeferredRef.current.resolve(piece);
+          promotionDeferredRef.current = null;
+        }
+      }}
+    >
+      <img
+        src={`/${color}${piece}.png`}
+        alt={`${color}${piece}`}
+        className={`${"w-[46px] sm:w-[78px] object-contain"}`}
+      />
+    </button>
   );
 }

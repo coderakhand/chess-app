@@ -17,6 +17,7 @@ export interface timeControlType {
 export interface moveType {
   from: string;
   to: string;
+  promotion?: PieceSymbol;
   before?: string;
   after?: string;
   timeTaken?: number;

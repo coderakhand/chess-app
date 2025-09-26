@@ -11,16 +11,16 @@ const registerVerifiedUsernameConnectionSchema = z.object({
 const initGameSchema = z.object({
   type: z.string(),
   payload: z.object({
-    authToken: z.string(),
+    authToken: z.string().nullable(),
     isRated: z.boolean(),
     timeControl: z.object({
-      name: z.string() || z.null(),
-      baseTime: z.number() || z.null(),
-      increment: z.number() || z.null(),
+      name: z.string().nullable(),
+      baseTime: z.number().nullable(),
+      increment: z.number().nullable(),
     }),
     userInfo: z.object({
       isGuest: z.boolean(),
-      id: z.string(),
+      id: z.string().nullable(),
       username: usernameSchema,
       rating: z.number(),
     }),
@@ -33,6 +33,7 @@ const moveSchema = z.object({
     move: z.object({
       from: z.string(),
       to: z.string(),
+      promotion: z.string().optional(),
     }),
   }),
 });

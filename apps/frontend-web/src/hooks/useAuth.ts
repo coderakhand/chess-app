@@ -56,10 +56,12 @@ export default function useAuth() {
 
       fetchMe();
     } catch (err) {
+      console.log(err);
       fetchMe();
     }
 
     const { exp } = jwtDecode(String(authToken));
+    
     if (!authToken || !exp || Date.now() >= exp * 1000) {
       fetchMe();
     }

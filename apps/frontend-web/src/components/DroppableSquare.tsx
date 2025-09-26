@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import { useGameInfoStore } from "../store/atoms";
+import { useGameInfoStore, useUserSettings } from "../store/atoms";
 
 interface DroppableProps {
   id: string;
@@ -20,6 +20,10 @@ export default function DroppableSquare({
   const showPositionAtMovesIndex = useGameInfoStore(
     (state) => state.showPositionAtMovesIndex
   );
+  
+  const showBoardCoordinates = useUserSettings(
+    (state) => state.showBoardCoordinates
+  );
 
   return (
     <div
@@ -35,19 +39,20 @@ export default function DroppableSquare({
             className={`absolute bg-yellow-300/50 blur-xs h-full w-full inset-0 overflow-hidden`}
           />
         )}
-      {!flipBoard && id.charAt(1) == "1" && (
+
+      {showBoardCoordinates && !flipBoard && id.charAt(1) == "1" && (
         <AlphabetCoordinate coordinate={id.charAt(0)} />
       )}
 
-      {!flipBoard && id.charAt(0) == "a" && (
+      {showBoardCoordinates && !flipBoard && id.charAt(0) == "a" && (
         <NumbericCoordinate coordinate={id.charAt(1)} />
       )}
 
-      {flipBoard && id.charAt(1) == "8" && (
+      {showBoardCoordinates && flipBoard && id.charAt(1) == "8" && (
         <AlphabetCoordinate coordinate={id.charAt(0)} rotated={true} />
       )}
 
-      {flipBoard && id.charAt(0) == "h" && (
+      {showBoardCoordinates && flipBoard && id.charAt(0) == "h" && (
         <NumbericCoordinate coordinate={id.charAt(1)} rotated={true} />
       )}
       {children}

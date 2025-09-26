@@ -6,6 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { useUserInfoStore } from "../store/atoms";
 import { Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "../components/ui/input-otp";
 
 export default function SignUp() {
   const [isLoadingSendOtp, setIsLoadingSendOtp] = useState(false);
@@ -134,14 +139,35 @@ export default function SignUp() {
               if (event.key === "Enter") handleVerifyOtp();
             }}
           >
-            <div className="flex flex-col gap-4 w-full">
-              <input
-                type="text"
-                placeholder="Verification code"
-                value={otp ?? ""}
-                onChange={(e) => setOtp(e.target.value)}
-                className="focus:outline-slate-600 focus:outline-2 font-medium px-[10px] h-[40px] w-full bg-white/30 backdrop-blur-md shadow-md border border-white/40 rounded-lg font-proza"
-              />
+            <div className="flex flex-col gap-4 w-full items-center">
+              <InputOTP onChange={(value) => setOtp(value)} maxLength={6}>
+                <InputOTPGroup>
+                  <InputOTPSlot
+                    index={0}
+                    className="bg-white/30 data-[active=true]:border-white/40 border-white/40"
+                  />
+                  <InputOTPSlot
+                    index={1}
+                    className="bg-white/30 data-[active=true]:border-white/40 border-white/40"
+                  />
+                  <InputOTPSlot
+                    index={2}
+                    className="bg-white/30 data-[active=true]:border-white/40 border-white/40"
+                  />
+                  <InputOTPSlot
+                    index={3}
+                    className="bg-white/30 data-[active=true]:border-white/40 border-white/40"
+                  />
+                  <InputOTPSlot
+                    index={4}
+                    className="bg-white/30 data-[active=true]:border-white/40 border-white/40"
+                  />
+                  <InputOTPSlot
+                    index={5}
+                    className="bg-white/30 data-[active=true]:border-white/40 border-white/40"
+                  />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
             <button
               onClick={handleVerifyOtp}
@@ -162,7 +188,7 @@ export default function SignUp() {
       ) : (
         <>
           <DialogTitle className="text-3xl">Create your account</DialogTitle>
-          <DialogDescription className="text-center font-proza">
+          <DialogDescription className="text-center font-proza text-slate-800">
             Create free account & start playing online chess!
           </DialogDescription>
           <motion.div

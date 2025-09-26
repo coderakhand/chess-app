@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { boardColorsList } from "../config";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
-import { type moveType, type UserInfo} from "@repo/types";
+import { type moveType, type UserInfo } from "@repo/types";
 interface BoardStoreType {
   darkSquare: string;
   lightSquare: string;
@@ -207,4 +207,15 @@ export const useGameInfoStore = create<gameInfoStoreType>((set) => ({
 
   setFlipBoard: (newFlipValue: boolean) => set({ flipBoard: newFlipValue }),
   toggleFlipBoard: () => set((state) => ({ flipBoard: !state.flipBoard })),
+}));
+
+interface UserSettingsType {
+  showBoardCoordinates: boolean;
+  setShowBoardCoordinates: (newShowBoardCoordiantes: boolean) => void;
+}
+
+export const useUserSettings = create<UserSettingsType>((set) => ({
+  showBoardCoordinates: false,
+  setShowBoardCoordinates: (newShowBoardCoordiantes: boolean) =>
+    set({ showBoardCoordinates: newShowBoardCoordiantes }),
 }));
